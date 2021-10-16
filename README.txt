@@ -1,9 +1,18 @@
 README.txt
 ----------
 
-This is a collection of oneliners, commands, scripts, etc. for UNIX-like systems. PRs are welcome - oneliners need to be in the format (see the file): (*) DESCRIPTION: `COMMAND`
+This is a collection of oneliners, commands, scripts, etc. for UNIX-like systems.
+PRs are welcome - oneliners need to be in the format (see the file):
 
-Extra
+(*) DESCRIPTION: `COMMAND`
+
+TODO
+----
+
+* More package manager commands (dpkg, apt, yum, etc.)
+* A longer TODO list
+
+Bonus
 -----
 
 You can alias a simple command like this one:
