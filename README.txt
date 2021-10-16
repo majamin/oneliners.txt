@@ -15,8 +15,7 @@ TODO
 Bonus
 -----
 
-You can alias a simple command like this one in zsh:
+You can alias a simple command like this one to get a nice menu that prints out the command:
 
-    alias oneliner='print -z $(grep "(\*)" -rw oneliners.txt | fzf -e | sed "s/: \{1,\}/\n/" | tail -1 | sed "s/^\`//;s/\`$//")'
-
-Which will give you a `fzf` menu and then print the command directly into the shell for editing or execution.
+    alias oneliner='print -z $(grep "^(\*)" oneliners.txt | fzf -e | grep -oP "(?<=: \`).*(?=\`$)")'
+    (requirements: zsh is your shell, GNU grep, fzf)
