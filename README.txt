@@ -15,7 +15,7 @@ TODO
 Bonus
 -----
 
-You can alias a simple command like this one:
+You can alias a simple command like this one in zsh:
 
     alias oneliner='print -z $(grep "(\*)" -rw oneliners.txt | fzf -e | sed "s/: \{1,\}/\n/" | tail -1 | sed "s/^\`//;s/\`$//")'
 
