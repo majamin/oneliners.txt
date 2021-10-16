@@ -562,7 +562,7 @@ ffmpeg \
 	-f dshow -i audio="Microphone Array (Realtek(R) Audio)" \
 	-c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 \
 	-b:v 1500k -c:a aac \
-	-f flv "rtmp://a.rtmp.youtube.com/live2/gejs-ux1t-xs6h-taa5-4k4x"
+	-f flv "rtmp://a.rtmp.youtube.com/live2/rejs-op2w-xs6h-qpp9-4k4x"
 }}}
 
 Screen capture, capture default audio out:
