@@ -85,7 +85,7 @@ Fundamental Commands
 (*) Find all files in current directory exclude `.wine` and `.git` directories: `find . -type f \! \( -path '*/\.wine/*' -o -path '*/\.git/*' \)`
 (*) Find recently accessed files: `find . -type f -print0 | xargs -0 stat --format '%Y :%y %n' | sort -nr | cut -d: -f2- | head`
 (*) Example. Find files and pipe into xargs (filenames with spaces): `find . -type f -print0 | xargs -0 sxiv -t`
-(*) Listing today’s files only: `find directory_path -maxdepth 1 -daystart -mtime -1`
+(*) Listing today's files only: `find directory_path -maxdepth 1 -daystart -mtime -1`
 (*) Find ASCII files and extract IP addresses: `find . -type f -exec grep -Iq . {} \; -exec grep -oE "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" {} /dev/null \;`
 (*) Find out which directory uses most inodes - list total sum of directoryname existing on filesystem: `find /etc -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n`
 (*) Find all executable files across the entire tree: `find  -executable -type f`
@@ -174,6 +174,16 @@ Pacman
 Network Manager
 ===============
 
+https://networkmanager.dev/docs/
+
+man 1 nmcli
+man 5 nmcli-examples
+man 1 nmtui
+man 1 nm-online
+man 8 nm-cloud-setup
+man 8 nm-initrd-generator
+man 7 nm-openvswitch
+
 (*) Tells you whether NetworkManager is running or not: `nmcli -t -f RUNNING general`
 (*) Shows the overall status of NetworkManager: `nmcli -t -f STATE general`
 (*) Switches Wi-Fi off: `nmcli radio wifi off`
@@ -215,38 +225,101 @@ PulseAudio and ALSA (not so much)
 PulseAudio is a general purpose sound server.
 It is intended to run as a middleware between your applications and your hardware devices, either using ALSA or OSS.
 It also offers easy network streaming across local devices using Avahi if enabled.
-
-NOTE:
 PulseAudioclients can send audio to "sinks" and receive audio from "sources".
-So sinks are outputs (audio goes there), sources are inputs (audio comes from there).
+So, sinks are outputs (audio goes there), sources are inputs (audio comes from there).
 
-(*) List all sinks: `pactl list sinks short`
-(*) Change the default sink (output) to 1: `pactl set-default-sink 1`
-(*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
 (*) Set the volume of sink 1 to 75%: `pactl set-sink-volume 1 0.75`
-(*) Toggle mute on the default sink (using the special name `@DEFAULT_SINK@`): `pactl set-sink-mute @DEFAULT_SINK@ toggle`
-
-(*) List all sinks and sources with their corresponding IDs: `pamixer --list-sinks --list-sources`
 (*) Set the volume to 75% on the default sink: `pamixer --set-volume 75`
+(*) Toggle mute on the default sink (using the special name `@DEFAULT_SINK@`): `pactl set-sink-mute @DEFAULT_SINK@ toggle`
 (*) Toggle mute on a sink other than the default: `pamixer --toggle-mute --sink ID`
 (*) Increase the volume on default sink by 5%: `pamixer --increase 5`
 (*) Decrease the volume on a source by 5%: `pamixer --decrease 5 --source ID`
+(*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
 (*) Use the allow boost option to increase, decrease, or set the volume above 100%: `pamixer --set-volume 105 --allow-boost`
 (*) Mute the default sink (use `--unmute` instead to unmute): `pamixer --mute`
-(*) Create a sink:
-  `pacmd load-module module-null-sink sink_name=MySink && pacmd update-sink-proplist MySink device.description=MySink`
+
+(*) Change the default sink (output) to 1: `pactl set-default-sink 1`
+(*) List all sinks and sources with their corresponding IDs: `pamixer --list-sinks --list-sources`
+(*) List all sources: `LANG=C pactl list | grep -A2 'Source #' | grep 'Name: ' | cut -d" " -f2`
+(*) List all sinks: `pactl list sinks short`
+(*) Create a sink: `pacmd load-module module-null-sink sink_name=MySink && pacmd update-sink-proplist MySink device.description=MySink`
+
+{{{sh
+SOURCE=$(pactl list | grep -A2 'Source #' | grep 'Name: ' | cut -d" " -f2 | fzf --prompt="Select source >")
+SINK=$(pactl list | grep -A2 'Sink #' | grep 'Name: ' | cut -d" " -f2 | fzf --prompt="Select sink >")
+PULSE_SOURCE="$SOURCE" PULSE_SINK="$SINK" ffplay "https://holiday.stream.publicradio.org/holiday_yc.aac"
+}}}
+
+Bluetooth
+=========
+
+So much to do here - probably - skip this unless you know what you're doing.
+
+- On Arch Linux, install packages `bluez`, `bluez-utils`, and recommended `pulseaudio-bluetooth`
+- Enable bluetooth with `systemctl enable --now bluetooth`
+- `bluetoothctl`
+	* `power on`
+	* `agent on`
+	* `default-agent`
+	* `scan on`
+	* `pair <TAB>`
+	* `connect <TAB>`
+
+TIPS::
+* `org.bluez.Error.Failed` error
+	- *Make sure your device is ON, accepting BLUETOOTH connections, and/or PAIRING*
+	- Is `bluetooth.service` running?
+	- Check out logs `systemctl status bluetooth`
+	- Restart pulseaudio: `pulseaudio -k`, then try connecting again
+* By default, bluetooth power is not on. Change this: https://wiki.archlinux.org/index.php/bluetooth#Auto_power-on_after_boot
+* To automate bluetoothctl commands, use `echo -e "<command1>\n<command2>\n" | bluetoothctl`
+
+Printing
+========
+
+Again, lots to do. Reader beware.
+
+- `pacman -S cups cups-pdf gutenprint system-config-printer`
+- `systemctl enable --now cups` (reboot may be necessary regardless)
+- `system-config-printer`
+- Google search for the PPD file and add it manually
+	- e.g. https://www.openprinting.org/printer/Ricoh/Ricoh-SP_C440DN
+
+* https://gist.github.com/edoz90/660a2a67b9bc8a815ba537530137636a
+* https://www.openprinting.org/printer/Ricoh/Ricoh-MP_9003
+* https://wiki.linuxfoundation.org/openprinting/database/cupsdocumentation
+* https://wiki.archlinux.org/index.php/CUPS#Printer_Drivers
+
+http://localhost:631 is the CUPS web interface.
+
+Helpful commands:
+`lpstat -s` to view the status of known printers
+`lpoptions -l` to list all known options
+`lpoptions -d Ricoh-SP-C440DN` to list printing options for Ricoh
+`lpr -P Ricoh-SP-C440DN <file>` to print <file> to Ricoh
+
+More:
+https://wiki.archlinux.org/index.php/CUPS#CLI_tools
 
 Hashes, Passwords, Encryption, and Secrets
 ==========================================
 
-(*) Compute and check MD5 message digest: `md5sum -c filename.md5`
+SSH - OpenSSH (thanks, puffy!)
+------------------------------
+
 (*) Generate a SSH key: `ssh-keygen`
 (*) Add a key to SSH agent: `eval "$(ssh-agent -s) ` and `ssh-add ~/.ssh/NAMEOFYOURKEY`
 (*) Copy `~/.ssh/id_rsa.pub` to remote-server.org: `$ ssh-copy-id -i ~/.ssh/is_rsa.pub username@remote-server.org`
 (*) Specify the port that SSH should use: `$ ssh-copy-id -i ~/.ssh/id_ed25519.pub -p 221 username@remote-server.org`
-(*) SSH security (make sure you can login using your key first!) `/etc/ssh/sshd_config`: `PasswordAuthentication no` and `PermitRootLogin no`
 (*) Use a specific key to copy a file: `scp -i ~/.ssh/private_key local_file remote_host:/path/remote_file`
 
+SSH security (make sure you can login using your key first!) `/etc/ssh/sshd_config`:
+    `PasswordAuthentication no` and `PermitRootLogin no`
+
+Password Store
+--------------
+
+(*) Initiate a password-store (requires gpg key): `pass init <same-email-as-full-gen-key>`
 (*) Allow git to manage the password-store: `pass git init`
 (*) Insert a new password for somecompany: `pass insert somecompany`
 (*) Show a password for somecompany: `pass somecompany`
@@ -257,6 +330,55 @@ Hashes, Passwords, Encryption, and Secrets
 (*) find existing passwords that match "company": `pass find *company*`
 (*) Add additional info to a password (add info separate lines): `pass edit somecompany`
 
+TODO: how do we move the store safely? bring keys? can we remotely access the store and have some security still?
+
+Passwords and Secrets
+---------------------
+
+Don't even bother - there's too much security risk here.
+I have this here for my own notes.
+Figure these things out slowly and carefully on your system.
+
+1. Install `gnupg`, `pass`, `pam-gnupg`.
+2. Import your gpg keys or generate a full key pair: `gpg --full-gen-key`
+3. Use a pre-existing `$PASSWORD_STORE_DIR`, or:
+	Initiate a password-store: `pass init <same-email-as-full-gen-key>`
+4. Set the `$GNUPGHOME` variable (`~/.local/share/gnupg` is used here)
+
+To import keys:
+* (elsewhere) `gpg --list-secret-keys user@example.com`
+* (elsewhere) `gpg --export-secret-keys user@example.com > private.key`
+* (new location) `gpg --import private.key`
+* (new location) To allow the key trust:
+	- enter gpg console with `gpg --edit-key GPGKEY`
+	- type `trust`
+* Use `shred -uz` (careful!) to destroy the private key in the old location
+
+Unlocking keyrings (convenience vs. security)
+---------------------------------------------
+
+This activates `sudopass` to allow `w!!` in vim, and `neomutt` syncing with `isync`
+	1. Transfer gnupg keys to new machine or create a new one `gpg --full-key-gen`
+	2. Initialize a password store `pass init EMAIL`
+	3. Add your sudo password with `pass add local/USER@HOSTNAME`
+	4. Because my gnupg lives elsewhere,
+		- Need `~/.pam_environment` with:
+			GNUPGHOME DEFAULT=@{HOME}/.local/share/gnupg
+			XDG_CONFIG_HOME DEFAULT=@{HOME}/.config
+	5. Install `pam-gnupg` (AUR / github) and` inetutils` (enable `hostname`)
+	6. Add `auth optional pam_gnupg.so` to `/etc/pam.d/system-local-login`
+		(see https://github.com/cruegge/pam-gnupg#setup-guide if you are using a login manager)
+	7. Add keygrip from `gpg -K --with-keygrip` to `~/.config/pam-gnupg`
+	   (`gpg -K --with-keygrip | tail -n2 | grep -Po "(?<=Keygrip = ).*" >> ~/.config/pam-gnupg`)
+
+	NOTE: GnuPG may complain about unsafe permissions on gnupg directory:
+	  	- Files in `gnupg` should be `600` and directories `700` (use `chmod`)
+		- `find -type f $GNUPGHOME -exec chmod 600 {}`
+
+
+GPG - GnuPG
+-----------
+
 (*) Sign `doc.txt` without encryption (writes output to `doc.txt.asc`): `gpg --clearsign doc.txt`
 (*) Encrypt `doc.txt` for alice@example.com (output to `doc.txt.gpg`): `gpg --encrypt --recipient alice@example.com doc.txt`
 (*) Encrypt `doc.txt` with only a passphrase (output to `doc.txt.gpg`): `gpg --symmetric doc.txt`
@@ -265,10 +387,15 @@ Hashes, Passwords, Encryption, and Secrets
 (*) Export public key for alice@example.com (output to stdout): `gpg --export --armor alice@example.com`
 (*) Export private key for alice@example.com (output to stdout): `gpg --export-secret-keys --armor alice@example.com`
 (*) Make an encrypted archive of local dir/ on remote machine using ssh: `tar -c dir/ | gzip | gpg -c | ssh user@remote 'dd of=dir.tar.gz.gpg'`
-(*) Encrypt a file using OpenSSL: `openssl aes-256-cbc -a -salt -iter 5 -in data.tar.gz -out data.enc`
-(*) Decrypt a file using OpenSSL: `openssl aes-256-cbc -d -a -iter 5 -in data.enc -out data_decrypted.tar.gz`
 (*) Encrypted archive with openssl and tar: `tar --create --file - --posix --gzip -- <dir> | openssl enc -e -aes256 -out <file>`
 
+(*) Compute and check MD5 message digest: `md5sum -c filename.md5`
+
+OpenSSL
+-------
+
+(*) Encrypt a file using OpenSSL: `openssl aes-256-cbc -a -salt -iter 5 -in data.tar.gz -out data.enc`
+(*) Decrypt a file using OpenSSL: `openssl aes-256-cbc -d -a -iter 5 -in data.enc -out data_decrypted.tar.gz`
 (*) List SAN domains for a certificate: `echo | openssl s_client -connect google.com:443 2>&1 | openssl x509 -noout -text |  awk -F, -v OFS="\n" '/DNS:/{x=gsub(/ *DNS:/, ""); $1=$1; print $0}'`
 (*) Download certificate from FTP: `echo | openssl s_client -servername ftp.domain.com -connect ftp.domain.com:21 -starttls ftp 2>/dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'`
 (*) Download certificate chain from FTP: `echo | openssl s_client -showcerts -connect ftp.domain.com:ftp -starttls ftp 2>/dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p'`
@@ -458,11 +585,61 @@ Android ADB and Droidcam
 (*) Open application: `adb shell monkey -p com.dev47apps.droidcamx 1`
 (*) Send on/off key press (activates screen): `adb shell input keyevent 26`
 
+You want to be able to combine an audio and microphone sink to share while live streaming: https://www.reddit.com/r/archlinux/comments/klmyec/how_to_play_audio_files_as_input/ghaclhs?utm_source=share&utm_medium=web2x&context=3
+
 (*) List all sinks (or other types - sinks are outputs and sink-inputs are active audio streams): `pactl list sinks short`
 (*) Change the default sink (output) to 1 (the number can be retrieved via the `list` subcommand): `pactl set-default-sink 1`
 (*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
 (*) Set the volume of sink 1 to 75%: `pactl set-sink-volume 1 0.75`
 (*) Toggle mute on the default sink (using the special name `@DEFAULT_SINK@`): `pactl set-sink-mute @DEFAULT_SINK@ toggle`
+
+Droidcam - DroidcamX
+--------------------
+
+Home security, using your phone as a camera, what's not to love?
+DroidcamX is worth the $5 or whatever - it's really good.
+
+ADB setup
+---------
+  * (Phone) Install `Droidcam` app - `DroidcamX` is a way better alternative (not free)
+  * (Phone) Enable USB debugging (research this for your phone)
+  * Install linux headers (e.g. `linux-headers-lts` for the lts kernel, etc.)
+  * Install `adb` and `droidcam` packages (installs `v4l2loopback-dc-dkms`)
+  * Create a video loopback device `sudo modprobe v4l2loopback_dc video_nr=42`
+  * Optional? Start adb, `adb start-server`
+  * (Phone) confirm connection (a dialog box should open)
+  * Confirm connection to phone, `adb devices`
+
+Droidcam video only (over USB)
+------------------------------
+  1. `droidcam-cli -v adb 4747 &` or `droidcam`
+
+Droidcam with video and microphone
+----------------------------------
+  1. Load `droidcam` on phone and then on computer
+  2. Create a pulse-alsa loopback device: `pacmd load-module module-alsa-source device=hw:Loopback,1,0`
+  3. Run `pactl list short sources` to verify the ID of the loopback device (used in ffmpeg recording)
+  4. Use `pavucontrol` to verify that the phone microphone is active
+
+Viewing the feed
+----------------
+  * `ffplay /dev/videoX` - replace X with your device
+  * Flipped video: `ffplay -vf "vflip,hflip" /dev/video0`
+
+Increase the resolution available to droidcam
+---------------------------------------------
+  * `sudo rmmod v4l2loopback_dc`
+  * `sudo insmod /lib/modules/`uname -r`/kernel/extramodules/v4l2loopback-dc.ko width=1920 height=1080`
+  Restart the droidcam client to reload the settings, and test it out. You can keep changing the resolution.
+  Edit the text file /etc/modprobe.d/droidcam.conf with the new options to make the change stick.
+
+  Example:
+  `/etc/modprobe.d/droidcam.conf`
+  options v4l2loopback_dc width=1920 height=1080
+  options snd-aloop index=0
+
+  It’s also possible to invert the video size (eg. 480×640, width=480 height=640), which will make the webcam vertical and rotate the video 90º.
+  Not all programs may load the webcam with inverted parameters (eg. Discord does not) but many do (eg. Zoom and OBS).
 
 Image Magick
 ============
@@ -476,6 +653,13 @@ Image Magick
 (*) Convert all images in directory to 25% of original size and put all converted images into subdirectory: `mogrify -scale 25% -path ./thumbs *.*`
 (*) Crop an image: `convert image.png -crop 200x300+20+20 cropped.png`
 (*) Calculate a hash of image data (ImageMagick): `identify -quiet -format "%#" "./path/to/file"`
+(*) stdout text to image: `convert -background lightblue -fill blue -font DejaVu-Sans-Mono-Book -pointsize 72 label:@- cal.gif <<< $(cal)`
+(*) Combine `cal` calendar output with an image: `convert -font DejaVu-Sans-Mono-Book -fill '#0008' -draw 'rectangle 200,180,960,680' -fill white -pointsize 50 -draw "text 270,260 \" `cal` \"" bg.png bgcal.png`
+
+    - (optional) make canvas bigger to ensure proper filling; in this case assumption is background is white:
+      	`convert original.png -gravity Center -extent 110%x110% original_grown.png`
+    - Add the mask
+      	`magick master.JPG -fuzz 5% -bordercolor white -border 1 -fill none -draw "alpha 0,0 floodfill" -shave 1x1 result.png`
 
 Exiftool
 ========
@@ -492,41 +676,127 @@ Exiftool
 FFmpeg (simple)
 =====================
 
-(*) A good x264 read: `x264 --fullhelp`
-(*) Convert a video using CRF (constant rate factor; 0 is lossless, 24 is good, 40 is painful but passable) `ffmpeg -i input.mp4 -vcodec libx265 -crf 28 output.mp4`
+A good x264 read: `x264 --fullhelp`
+
+(*) Convert a video using CRF (lower = better): `ffmpeg -i input.mp4 -vcodec libx265 -crf 28 output.mp4`
 (*) Convert video for max compatibility and web viewing (2019): `ffmpeg -i final3.mp4 -c:v libx264 -crf 40 -profile:v baseline -level 3.0 -pix_fmt yuv420p -movflags faststart final3_264.mp4`
 (*) Clip a video starting at 35 min 10 sec to 37 min 29 sec: `ffmpeg -ss 00:35:10 -i original.mp4 -to 00:37:29 -c copy out.mp4`
 (*) Clip a video starting at 35 min 10 sec, 1 min 34 sec duration: `ffmpeg -ss 00:35:10.0 -i input.wmv -t 00:01:34 -c copy output.wmv`
+(*) 0 = 90° CounterClockwise and Vertical Flip (default): `ffmpeg -i in.mov -vf "transpose=0" out.mov`
+(*) 1 = 90° Clockwise: `ffmpeg -i in.mov -vf "transpose=1" out.mov`
+(*) 2 = 90° CounterClockwise: `ffmpeg -i in.mov -vf "transpose=2" out.mov`
+(*) 3 = 90° Clockwise and Vertical Flip: `ffmpeg -i in.mov -vf "transpose=3" out.mov`
 (*) Flip a video horizontally (this way: <->): `ffmpeg -i original.mp4 -vf hflip original_flipped.mp4`
+(*) Combine multiple images into a video using ffmpeg: `ffmpeg -start_number 0053 -r 1/5 -i IMG_%04d.JPG -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4`
+(*) Inset video. `ffmpeg -i main.mp4 -i inset.mp4 -filter_complex 'overlay=main_w-overlay_w+(1920-192*2.5):main_h-overlay_h+(1080-108*2.5)' -t 5 output.mp4`
+(*) Cover the main video with a transparent color: `ffmpeg -i lights.mp4 -vf 'color=color=red@.3:size=1920x1080 [over]; [in][over] overlay [out]' -t 5 output.mp4`
+(*) ffmpeg fade from video 1 to video 2 (start at 20 seconds for 2 sec): `ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex "xfade=offset=20:duration=2" v1_to_v2.mp4`
+
+FFMPEG transition effects:
+  'custom' 'fade' 'wipeleft' 'wiperight' 'wipeup' 'wipedown' 'slideleft' 'slideright' 'slideup'
+  'slidedown' 'circlecrop' 'rectcrop' 'distance' 'fadeblack' 'fadewhite' 'radial'
+  'smoothleft' 'smoothright' 'smoothup' 'smoothdown' 'circleopen' 'circleclose'
+  'vertopen' 'vertclose' 'horzopen' 'horzclose' 'dissolve' 'pixelize' 'diagtl'
+  'diagtr' 'diagbl' 'diagbr' 'hlslice' 'hrslice' 'vuslice' 'vdslice' 'hblur'
+  'fadegrays' 'wipetl' 'wipetr' 'wipebl' 'wipebr' 'squeezeh' 'squeezev'
+
 (*) Stabilize a video: `ffmpeg -i video.mp4 -vf vidstabtransform=smoothing=30 video_stab.mp4`
-(*) Extract ALL frames from a video: `ffmpeg -i file.mpg $filename%03d.bmp`
 (*) Extract frames from a video: `ffmpeg -i file.mpg -r 1/1 $filename%03d.bmp`
 (*) Lossless conversion of a movie to mkv, adding cover art: `ffmpeg -i in.mkv -i cover.jpg -map 0 -map 1 -c copy -c:v:1 png -disposition:v:1 attached_pic -sameq out.mkv`
 (*) Video to gif (start at 30 seconds, 3 sec duration): `ffmpeg -ss 30 -t 3 -i VIDEO.mp4 -vf "fps=10,scale=320:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" -loop 0 OUTPUT.gif`
 (*) Output keyframes from all source files: `ffmpeg -skip_frame nokey -i *.mp4 -vsync 0 -r 30 -f image2 t%02d.tiff`
 (*) Run ffmpeg in the bg and divert messages: `ffmpeg -nostdin example.mkv &> log.txt &`
 
-(*) Combine multiple images into a video using ffmpeg: `ffmpeg -start_number 0053 -r 1/5 -i IMG_%04d.JPG -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4`
+(*) Write file and also play it (audio only): `ffmpeg -i "https://chillout.zone/chillout_plus" -map 0 -c:a copy -f tee "output.flac|[f=nut]pipe:" | ffplay pipe:`
+(*) Write file and also play it (video + audio): `ffmpeg -f v4l2 -i /dev/video0 -map 0 -c:v libx264 -f tee "output.mp4|[f=nut]pipe:" | ffplay pipe:`
+(*) Screen capture with mic input (ALSA): `ffmpeg -f x11grab -s 1440x900 -i :0.0 -f alsa -i hw:0 out.mkv`
 
-Concatenate two or more videos read from a file:
-`$ cat mylist.txt`
-   file '/path/to/file1'
-   file '/path/to/file2'
-   file '/path/to/file3'
-`ffmpeg -f concat -safe 0 -i mylist.txt -c copy output.mp4`
+Noise-reducing pre-built models
+-------------------------------
 
-Noise-reducing pre-built models:
-Reduce background noise:
-https://superuser.com/questions/733061/reduce-background-noise-and-optimize-the-speech-from-an-audio-clip-using-ffmpeg
+Reduce background noise: https://superuser.com/questions/733061/reduce-background-noise-and-optimize-the-speech-from-an-audio-clip-using-ffmpeg
 
 (*) Use a highpass/lowpass filter (e.g. to enhance speech): `ffmpeg -i <nput_file> -af "highpass=f=200, lowpass=f=3000" <output_file>`
 (*) Use RNNoise-Models to enhance speech-based audio ( https://github.com/GregorR/rnnoise-models ): `ffmpeg -i input.mp4 -af "arnndn=m=bd.rnnn" -c:v copy denoised.mp4`
 (*) Volume boost: `ffmpeg -i denoised.mp4 -af "volume=4" -c:v copy boosted.mp4`
 
+Concatenate two or more videos read from a file:
+------------------------------------------------
+`cat mylist.txt`
+   file '/path/to/file1'
+   file '/path/to/file2'
+   file '/path/to/file3'
+
+`ffmpeg -f concat -safe 0 -i mylist.txt -c copy output.mp4`
+
+More complex tasks with ffmpeg
+==============================
+
+{{{sh
+ffmpeg -i 1.mp4 -i 2.mp4 -an \
+-filter_complex \
+"   [0:v]trim=start=0:end=13.47,setpts=PTS-STARTPTS[firstclip];
+    [1:v]trim=start=1,setpts=PTS-STARTPTS[secondclip];
+    [0:v]trim=start=13.47:end=14.47,setpts=PTS-STARTPTS[fadeoutsrc];
+    [1:v]trim=start=0:end=1,setpts=PTS-STARTPTS[fadeinsrc];
+    [fadeinsrc]format=pix_fmts=yuva420p,
+                fade=t=in:st=0:d=1:alpha=1[fadein];
+    [fadeoutsrc]format=pix_fmts=yuva420p,
+                fade=t=out:st=0:d=1:alpha=1[fadeout];
+    [fadein]fifo[fadeinfifo];
+    [fadeout]fifo[fadeoutfifo];
+    [fadeoutfifo][fadeinfifo]overlay[crossfade];
+    [firstclip][crossfade][secondclip]concat=n=3[output];
+    [0:a][1:a] acrossfade=d=1 [audio]
+" \
+-map "[output]" -map "[audio]" result.mp4
+}}}
+
+(*) 0 = 90° CounterClockwise and Vertical Flip (default): `ffmpeg -i in.mov -vf "transpose=0" out.mov`
+(*) 1 = 90° Clockwise: `ffmpeg -i in.mov -vf "transpose=1" out.mov`
+(*) 2 = 90° CounterClockwise: `ffmpeg -i in.mov -vf "transpose=0" out.mov`
+(*) 3 = 90° Clockwise and Vertical Flip: `ffmpeg -i in.mov -vf "transpose=0" out.mov`
+
+
+Create a video mosaic of multiple videos
+----------------------------------------
+{{{sh
+ffmpeg \
+   -i ./20201112_090258.mp4 \
+   -i ./20201112_093103.mp4 \
+   -i ./20201112_093142.mp4 \
+   -i ./20201112_095845.mp4 \
+   -i ./20201112_101033.mp4 \
+   -i ./20201112_112423.mp4 \
+   -i ./20201112_120200.mp4 \
+   -i ./20201112_140711.mp4 \
+   -i ./20201112_141343.mp4 \
+  -filter_complex " \
+      [0:v] setpts=PTS-STARTPTS, scale=qvga [a0]; \
+      [1:v] setpts=PTS-STARTPTS, scale=qvga [a1]; \
+      [2:v] setpts=PTS-STARTPTS, scale=qvga [a2]; \
+      [3:v] setpts=PTS-STARTPTS, scale=qvga [a3]; \
+      [4:v] setpts=PTS-STARTPTS, scale=qvga [a4]; \
+      [5:v] setpts=PTS-STARTPTS, scale=qvga [a5]; \
+      [6:v] setpts=PTS-STARTPTS, scale=qvga [a6]; \
+      [7:v] setpts=PTS-STARTPTS, scale=qvga [a7]; \
+      [8:v] setpts=PTS-STARTPTS, scale=qvga [a8]; \
+      [a0][a1][a2][a3][a4][a5][a6][a7][a8]xstack=inputs=9:layout=0_0|w0_0|w0+w1_0|0_h0|w0_h0|w0+w1_h0|0_h0+h1|w0_h0+h1|w0+w1_h0+h1[out] \
+      " \
+    -map "[out]" \
+    -c:v libx264 -t '30' -f matroska -  | ffplay -autoexit -left 30 -top 30 -
+}}}
+
 Live video, downloading video, and ffmpeg streaming
 ===================================================
 
-Loop stream a video on the local network (only tested on Windows):
+(*) Get stream URIs with youtube-dl: `youtube-dl -g "URL"`
+(*) Grab a video with youtube-dl but limit the size of the video to 1920x?: `youtube-dl -f 'bestvideo[width<=1920]+bestaudio' $URI`
+(*) Grab audio only with youtube-dl: `youtube-dl -f bestaudio --add-metadata --extract-audio --audio-format mp3 --audio-quality 0 <Video-URL>`
+
+Loop stream a video on the local network
+----------------------------------------
+Only tested on Windows, `mpv udp://localhost:1234` plays it, as an example:
 {{{sh
   ffmpeg
   -stream_loop -1 -i .\campfire.mkv
@@ -534,38 +804,34 @@ Loop stream a video on the local network (only tested on Windows):
   -tune zerolatency -b 900k -f mpegts
   udp://localhost:1234
 }}}
-  (`mpv udp://localhost:1234` plays it, as an example.)
 
-(*) Get stream URIs with youtube-dl: `youtube-dl -g "URL"`
-(*) Grab a video with youtube-dl but limit the size of the video to 1920x?: `youtube-dl -f 'bestvideo[width<=1920]+bestaudio' $URI`
-(*) Grab audio only with youtube-dl: `youtube-dl -f bestaudio --add-metadata --extract-audio --audio-format mp3 --audio-quality 0 <Video-URL>`
-
-(*) Write file and also play it (audio only): `ffmpeg -i "https://chillout.zone/chillout_plus" -map 0 -c:a copy -f tee "output.flac|[f=nut]pipe:" | ffplay pipe:`
-(*) Write file and also play it (video + audio): `ffmpeg -f v4l2 -i /dev/video0 -map 0 -c:v libx264 -f tee "output.mp4|[f=nut]pipe:" | ffplay pipe:`
-(*) Screen capture with mic input (ALSA): `ffmpeg -f x11grab -s 1440x900 -i :0.0 -f alsa -i hw:0 out.mkv`
-
-Youtube streaming (replace $FPS with 24 or the like):
+NOTE: Youtube requires both a video and audio component to be able to stream!
+Youtube streaming a video source (must have audio)
+--------------------------------------------------
 {{{sh
-FPS=24 && ffmpeg \
+KEY="your-key-goes-here" && FPS=24 && ffmpeg \
 	-stream_loop -1 \
 	-re -i "VIDEO_SOURCE" \
-	-c:v libx264 -pix_fmt yuv420p -preset superfast -r $FPS -g $(($FPS * 2)) -b:v 1500k \
-	-c:a aac \
-	-f flv "YOUTUBE_URL/KEY"
+	-c:v libx264 -pix_fmt yuv420p -preset superfast \
+	-r $FPS -g $(($FPS * 2)) \
+	-b:v 1500k -c:a aac \
+	-f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"
 }}}
 
-Another one:
+Another one (webcam + mic, Windoze dshow example)
+-------------------------------------------------
 {{{sh
-ffmpeg \
+KEY="your-key-goes-here" && ffmpeg \
 	-stream_loop -1 -re \
 	-f dshow -rtbufsize 100M -i video="Integrated Camera" \
 	-f dshow -i audio="Microphone Array (Realtek(R) Audio)" \
 	-c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 \
 	-b:v 1500k -c:a aac \
-	-f flv "rtmp://a.rtmp.youtube.com/live2/rejs-op2w-xs6h-qpp9-4k4x"
+	-f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"
 }}}
 
-Screen capture, capture default audio out:
+Capture main screen (:0) and the default Pulse Audio sink
+---------------------------------------------------------
 {{{sh
 ffmpeg \
   -video_size 1366x768 \
@@ -576,39 +842,25 @@ ffmpeg \
   -c:a libopus output.mkv
 }}}
 
-Another good screen capture oneliner:
+Create an awesome fireplace, classical music combo!
+---------------------------------------------------
 
 {{{sh
-ffmpeg -framerate 60 \
-	-f x11grab -thread_queue_size 1024 -i :0.0 \
-	-f pulse -ac 2 -i default \
-	-c:v libx264rgb \
-	-c:a libopus -crf 0 -preset ultrafast -b:a 160k \
-	output.mkv
+FIRE_V="$(youtube-dl -f 137 -g http://www.youtube.com/watch?v=-wKiNZ-u-HAs)" && \
+FIRE_A="$(youtube-dl -f 251 -g http://www.youtube.com/watch?v=-wKiNZ-u-HAs)" && \
+AUDIO="https://holiday.stream.publicradio.org/holiday_yc.aac" && \
+ffmpeg \
+	-i "$FIRE_V" \
+	-i "$FIRE_A" \
+	-i "$AUDIO" \
+	-filter_complex "[1:a][2:a]amerge=inputs=2[a]" \
+	-map "[a]" -map 0:v:0
+	-c:a aac -c:v copy \
+	-f matroska - | ffplay -
 }}}
 
-Screen capture again. I'm not sure what this one was (webcam inset, desktop capture?)
-{{{sh
-ffmpeg -f x11grab -thread_queue_size 64 -video_size 1920x1080 -framerate 30 -i :1 \
-       #-f v4l2 -thread_queue_size 64 -video_size 320x180 -framerate 30 -i /dev/video42 \
-       -filter_complex 'overlay=main_w-overlay_w:main_h-overlay_h:format=yuv444' \
-       -vcodec libx264 -preset ultrafast -qp 0 -pix_fmt yuv444p \
-       video.mkv
-}}}
-
-(*) ffmpeg fade from video 1 to video 2 (start at 20 seconds for 2 sec): `ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex "xfade=offset=20:duration=2" v1_to_v2.mp4`
-
-FFMPEG transition effects:
-‘custom’ ‘fade’ ‘wipeleft’ ‘wiperight’ ‘wipeup’ ‘wipedown’ ‘slideleft’ ‘slideright’ ‘slideup’
-‘slidedown’ ‘circlecrop’ ‘rectcrop’ ‘distance’ ‘fadeblack’ ‘fadewhite’ ‘radial’
-‘smoothleft’ ‘smoothright’ ‘smoothup’ ‘smoothdown’ ‘circleopen’ ‘circleclose’
-‘vertopen’ ‘vertclose’ ‘horzopen’ ‘horzclose’ ‘dissolve’ ‘pixelize’ ‘diagtl’
-‘diagtr’ ‘diagbl’ ‘diagbr’ ‘hlslice’ ‘hrslice’ ‘vuslice’ ‘vdslice’ ‘hblur’
-‘fadegrays’ ‘wipetl’ ‘wipetr’ ‘wipebl’ ‘wipebr’ ‘squeezeh’ ‘squeezev’
-
-(*) Inset video. This will set lights.mp4 as the main video with street.mp4 an inset video in the lower right corner: `ffmpeg -i lights.mp4 -i street.mp4 -filter_complex 'overlay=main_w-overlay_w+(1920-192*2.5):main_h-overlay_h+(1080-108*2.5)' -t 5 output.mp4`
-
-Combine a video and an audio stream simultaneously:
+Combine a video and an audio stream simultaneously
+--------------------------------------------------
 {{{sh
 ffmpeg \
 	-i "https://ycradio.stream.publicradio.org/ycradio.aac" \
@@ -618,7 +870,8 @@ ffmpeg \
 	-f matroska out.mkv
 }}}
 
-Play a video that contains audio, MERGE with an audio stream:
+Play a video that contains audio, MERGE with an audio stream
+------------------------------------------------------------
 {{{sh
 ffmpeg \
 	-i "https://hygge.stream.publicradio.org/hygge.aac" \
@@ -631,7 +884,8 @@ ffmpeg \
 	-f matroska - | ffplay -
 }}}
 
-Visual spectrograph of an audio stream:
+Visual spectrograph of an audio stream
+--------------------------------------
 {{{sh
 ffmpeg -i "https://nightride.fm/stream/nightride.m4a" \
 	-filter_complex "[0:a]avectorscope=s=480x480:zoom=1.5:rc=0:gc=200:bc=0:rf=0:gf=40:bf=0,format=yuv420p[v]; [v]pad=854:480:187:0[out]" \
@@ -641,10 +895,13 @@ ffmpeg -i "https://nightride.fm/stream/nightride.m4a" \
 	- | ffplay -
 }}}
 
-ffmpeg and Windows
-==================
+(*) Sliding overlay (does it work?): `ffmpeg -i lights.mp4 -i street.mp4 -filter_complex "overlay=x='if(gte(t,2), -w+(t-2)*20, NAN)" -t 10 output.mp4`
+
+ffmpeg and Windoze
+------------------
 
 `gdigrab` works out of the box but better alternatives exist: https://trac.ffmpeg.org/wiki/Capture/Desktop#Windows
+
 (*) (Windows) Get names of devices for commands below: `ffmpeg -list_devices true -f dshow -i dummy`
 (*) (Windows) Play borderless webcam (mpv): `mpv -border=no -no-osc --ontop av://dshow:video="NAMEOFWEBCAM"`
 (*) (Windows) Play borderless webcam (ffplay): `ffplay -noborder -probesize 32 -sync ext -f dshow -i video="Integrated Camera" -vf scale=320:-1`
@@ -653,12 +910,10 @@ ffmpeg and Windows
 (*) (Windows) Capture a window by window title: `ffmpeg -f gdigrab -framerate 6 -i title=Calculator out.mpg`
 (*) (Windows) Capture desktop using a virtual device (need 3rd party - see trac URL above): `ffmpeg -f dshow -i video="UScreenCapture" -f dshow -i audio="NAMEOFMICROPHONE" output.mkv`
 
-gdigrab only (it's passable)
-
 Borderless (and movable) webcam stream with good latency (no sound)
-1. Get AutoHotkey, and enable WinDrag.ahk ( https://wwwautohotkey.com/boards/viewtopic.php?t=57703 )
-2. List video devices: `ffmpeg -list_devices true -f dshow -i dummy`
-3. Play a borderless stream (see above)
+  1. Get AutoHotkey, and enable WinDrag.ahk ( https://wwwautohotkey.com/boards/viewtopic.php?t=57703 )
+  2. List video devices: `ffmpeg -list_devices true -f dshow -i dummy`
+  3. Play a borderless stream (see above)
 
 Other cool programs and their magic
 ===================================
@@ -689,18 +944,44 @@ Other cool programs and their magic
 Powershell
 ==========
 
-Because sometimes you gotta use the Windoze.
+  Because sometimes you gotta use the Windoze.
 
-Pipe is unusable (https://gitub.com/PowerShell/PowerShell/issues/1908)
-Re-directs sometimes work (<, >, etc.)
-Subshell works (e.g. $(Get-Clipboard) )
+  Pipe is unusable (https://gitub.com/PowerShell/PowerShell/issues/1908)
+  Re-directs sometimes work (<, >, etc.)
+  Subshell works (e.g. $(Get-Clipboard) )
 
-Powershell                          *Nix
---------------------------------------------
-Get-Clipboard                       xclip
-Get-Content OR cat                  cat
-Compare-Object OR diff              diff
-Get-PnpDevice -PresentOnly          lsdev (or, lsusb, etc.)
+  Powershell                          *Nix
+  --------------------------------------------
+  Get-Clipboard                       xclip
+  Get-Content OR cat                  cat
+  Compare-Object OR diff              diff
+  Get-PnpDevice -PresentOnly          lsdev (or, lsusb, etc.)
+
+Vim and Neovim
+==============
+
+  In Neovim, type `:options` to get a list of settings you can tweak in the vimrc
+  Run `:scriptnames` to find out which files Vim actually loaded (debugging vimrc)
+
+  `<C-o>` `<C-i>` replay your jumps forward and back
+  `g;` and `g,` jump to the places where you made changes
+
+  Make the primary clipboard the main one: `set clipboard+=unnamedplus`
+  Open a file browser in your home directory: `:find ~/`
+  The `%` register contains the path to the current file
+  In a Vim helpfile, `<C+]>` opens the topic under the cursor in a new buffer
+  Unicode typing: `<C+v>` followed by code (i.e. `u24ba` which would give Ⓔ)
+  Autocomplete filenames: `<C-x><C-f>`
+  Autocomplete names: `<C-x><C-n>`
+  Run a system command on the current file and display the results: `:!command %`
+  Run a shell command (`sort` as an example) on the current buffer: `:%!sort`
+  If editing a bash script, etc., run the script from Vim with `:!%:p`
+  Run a command on the current buffer and replace the contents with the results: `:%!command`
+  Run a command on the current buffer and paste the results: `:r !command %`
+
+  Save window layout: `:mksession cool.vim` and later load it with `vim -S cool.vim`
+  Open man page for word under the cursor: `<Shift-k>`
+  You really like a colorscheme except for one thing. [How to change that properly in your virmc](https://gist.github.com/romainl/379904f91fa40533175dfaec4c833f2f).
 
 Other guides
 ============
@@ -745,13 +1026,13 @@ QEMU: Run a VM using virt-manager
   * reboot
   * Run `virt-manager`
   * Also necessary for network (unverified!):
-    {{{sh
-    virsh net-autostart default
-    virsh net-start default
-    }}}
+        `virsh net-autostart default`
+        `virsh net-start default`
 
 Run VirtualBox Arch Linux headless on Windows and ssh into it
 -------------------------------------------------------------
+
+  Why? It's like having your own custom WSL.
 
   Create a virtual machine using your preferred settings
 
@@ -779,22 +1060,32 @@ Run a simple X server and connect to it
 Send mail in the command line using msmtp
 -----------------------------------------
 
-  {{{sh
-  printf "To: recipient@somedomain.com\n \
-  From: sender@email.com\n \
-  Subject: Something important\n\n \
-  This is the body of the message" \
-  | msmtp -a account_name recipient@somedomain.com`
-  }}}
+{{{sh
+printf "To: recipient@somedomain.com\n \
+From: sender@email.com\n \
+Subject: Something important\n\n \
+This is the body of the message" \
+| msmtp -a account_name recipient@somedomain.com`
+}}}
 
 (*) Send mail in the command line using neomutt: `neomutt -e 'set content_type="text/html"' user@mail.com -s "subject" < email.html``
+
+Tether computer to mobile Wifi
+------------------------------
+Connect device and turn on usb tethering, and then:
+	- `lsmod | grep usbnet`
+	- `dmesg | grep usb0` (note your interface)
+	- `ifconfig YOUR_INTERFACE_NAME_HERE up`
+	- `dhcpcd interface_name`
 
 New oneliners (thanks commandlinefu)
 ====================================
 
+At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far {0..25} in the command below:
+
 (*) Scrape commandlinefu with: `URL="http://www.commandlinefu.com" && wget -O - --save-cookies c $URL && for i in {0..564};do wget -w 8 --random-wait -O - --load-cookies c $URL/commands/browse/plaintext/$i >> ~/commands.txt ;done;rm -f c`
 
-(*) Recall “N”th command from your BASH history without executing it.: `!12:p`
+(*) Recall Nth command from your BASH history without executing it.: `!12:p`
 (*) Learn the difference between single and double quotes: `a=7; echo $a; echo "$a"; echo '$a'; echo "'$a'"; echo '"$a"'`
 (*) Bash alias to output the current Swatch Internet Time: `alias beats='echo '\''@'\''$(TZ=GMT-1 date +'\''(%-S + %-M * 60 + %-H * 3600) / 86.4'\''|bc)'`
 (*) Start a game on the discrete GPU (hybrid graphics): `alias game='DRI_PRIME=1'`
@@ -994,7 +1285,7 @@ New oneliners (thanks commandlinefu)
 (*) Listen to a song from youtube with youtube-dl and mpv: `listen-to-yt() { if [[ -z "$1" ]]; then echo "Enter a search string!"; else mpv "$(youtube-dl --default-search 'ytsearch1:' \"$1\" --get-url | tail -1)"; fi }`
 (*) Display list of available printers: `lpstat -p`
 (*) Slow Down Command Output: `ls -alt|awk '{if (system("sleep .5 && exit 2") != 2) exit; print}'`
-(*) Listing today’s files only: `ls -al --time-style=+%D| grep `date +%D``
+(*) Listing today's files only: `ls -al --time-style=+%D| grep `date +%D``
 (*) Display information about the CPU: `lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'`
 (*) List current   processes  writing to hard drive: `lsof | grep -e "[[:digit:]]\+w"`
 (*) Find wich ports you probably want to open in your firewall on a fresh installed machine: `lsof -i -nlP | awk '{print $9, $8, $1}' | sed 's/.*://' | sort -u`
@@ -1169,6 +1460,3 @@ New oneliners (thanks commandlinefu)
 (*) Make window transparent (50% opacity) in Gnome shell: `xprop -format _NET_WM_WINDOW_OPACITY 32c -set _NET_WM_WINDOW_OPACITY 0x7FFFFFFF`
 (*) Draw honeycomb: `yes "\\__/ " | tr "\n" " " | fold -$((($COLUMNS-3)/6*6+3)) | head -$LINES`
 (*) Convert JSON to YAML: `yq . -y <example.json`
-
-
-
