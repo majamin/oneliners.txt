@@ -1,8 +1,3 @@
-[[Notes]]
-
-New!
-====
-
 System information commands
 ===========================
 (*) #su Show only errors and warnings: `dmesg --level=err,warn`
