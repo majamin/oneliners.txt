@@ -402,7 +402,7 @@ OpenSSL
 (*) Check SSL expiry from commandline: `echo | openssl s_client -showcerts -servername google.com -connect gnupg.org:443 2>/dev/null | openssl x509 -inform pem -noout -text`
 (*) SHA256 signature sum check of file: `openssl dgst -sha256  <FILENAME>`
 (*) Generate a random password 30 characters long: `openssl rand -rand /dev/urandom -base64 30`
-(*) Openssl Generate Self Signed SSL Certifcate: `openssl req -newkey rsa:2048 -nodes -keyout /etc/ssl/private/myblog.key -x509 -days 365 -out /etc/ssl/private/myblog.pem`
+(*) Openssl Generate Self Signed SSL Certificate: `openssl req -newkey rsa:2048 -nodes -keyout /etc/ssl/private/myblog.key -x509 -days 365 -out /etc/ssl/private/myblog.pem`
 (*) Generate a certificate signing request (CSR) for an existing private key. CSR.csr MUST be exists before: `openssl req -out CSR.csr -key privateKey.key -new`
 (*) Generate a new private key and Certificate Signing Request. CSR.csr MUST be extist before !: `openssl req -out CSR.csr -new -newkey rsa:2048 -nodes -keyout privateKey.key`
 (*) Generate pem cert from host with ssl port: `openssl s_client -connect HOSTNAME.at:443 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM > meinzertifikat.pem`
@@ -490,7 +490,7 @@ Parallel host scan group sizes: `50; 1024`
 Probe parallelization: `10; 1`
 Adjust delay between probes: `20ms; 2s; 4m; 5h`
 Specify the maximum number of port scan probe retransmissions
-Send packets no slower than <numberr> per second
+Send packets no slower than <number> per second
 Send packets no faster than <number> per second
 
 NSE Scripts
@@ -649,7 +649,7 @@ Image Magick
 (*) "Diff" two images (first shows the result as a PNG, second as a PDF): `compare image1 image2 -compose src diff.png`
 (*) Changing all JPGs to a width of 120px and save as PNG: `magick '*.jpg' -resize 120x thumbnail%03d.png`
 (*) Extract text from an image (requires `tesseract`): `convert -colorspace gray -fill white -resize 480% -sharpen 0x1 in.png out.jpg && tesseract out.jpg out.txt`
-(*) Replace transperancy with white background: `convert -flatten img1.png img1-white.png`
+(*) Replace transparency with white background: `convert -flatten img1.png img1-white.png`
 (*) Convert all images in directory to 25% of original size and put all converted images into subdirectory: `mogrify -scale 25% -path ./thumbs *.*`
 (*) Crop an image: `convert image.png -crop 200x300+20+20 cropped.png`
 (*) Calculate a hash of image data (ImageMagick): `identify -quiet -format "%#" "./path/to/file"`
@@ -1225,7 +1225,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Download all default installed apk files from your android.: `for i in $(adb shell pm list packages | awk -F':' '{print $2}'); do adb pull "$(adb shell pm path $i | awk -F':' '{print $2}')"; mv *.apk $i.apk 2&> /dev/null ;done`
 (*) Shell bash iterate number range with for loop: `for i in $(seq 1 5) ; do echo $i ; done`
 (*) Shell bash iterate number range with for loop: `for i in {1..10}; do echo $i; done`
-(*) Quickly ping range of IP adresses and return only those that are online: `{ for i in {1..254}; do ping -c 1 -W 1  192.168.1.$i & done } | grep "64 bytes"`
+(*) Quickly ping range of IP addresses and return only those that are online: `{ for i in {1..254}; do ping -c 1 -W 1  192.168.1.$i & done } | grep "64 bytes"`
 (*) Scan all open ports without any required program: `for i in {1..65535}; do (echo < /dev/tcp/127.0.0.1/$i) &>/dev/null && printf "\n[+] Open Port at\n: \t%d\n" "$i" || printf "."; done`
 (*) Download all .key files from your android device to your pc.: `for i in `adb shell "su -c find /data /system -name '*.key'"`; do mkdir -p ".`dirname $i`";adb shell "su -c cat $i" > ".$i";done`
 (*) Convert raw camera image to jpeg: `for i in *.CR2; do ufraw-batch $i --out-type=jpeg --output $i.jpg; done;`
@@ -1303,7 +1303,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Mysql status: `mysqladmin status >> /home/status.txt 2>> /home/status_err.txt`
 (*) InnoDB related parameters: `mysqladmin variables | egrep '(innodb_log_file|innodb_data_file)'`
 (*) Mysql backup utility: `mysqlbackup --port=3306 --protocol=tcp --user=dba --password=dba  --with-timestamp  --backup-dir=/tmp/toback/ --slave-info backup-and-apply-log  --innodb_data_file_path=ibdata1:10M:autoextend --innodb_log_files_in_group=2 --innodb_log_file_size=5242880`
-(*) Reapair all mySQL/mariaDB databases: `mysqlcheck --repair --all-databases -u root -p<PASSWORD>`
+(*) Repair all mySQL/mariaDB databases: `mysqlcheck --repair --all-databases -u root -p<PASSWORD>`
 (*) Monitor ETA using pv command: `mysqldump --login-path=mypath sbtest sbtest4 |  pv  --progress  --size  200m  -t  -e  -r  -a > dump.sql`
 (*) Backup all data in compressed format: `mysqldump --routines --all-databases | gzip > /home/mydata.sql.gz 2> /home/mydata.date '+\%b\%d'.err`
 (*) Check mysql server performance: `mysqlslap --query=/home/ec2-user/insert.txt --concurrency=123 --iterations=1  --create-schema=test`
@@ -1316,7 +1316,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Nmap fast scan all ports target: `nmap  -p0-65535 192.168.1.254 -T5`
 (*) Network Discover in a one liner: `nmap -sn 192.168.1.0/24 -oG - | awk '$4=="Status:" && $5=="Up" {print $0}'|column -t`
 (*) Display live hosts on the network: `nmap -sP "$(ip -4 -o route get 1 | cut -d ' ' -f 7)"/24 | grep report | cut -d ' ' -f 5-`
-(*) Quickly ping range of IP adresses and return only those that are online: `nmap -sP 192.168.0.0/24`
+(*) Quickly ping range of IP addresses and return only those that are online: `nmap -sP 192.168.0.0/24`
 (*) Show a prettified list of nearby wireless APs: `nmcli device wifi list`
 (*) List all global top level modles, then remove ALL npm packages with xargs: `npm ls -gp --depth=0 | awk -F/ '/node_modules/ && !/\/npm$/ {print $NF}' | xargs npm -g rm; npm -g uninstall npm`
 (*) Convert rich text on the clipboard to Markdown in OS X: `osascript -e'get the clipboard as"RTF "'|sed 's/«data RTF //;s/»//'|xxd -r -p|textutil -convert html -stdin -stdout|pandoc -f html -t markdown_strict --no-wrap --atx-headers`
@@ -1345,7 +1345,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Top 10 Memory Processes: `ps aux | sort -rk 4,4 | head -n 10`
 (*) List packages manually installed with process currently running: `ps -eo cmd | awk '{print $1}'| sort -u | grep "^/" | xargs dpkg -S 2>/dev/null | awk -F: '{print $1}' | sort -u | xargs apt-mark showmanual`
 (*) Debug pytest failures in the terminal: `pytest --pdbcls pudb.debugger:Debugger --pdb --capture=no`
-(*) Generrate Cryptographically Secure RANDOM PASSWORD: `python -c "import string; import random;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(16)))"`
+(*) Generate Cryptographically Secure RANDOM PASSWORD: `python -c "import string; import random;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(16)))"`
 (*) Bootstrap python-pip & setuptools: `python -m ensurepip --default-pip && python -m pip install --upgrade pip setuptools wheel`
 (*) Serve current directory tree at http://$HOSTNAME:8000/: `python -m SimpleHTTPServer 8080`
 (*) KDE Console Logout command (with confirmation dialog): `qdbus org.kde.ksmserver /KSMServer logout 1 0 0`
