@@ -1,6 +1,10 @@
+[[Notes]]
+
+New!
+====
+
 System information commands
 ===========================
-
 (*) #su Show only errors and warnings: `dmesg --level=err,warn`
 (*) View dmesg output in human readable format: `dmesg -T`
 (*) Get an audio notification if a new device is attached to your computer: `dmesg -tW -l notice | gawk '{ if ($4 == "Attached") { system("echo New device attached | espeak") } }`
@@ -11,6 +15,7 @@ System information commands
 (*) Query sound card: `lspci -nnk | grep -i audio -A2`
 (*) Quick and dirty hardware summary: `(printf "\nCPU\n\n"; lscpu; printf "\nMEMORY\n\n"; free -h; printf "\nDISKS\n\n"; lsblk; printf "\nPCI\n\n"; lspci; printf "\nUSB\n\n"; lsusb; printf "\nNETWORK\n\n"; ifconfig) | less`
 (*) Percental CPU scaled load average: `printf "System load (1m/5m/15m): "; for l in 1 2 3 ; do printf "%.1f%s" "$(( $(cat /proc/loadavg | cut -f $l -d " ") * 100 / $(nproc) ))" "% "; done; printf "\n"`
+(*) Check whether laptop is running on battery or cable: `eval "$(printf "echo %s \$((%i * 100 / %i))\n" $(cat $(find /sys -name energy_now 2>/dev/null | head -1 | xargs dirname)/{status,energy_{now,full}}))%"`
 
 `finddevs.sh` (poor man's lsusb):
 
@@ -76,22 +81,28 @@ done
 Fundamental Commands
 ====================
 
+(*) List contents of directory, sort by access time: `ls -ltr`
 (*) Invert matching lines with `-v`: `grep -v "roses" poem.txt`
 (*) TODO look ahead/behind with `-A`, `-B`, `-C` switches
 (*) TODO only keep what grep found with `-o`
 (*) Find (grep) files with oldpattern and replace with newpattern: `grep /path/to/search -rl -e "oldpattern" | xargs sed -i "s/oldpattern/newpattern/g"`
 (*) Find (grep) strings in files, in current directory, recursively (-r), printing line numbers (-n): `grep "STRING" -rnw .`
 
+(*) Delete all files by extension: `find / -name "*.jpg" -delete`
+
+(*) Find from here, inside files recursively and replace a string: `find . -type f -exec sed -i 's/OLDSTRING/NEWSTRING/g' {} +`
 (*) Find all files in current directory exclude `.wine` and `.git` directories: `find . -type f \! \( -path '*/\.wine/*' -o -path '*/\.git/*' \)`
 (*) Find recently accessed files: `find . -type f -print0 | xargs -0 stat --format '%Y :%y %n' | sort -nr | cut -d: -f2- | head`
-(*) Example. Find files and pipe into xargs (filenames with spaces): `find . -type f -print0 | xargs -0 sxiv -t`
+
+(*) Find files possibly with spaces in filenames, and pipe into : `find . -type f -print0 | xargs -0 sxiv -t`
+
 (*) Listing today's files only: `find directory_path -maxdepth 1 -daystart -mtime -1`
+(*) Find image files by common extension: `find . \( -iname '*.tiff' -or -iname '*.tif'  -or -iname '*.bmp'  -or -iname '*.jpeg' -or -iname '*.jpg'  -or -iname '*.gif'  -or -iname '*.png'  -or -iname '*.heic' -or -iname '*.raw' -or -iname '*.cr2' -or -iname '*.nef' -or -iname '*.orf' -or -iname '*.sr2' \)`
 (*) Find ASCII files and extract IP addresses: `find . -type f -exec grep -Iq . {} \; -exec grep -oE "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" {} /dev/null \;`
 (*) Find out which directory uses most inodes - list total sum of directoryname existing on filesystem: `find /etc -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n`
 (*) Find all executable files across the entire tree: `find  -executable -type f`
-(*) Replace recursive in folder with sed: `find <folder> -type f -exec sed -i 's/my big String/newString/g' {} +`
 (*) Show contents of all git objects in a git repo: `find .git/objects/ -type f \| sed 's/\.git\/objects\/\///' | sed 's/\///g' | xargs -n1 -I% echo echo "%" \$\(git cat-file -p "%"\) \0 | xargs -n1 -0 sh -c`
-(*) Find dupe files by checking md5sum: `find /glftpd/site/archive -type f|grep '([0-9]\{1,9\})\.[^.]\+$'|parallel -n1 -j200%  md5sum ::: |awk 'x[$1]++ { print $2 " :::"}'|sed 's/^/Dupe: /g'|sed 's,Dupe,\x1B[31m&\x1B[0m,'`
+(*) Find dupe files by checking md5sum: `find . -type f | grep '([0-9]\{1,9\})\.[^.]\+$' | parallel -n1 -j200% md5sum ::: | awk 'x[$1]++ { print $2 " :::"}'| sed 's/^/Dupe: /g'| sed 's,Dupe,\x1B[31m&\x1B[0m,'`
 (*) Find and remove old backup files: `find /home/ -name bk_all_dbProdSlave_\* -mtime +2 -exec rm -f {} \;`
 (*) Find and remove old compressed backup files: `find /home -type f \( -name "*.sql.gz" -o -name "*.tar.gz" -mtime +10 \) -exec rm -rf {} \;`
 (*) Shows space used by each directory of the root filesystem excluding mountpoints/external filesystems (and sort the output): `find / -maxdepth 1 -mindepth 1 -type d \! -empty \! -exec mountpoint -q {} \; -exec du -xsh {} + | sort -h`
@@ -101,9 +112,8 @@ Fundamental Commands
 (*) Shows space used by each directory of the root filesystem excluding mountpoints/external filesystems (and sort the output): `find / -maxdepth 1 -type d | xargs -I {} sh -c "mountpoint -q {} || du -sk {}" | sort -n`
 (*) Zgrep across multiple files: `find . -name "file-pattern*.gz" -exec zgrep -H 'pattern' {} \;`
 (*) Code to check if a module is used in python code: `find .  -name "*.ipynb" -exec grep -l "symspellpy" {} \;`
-(*) Delete all files by extension: `find / -name "*.jpg" -delete`
 (*) Check if the same table name exist across different databases: `find . -name "withdrownblocks.frm"  | sort -u | awk -F'/' '{print $3}' | wc  -l`
-(*) Count the total amount of hours of your music collection: `find . -print0 | xargs -0 -P 40 -n 1 sh -c 'ffmpeg -i "$1" 2>&1 | grep "Duration:" | cut -d " " -f 4 | sed "s/.$//" | tr "." ":"' - | awk -F ':' '{ sum1+=$1; sum2+=$2; sum3+=$3; sum4+=$4 } END { printf "%.0f:%.0f:%.0f.%.0f\n", sum1, sum2, sum3, sum4 }'`
+^(*) Count the total amount of hours of your music collection: `find . -print0 | xargs -0 -P 40 -n 1 sh -c 'ffmpeg -i "$1" 2>&1 | grep "Duration:" | cut -d " " -f 4 | sed "s/.$//" | tr "." ":"' - | awk -F ':' '{ sum1+=$1; sum2+=$2; sum3+=$3; sum4+=$4 } END { printf "%.0f:%.0f:%.0f.%.0f\n", sum1, sum2, sum3, sum4 }'`
 (*) Graphical tree of sub-directories with files: `find . -print | sed -e 's;[^/]*/;|-- ;g;s;-- |;   |;g'`
 (*) Moving large number of files: `find /source/directory -mindepth 1 -maxdepth 1 -name '*'  -print0 | xargs -0 mv -t /target/directory;`
 (*) List only empty directories and delete safely (=ask for each): `find . -type d -empty -exec rm -i -R {} \;`
@@ -152,6 +162,11 @@ Fundamental Commands
 (*) Check difference between two file directories recursively: `diff <(tree /dir/one) <(tree /dir/two)`
 
 (*) Close shell keeping all subprocess running: `disown -a && exit`
+
+man
+===
+
+(*) List all software the have a man page installed: `ls /usr/share/man/man1 2> /dev/null | sed -e 's/\.1.*//' | xargs whatis 2> /dev/null | sed -e '/unknown subject/d' -e 's/  *- / - /'`
 
 Pacman
 ======
@@ -365,7 +380,7 @@ This activates `sudopass` to allow `w!!` in vim, and `neomutt` syncing with `isy
 		- Need `~/.pam_environment` with:
 			GNUPGHOME DEFAULT=@{HOME}/.local/share/gnupg
 			XDG_CONFIG_HOME DEFAULT=@{HOME}/.config
-	5. Install `pam-gnupg` (AUR / github) and` inetutils` (enable `hostname`)
+	5. Install `pam-gnupg` (AUR / GitHug) and` inetutils` (enable `hostname`)
 	6. Add `auth optional pam_gnupg.so` to `/etc/pam.d/system-local-login`
 		(see https://github.com/cruegge/pam-gnupg#setup-guide if you are using a login manager)
 	7. Add keygrip from `gpg -K --with-keygrip` to `~/.config/pam-gnupg`
@@ -402,11 +417,11 @@ OpenSSL
 (*) Check SSL expiry from commandline: `echo | openssl s_client -showcerts -servername google.com -connect gnupg.org:443 2>/dev/null | openssl x509 -inform pem -noout -text`
 (*) SHA256 signature sum check of file: `openssl dgst -sha256  <FILENAME>`
 (*) Generate a random password 30 characters long: `openssl rand -rand /dev/urandom -base64 30`
-(*) Openssl Generate Self Signed SSL Certificate: `openssl req -newkey rsa:2048 -nodes -keyout /etc/ssl/private/myblog.key -x509 -days 365 -out /etc/ssl/private/myblog.pem`
+(*) Openssl Generate Self Signed SSL Certifcate: `openssl req -newkey rsa:2048 -nodes -keyout /etc/ssl/private/myblog.key -x509 -days 365 -out /etc/ssl/private/myblog.pem`
 (*) Generate a certificate signing request (CSR) for an existing private key. CSR.csr MUST be exists before: `openssl req -out CSR.csr -key privateKey.key -new`
 (*) Generate a new private key and Certificate Signing Request. CSR.csr MUST be extist before !: `openssl req -out CSR.csr -new -newkey rsa:2048 -nodes -keyout privateKey.key`
 (*) Generate pem cert from host with ssl port: `openssl s_client -connect HOSTNAME.at:443 -showcerts </dev/null 2>/dev/null | openssl x509 -outform PEM > meinzertifikat.pem`
-(*) Download SSL/TLS pem format cert from https web host: `openssl s_client -showcerts -connect google.com:443 </dev/null 2>/dev/null|openssl x509 -outform PEM > /tmp/google.com.cer`
+(*) Download SSL/TLS pem format cert from https web host: `openssl s_client -showcerts -connect google.com:443 </dev/null 2>/dev/null | openssl x509 -outform PEM > /tmp/google.com.cer`
 (*) Host cpu performance: `openssl speed md5`
 (*) Finding the fingerprint of a given certificate: `openssl x509 -in cert.pem -fingerprint -noout`
 (*) Generate a certificate signing request based on an existing certificate. certificate.crt MUST be exists before !: `openssl x509 -x509toreq -in certificate.crt -out CSR.csr -signkey privateKey.key`
@@ -490,7 +505,7 @@ Parallel host scan group sizes: `50; 1024`
 Probe parallelization: `10; 1`
 Adjust delay between probes: `20ms; 2s; 4m; 5h`
 Specify the maximum number of port scan probe retransmissions
-Send packets no slower than <number> per second
+Send packets no slower than <numberr> per second
 Send packets no faster than <number> per second
 
 NSE Scripts
@@ -566,15 +581,31 @@ Fonts
 Git
 ===
 
-(*) Take a look at a different branch: `git checkout name-of-branch`
+(*) Checkout a different branch: `git checkout name-of-branch`
 (*) Stage files from another branch: `git checkout NAMEOFTHEBRANCH FILE1 FILE2`
 (*) Revert a file to two commits back: `git checkout HEAD~2 -- file1/to/restore`
 (*) Revert a file to a specific version (you'll have to find the sha1 first): `git checkout c5f567 -- file1/to/restore file2/to/restore`
 (*) Filter out untracked files: `git status --untracked-files=no`
-(*) Use `compact-summary` to compare two branches with a simple summary: `git diff --compact-summary <branch1> <branch2>`
-(*) Use the `-b` switch to make a new branch and carry over staged files.: `git checkout -b name-of-new-branch`
+(*) Compare two branches with a simple summary: `git diff --compact-summary <branch1> <branch2>`
+(*) Checkout a new branch and carry over staged files.: `git checkout -b name-of-new-branch`
 (*) See where settings are coming from: `git config --show-origin --list`
 (*) Nice git aliases to visualize git log: `git config --global alias.lg2 "log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''%C(white)%s%C(reset) %C(dim white)- %an%C(reset)' --all"`
+(*) (Powershell) Pull multiple repositories in child folders (a.k.a. I'm back from leave script): `gci -Directory | foreach {Push-Location $_.Name; git fetch --all; git checkout master; git pull; Pop-Location}`
+(*) Delete all local git branches that have been merged and deleted from remote: `git branch -d $( git branch -vv | grep '\[[^:]\+: gone\]' | awk '{print $1}' | xargs )`
+(*) (Powershell) Delete all local branches that have been merged into master: `git branch --merged origin/master | Where-Object {  !$_.Contains('master') } | ForEach-Object { git branch -d $_.trim() }`
+(*) Cleanup remote git repository of all branches already merged into master: `git branch --remotes --merged | grep -v master | sed 's@ origin/@:@' | xargs git push origin`
+(*) (Powershell) Delete all local branches that are not master: `git branch | Where-Object { !$_.Contains('master') } | ForEach-Object { git branch -D $_.Trim() }`
+(*) (Powershell) Copy current branch to clipboard: `(git branch | Where-Object { $_.Contains('*') } | Select-Object -First 1).Trim('*').Trim() | Set-Clipboard`
+(*) (Powershell) Initialise git in working directory with latest Visual Studio .gitignore: `git init; (Invoke-WebRequest https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore -UseBasicParsing).Content | Out-File -FilePath .gitignore -Encoding utf8; git add -A`
+(*) Get full git commit history of single file: `git log -p --name-only --follow <file>`
+(*) Open browser from terminal to create PR after pushing something in Git: `git remote -v | grep origin| tail -1| awk '{print $2}'| cut -d"@" -f2| sed 's/:/\//g'| xargs -I {} $BROWSER https://{}`
+(*) Print GitHub url for the current url: `git remote -v | sed -n '/github.com.*push/{s/^[^[:space:]]\+[[:space:]]\+//;s|git@github.com:|https://github.com/|;s/\.git.*//;p}'`
+(*) Push to all (different) remotes in git directory without having to combine them.: `git remote | while read line ; do git push $line; done`
+(*) (Powershell) Stage all files for commit except those that are *.config at any level within your git repo: `git status | Where-Object {$_.Contains('modified') -and !$_.Contains('.config')} | ForEach-Object { git add $_.Replace('modified:','').Trim() }`
+(*) Print all git repos from a user: `USERNAME=username && curl -s https://api.github.com/users/${USERNAME}/repos?per_page=1000 | grep git_url | awk '{print $2}'| sed 's/"\(.*\)",/\1/'`
+(*) Print all git repos from a user (only curl and grep): `USERNAME=username && curl -s https://api.github.com/users/${USERNAME}/repos?per_page=1000 | grep -oP '(?<="git_url": ").*(?="\,)'`
+(*) Print all git repos from a user: `USERNAME=username && curl -s "https://api.github.com/users/${USERNAME}/repos?per_page=1000" | jq '.[].git_url'`
+(*) Print all git repos from a user: `USERNAME=username && curl -s "https://api.github.com/users/${USERNAME}/repos?per_page=1000" | python <(echo "import json,sys;v=json.load(sys.stdin);for i in v:; print(i['git_url']);" | tr ';' '\n')`
 
 Android ADB and Droidcam
 ========================
@@ -584,6 +615,7 @@ Android ADB and Droidcam
 (*) List installed packages: `adb shell pm list packages`
 (*) Open application: `adb shell monkey -p com.dev47apps.droidcamx 1`
 (*) Send on/off key press (activates screen): `adb shell input keyevent 26`
+(*) Download all .key files from your android device to your pc.: `for i in `adb shell "su -c find /data /system -name '*.key'"`; do mkdir -p ".`dirname $i`";adb shell "su -c cat $i" > ".$i";done`
 
 You want to be able to combine an audio and microphone sink to share while live streaming: https://www.reddit.com/r/archlinux/comments/klmyec/how_to_play_audio_files_as_input/ghaclhs?utm_source=share&utm_medium=web2x&context=3
 
@@ -643,17 +675,20 @@ Increase the resolution available to droidcam
 
 Image Magick
 ============
-
-(*) List all fonts available to ImageMagick: `convert -list fonts`
-(*) Change all white pixels in an image to transparent (needs to PNG!): `convert test.png -transparent white transparent.png`
-(*) "Diff" two images (first shows the result as a PNG, second as a PDF): `compare image1 image2 -compose src diff.png`
+(*) Scale an image to 25% of width: `magick image.jpg -resize 25%x image_smaller.jpg`
+(*) Resize an image to 100px wide: `magick image.jpg -resize 100x image_smaller.jpg`
+(*) Resize all images in directory to 25% of original: `mogrify -scale 25% -path ./thumbs *.*`
 (*) Changing all JPGs to a width of 120px and save as PNG: `magick '*.jpg' -resize 120x thumbnail%03d.png`
+(*) Crop an image: `magick image.png -crop 200x300+20+20 cropped.png`
+(*) Change all white pixels in an image to transparent: `convert test.png -transparent white transparent.png`
+(*) Replace transperancy with white background: `convert -flatten img1.png img1-white.png`
+(*) Jpeg/jpg compression with very little quality loss: `convert in.jpg -sampling-factor 4:2:0 -strip -quality 85 -interlace JPEG -colorspace sRGB out.jpg`
+(*) Good PNG compression (maybe): `convert original.png -define png:compression-filter=2 -define png:compression-level=9 -define png:compression-strategy=1 out.png`
+(*) List all fonts available to ImageMagick: `convert -list fonts`
+(*) "Diff" two images (first shows the result as a PNG, second as a PDF): `compare image1 image2 -compose src diff.png`
 (*) Extract text from an image (requires `tesseract`): `convert -colorspace gray -fill white -resize 480% -sharpen 0x1 in.png out.jpg && tesseract out.jpg out.txt`
-(*) Replace transparency with white background: `convert -flatten img1.png img1-white.png`
-(*) Convert all images in directory to 25% of original size and put all converted images into subdirectory: `mogrify -scale 25% -path ./thumbs *.*`
-(*) Crop an image: `convert image.png -crop 200x300+20+20 cropped.png`
 (*) Calculate a hash of image data (ImageMagick): `identify -quiet -format "%#" "./path/to/file"`
-(*) stdout text to image: `convert -background lightblue -fill blue -font DejaVu-Sans-Mono-Book -pointsize 72 label:@- cal.gif <<< $(cal)`
+(*) Convert stdout text to image: `convert -background lightblue -fill blue -font DejaVu-Sans-Mono-Book -pointsize 72 label:@- cal.gif <<< $(cal)`
 (*) Combine `cal` calendar output with an image: `convert -font DejaVu-Sans-Mono-Book -fill '#0008' -draw 'rectangle 200,180,960,680' -fill white -pointsize 50 -draw "text 270,260 \" `cal` \"" bg.png bgcal.png`
 
     - (optional) make canvas bigger to ensure proper filling; in this case assumption is background is white:
@@ -690,6 +725,8 @@ A good x264 read: `x264 --fullhelp`
 (*) Combine multiple images into a video using ffmpeg: `ffmpeg -start_number 0053 -r 1/5 -i IMG_%04d.JPG -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4`
 (*) Inset video. `ffmpeg -i main.mp4 -i inset.mp4 -filter_complex 'overlay=main_w-overlay_w+(1920-192*2.5):main_h-overlay_h+(1080-108*2.5)' -t 5 output.mp4`
 (*) Cover the main video with a transparent color: `ffmpeg -i lights.mp4 -vf 'color=color=red@.3:size=1920x1080 [over]; [in][over] overlay [out]' -t 5 output.mp4`
+(*) Downmix first audio stream from 7.1 to 5.1 keeping all other streams: `ffmpeg -i in.mkv -map 0 -c copy -c:a:0 aac -ac:a:0 6 out.mkv`
+(*) Download screenshot or frame from YouTube video at certain timestamp: `ffmpeg -ss 8:14 -i $(youtube-dl -f 299 --get-url URL) -vframes 1 -q:v 2 out.jpg`
 (*) ffmpeg fade from video 1 to video 2 (start at 20 seconds for 2 sec): `ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex "xfade=offset=20:duration=2" v1_to_v2.mp4`
 
 FFMPEG transition effects:
@@ -956,6 +993,9 @@ Powershell
   Get-Content OR cat                  cat
   Compare-Object OR diff              diff
   Get-PnpDevice -PresentOnly          lsdev (or, lsusb, etc.)
+(*) Backup with versioning: `& 'C:\cwRsync_5.5.0_x86_Free\bin\rsync.exe' --force --ignore-errors --no-perms --chmod=ugo=rwX --checksum --delete --backup --backup-dir="_EVAC/$(Get-Date -Format "yyyy-MM-dd-HH-mm-ss")" --whole-file -a -v "//MyServer/MyFolder" "/cygdrive/c/Backup"`
+(*) Powershell one-line script to remove the bracketed date from filenames: `Get-ChildItem -Recurse | Where-Object { $_.Name -match " ?\(\d\d\d\d_\d\d_\d\d \d\d_\d\d_\d\d UTC\)" } | Rename-Item -NewName { $_.Name -replace " ?\(\d\d\d\d_\d\d_\d\d \d\d_\d\d_\d\d UTC\)", ""}`
+(*) Application network trace based on application name: `while(1 -eq 1 ) {Get-Process -Name *APPNAME* | Select-Object -ExpandProperty ID | ForEach-Object {Get-NetTCPConnection -OwningProcess $_} -ErrorAction SilentlyContinue }`
 
 Vim and Neovim
 ==============
@@ -1087,11 +1127,11 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 
 (*) Recall Nth command from your BASH history without executing it.: `!12:p`
 (*) Learn the difference between single and double quotes: `a=7; echo $a; echo "$a"; echo '$a'; echo "'$a'"; echo '"$a"'`
-(*) Bash alias to output the current Swatch Internet Time: `alias beats='echo '\''@'\''$(TZ=GMT-1 date +'\''(%-S + %-M * 60 + %-H * 3600) / 86.4'\''|bc)'`
+(*) Bash alias to output the current Swatch Internet Time: `alias beats='echo '\''@'\''$(TZ=GMT-1 date +'\''(%-S + %-M * 60 + %-H * 3600) / 86.4'\''| bc)'`
 (*) Start a game on the discrete GPU (hybrid graphics): `alias game='DRI_PRIME=1'`
 (*) Replacement of tree command (ignore node_modules): `alias tree='pwd;find . -path ./node_modules -prune -o -print | sort | sed '\''1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'\'''`
 (*) Open clipboard content on vim: `alias vcb='xclip -i -selection clipboard -o | vim -'`
-(*) Faciliate the work for lftp ('all' is needed if you wanna use it with getopts, otherwise its enough with the lftp line): `all="$(echo -e $*|awk '{for(i=3;i<=NF;++i)print $i}'|xargs)"; lftp -e open <HOSTNAME> -p <PORT> -u <USER>:<PASSWORD> -e "$all;exit"`
+(*) Faciliate the work for lftp ('all' is needed if you wanna use it with getopts, otherwise its enough with the lftp line): `all="$(echo -e $*| awk '{for(i=3;i<=NF;++i)print $i}'|xargs)"; lftp -e open <HOSTNAME> -p <PORT> -u <USER>:<PASSWORD> -e "$all;exit"`
 (*) Factory reset your android device via commandline.: `am broadcast -a android.intent.action.MASTER_CLEAR`
 (*) Before any Dell Firmware update on Ubuntu, run: `apt install raidcfg dtk-scripts syscfg smbios-utils sfcb cim-schema dcism`
 (*) Get all upgradable deb packages in a single line: `apt list --upgradable | grep -v 'Listing...' | cut -d/ -f1 | tr '\r\n' ' ' | sed '$s/ $/\n/'`
@@ -1099,7 +1139,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Print lines in a text file with numbers in first column higher or equal than a value: `awk '$NF >= 134000000 {print $0}' single-column-numbers.txt`
 (*) Change values from 0 to 100: `awk '{if ($3 =="LAN" && $5 == "0.00" ) print $1,  $2, "LAN",  "288",  "100.00"; else print $1 ,$2, $3, $4, $5 }' sla-avail-2013-Feb > sla-avail-2013-Feb_final`
 (*) Use was ec2 describe instances to retrieve IAM roles for specific ec2 tag to css list: `aws ec2 describe-instances --region us-east-1 --filters "Name=tag:YourTag,Values=YourValue" |  jq '.["Reservations"]|.[]|.Instances|.[]|.IamInstanceProfile.Arn + "," +.InstanceId'`
-(*) Get a list of stale AWS security groups: `aws ec2 describe-vpcs --query 'Vpcs[*].VpcId' --output text  |xargs -t -n1 aws ec2 describe-stale-security-groups --vpc-id`
+(*) Get a list of stale AWS security groups: `aws ec2 describe-vpcs --query 'Vpcs[*].VpcId' --output text | xargs -t -n1 aws ec2 describe-stale-security-groups --vpc-id`
 (*) Rclone - include Service account blobs to your config: `bash -c 'COUNT=0; for i in $(find . -iname "*.json");do ((count=count+1));VAL=`cat ${i} | jq -c '.'` ; echo "[dst$count]";echo "type = drive";echo "scope = drive";echo "service_account_credentials = $VAL" ; echo "team_drive = 0AKLGAlhvkJYyUk9PVA" ;done'`
 (*) Banner Grabber: `bash -c 'exec 3<>/dev/tcp/google.com/80; echo EOF>&3; cat<&3'`
 (*) Show which line of a shell script is currently executed: `bash -x foo.sh`
@@ -1112,7 +1152,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) AWK Calculator: `calc(){ awk "BEGIN{ print $* }" ;}; calc "((3+(2^3)) * 34^2 / 9)-75.89"`
 (*) Shell pocket calculator (pure sh): `calc(){ printf "%.8g\n" $(printf "%s\n" "$*" | bc -l); }`
 (*) Convert JSON object to JavaScript object literal: `cat data.json | json-to-js | pbcopy`
-(*) Generate cryptographically Secure RANDOM PASSWORD: `cat /dev/urandom |tr -c -d '[:alnum:]'|head -c 16;echo`
+(*) Generate cryptographically Secure RANDOM PASSWORD: `cat /dev/urandom | tr -c -d '[:alnum:]' | head -c 16;echo`
 (*) Extract a Zip File from STDOUT with the Jar Command: `cat foo.zip | jar xv`
 (*) Convert tab separate file (TSV) to JSON with jq: `cat input.tsv | jq --raw-input --slurp 'split("\n") | map(split("\t")) | .[0:-1] | map( { "id": .[0], "ip": .[1] } )'`
 (*) SFTP upload through HTTPS proxy: `cat myFile.json | ssh root@remoteSftpServer -o "ProxyCommand=nc.openbsd -X connect -x proxyhost:proxyport %h %p" 'cat > myFile.json'`
@@ -1121,10 +1161,9 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Check whether laptop is running on battery or cable: `cat /sys/class/power_supply/AC/online`
 (*) Print your cpu intel architecture family: `cat /sys/devices/cpu/caps/pmu_name`
 (*) Convert epoch date to human readable date format in a log file.: `cat /var/log/mosquitto/mosquitto.log | awk -F : '{"date -d @"$1 |& getline D; print D, $0}'`
-(*) Backup with versioning: `& 'C:\cwRsync_5.5.0_x86_Free\bin\rsync.exe' --force --ignore-errors --no-perms --chmod=ugo=rwX --checksum --delete --backup --backup-dir="_EVAC/$(Get-Date -Format "yyyy-MM-dd-HH-mm-ss")" --whole-file -a -v "//MyServer/MyFolder" "/cygdrive/c/Backup"`
 (*) Get the full path of a bash script's Git repository head.: `(cd "$(dirname "${BASH_SOURCE[0]}")" && git rev-parse --show-toplevel)`
 (*) Access folder "-": `cd -- -`
-(*) Jump to home dir and list all, not older than 3 days, with full-path, hidden/non-hidden files/subdirectories: `cd && tree -aicfnF --timefmt %Y%j-%d-%b-%y|grep $(date +%Y%j)'\|'$[$(date +%Y%j)-1]'\|'$[$(date +%Y%j)-2]`
+(*) Jump to home dir and list all, not older than 3 days, with full-path, hidden/non-hidden files/subdirectories: `cd && tree -aicfnF --timefmt %Y%j-%d-%b-%y | grep $(date +%Y%j)'\|'$[$(date +%Y%j)-1]'\|'$[$(date +%Y%j)-2]`
 (*) Set a user password without passwd: `chpasswd <<< "user:newpassword"`
 (*) Clear terminal Screen: `clear`
 (*) Convert & rename all filenames to lower case: `convmv --lower --notest FILE`
@@ -1140,10 +1179,6 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Offcloud - add a link as remote download: `curl  'https://offcloud.com/api/remote?key=XXXXXX' \   -H 'accept: application/json' \   -H 'Content-Type: application/x-www-form-urlencoded'  --data-raw "url=$MYLINK&remoteOptionId=XXXXX"`
 (*) Check web server port 80 response header: `curl -I <IPaddress>`
 (*) Get a list of top 1000 sites from alexa: `curl -qsSl http://s3.amazonaws.com/alexa-static/top-1m.csv.zip 2>/dev/null | zcat | grep ".de$" | head -1000 | awk -F, '{print $2}'`
-(*) Print all git repos from a user: `curl -s https://api.github.com/users/<username>/repos?per_page=1000 |grep git_url |awk '{print $2}'| sed 's/"\(.*\)",/\1/'`
-(*) Print all git repos from a user (only curl and grep): `curl -s https://api.github.com/users/<username>/repos?per_page=1000 | grep -oP '(?<="git_url": ").*(?="\,)'`
-(*) Print all git repos from a user: `curl -s "https://api.github.com/users/<username>/repos?per_page=1000" | jq '.[].git_url'`
-(*) Print all git repos from a user: `curl -s "https://api.github.com/users/<username>/repos?per_page=1000" | python <(echo "import json,sys;v=json.load(sys.stdin);for i in v:; print(i['git_url']);" | tr ';' '\n')`
 (*) Get Your IP Geographic Location with curl and jq: `curl -s https://ipvigilante.com/$(curl -s https://ipinfo.io/ip) | jq '.data.latitude, .data.longitude, .data.city_name, .data.country_name'`
 (*) Get current stable kernel version string from kernel.org: `curl -s https://www.kernel.org/releases.json | jq '.latest_stable.version' -r`
 (*) Check every URL redirect (HTTP status codes 301/302) with curl: `curl -sLkIv --stderr - http://example.org | grep -i location: | awk {'print $3'} | sed '/^$/d'`
@@ -1155,7 +1190,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Iso to USB with dd and show progress status: `dd if=/home/kozanoglu/Downloads/XenServer-7.2.0-install-cd.iso | pv --eta --size 721420288 --progress --bytes --rate --wait > /dev/sdb`
 (*) Hide or show Desktop Icons on MacOS: `defaults write com.apple.finder CreateDesktop -bool false;killall Finder`
 (*) Find German synonyms using OpenThesaurus: `desyno(){ wget -q -O- https://www.openthesaurus.de/synonyme/search\?q\="$*"\&format\=text/xml | sed 's/>/>\n/g' | grep "<term term=" | cut -d \' -f 2 | paste -s -d , | sed 's/,/, /g' | fold -s -w $(tput cols); }`
-(*) Get partitions that are over 50% usage: `df -h |awk '{a=$5;gsub(/%/,"",a);if(a > 50){print $0}}'`
+(*) Get partitions that are over 50% usage: `df -h | awk '{a=$5;gsub(/%/,"",a);if(a > 50){print $0}}'`
 (*) Show allocated disk space:: `df -klP -t xfs -t ext2 -t ext3 -t ext4 -t reiserfs | grep -oE ' [0-9]{1,}( +[0-9]{1,})+' | awk '{sum_used += $1} END {printf "%.0f GB\n", sum_used/1024/1024}'`
 (*) Show used disk space:: `df -klP -t xfs -t ext2 -t ext3 -t ext4 -t reiserfs | grep -oE ' [0-9]{1,}( +[0-9]{1,})+' | awk '{sum_used += $2} END {printf "%.0f GB\n", sum_used/1024/1024}'`
 (*) Update all Docker Images: `docker images --format "{{.Repository}}:{{.Tag}}" | grep ':latest' | xargs -L1 docker pull`
@@ -1173,7 +1208,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Automatically generate the ip/hostname entry for the /etc/hosts in the current system: `echo "$(ip addr show dev $(ip r | grep -oP 'default.*dev \K\S*') | grep -oP '(?<=inet )[^/]*(?=/)') $(hostname -f) $(hostname -s)"`
 (*) Generate a sequence of numbers.: `echo {1..12}`
 (*) Generate a sequence of numbers.: `echo {1..99}`
-(*) Colorize sequences of digits: `echo abcd89efghij340.20kl|grep --color -e "[0-9]\+" -e "$"`
+(*) Colorize sequences of digits: `echo abcd89efghij340.20kl | grep --color -e "[0-9]\+" -e "$"`
 (*) Produce 10 copies of the same string: `echo boo{,,,,,,,,,,}`
 (*) Replace all backward slashes with forward slashes: `echo 'C:\Windows\' | sed 's|\\|\/|g'`
 (*) Check if port is open on remote machine: `echo >  /dev/tcp/127.0.0.123/8085 && echo "Port is open"`
@@ -1181,36 +1216,30 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Check web server port 80 response header: `(echo -e 'GET / HTTP/1.0\r\n\r\n';) | ncat <IPaddress> 80`
 (*) Change user password  one liner: `echo -e "linuxpassword\nlinuxpassword" | passwd linuxuser`
 (*) Fork bomb (don't actually execute): `echo -e “\x23\x21/bin/bash\n\.\/\$\0\&\n\.\/\$\0\&” > bomb.sh && ./bomb.sh`
-(*) From all PDF files in all subdirectories, extract two metadata fields (here: Creator and Producer) into a CSV table: `echo "File;Creator;Producer";find . -name '*.pdf' -print0 | while IFS= read -d $'\0' line;do echo -n "$line;";pdfinfo "$line"|perl -ne 'if(/^(Creator|Producer):\s*(.*)$/){print"$2";if ($1 eq "Producer"){exit}else{print";"}}';echo;done 2>/dev/null`
+(*) From all PDF files in all subdirectories, extract two metadata fields (here: Creator and Producer) into a CSV table: `echo "File;Creator;Producer";find . -name '*.pdf' -print0 | while IFS= read -d $'\0' line;do echo -n "$line;";pdfinfo "$line" | perl -ne 'if(/^(Creator|Producer):\s*(.*)$/){print"$2";if ($1 eq "Producer"){exit}else{print";"}}';echo;done 2>/dev/null`
 (*) Pretty print json block that has quotes escaped: `echo 'json_here' | sed 's/\\//g' | jq .`
-(*) Instead of saying RTFM!: `echo "[q]sa[ln0=aln256%Pln256/snlbx]sb729901041524823122snlbxq"|dc`
+(*) Instead of saying RTFM!: `echo "[q]sa[ln0=aln256%Pln256/snlbx]sb729901041524823122snlbxq" | dc`
 (*) Test sendmail: `echo "Subject: test" | /usr/lib/sendmail -v me@domain.com`
-(*) OSX script to change Terminal profiles based on machine name;  use with case statement parameter matching: `echo "tell application \"Terminal\"\n\t set its current settings of selected tab of window 1 to settings set \"$PROFILE\"\n end tell"|osascript;`
+(*) (OSX) Script to change Terminal profiles based on machine name: `echo "tell application \"Terminal\"\n\t set its current settings of selected tab of window 1 to settings set \"$PROFILE\"\n end tell" | osascript;`
 (*) Remove all the characters after last space per line including it: `echo 'The quick brown fox jumps over the lazy dog' | sed 's|\(.*\) .*|\1|'`
 (*) Remove all the characters before last space per line including it: `echo 'The quick brown fox jumps over the lazy dog' | sed 's|.* ||'`
 (*) Set a user password without passwd: `echo 'user:newpassword' | chpasswd`
 (*) Replace all forward slashes with backward slashes: `echo '/usr/bin/' | sed 's|\/|\\|g'`
-(*) Download all recently uploaded pastes on pastebin.com: `elinks -dump https://pastebin.com/archive|grep https|cut -c 7-|sed 's/com/com\/raw/g'|awk 'length($0)>32 && length($0)<35'|grep -v 'messages\|settings\|languages\|archive\|facebook\|scraping'|xargs wget`
-(*) Crash bash, in case you ever want to for whatever reason: `enable -f /usr/lib/libpng.so png_create_read`
+(*) Download all recently uploaded pastes on pastebin.com: `elinks -dump https://pastebin.com/archive | grep https | cut -c 7- | sed 's/com/com\/raw/g' | awk 'length($0)>32 && length($0)<35' | grep -v 'messages\|settings\|languages\|archive\|facebook\|scraping'|xargs wget`
+(*) Crash bash: `enable -f /usr/lib/libpng.so png_create_read`
 (*) Save your current environment as a bunch of defaults: `env | sed 's/\(.*\)=\(.*\)/: ${\1:="\2"}/'  > mydefaults.bash`
 (*) Color STDERR in output: `./errorscript.sh 2> >(echo "\e[0;41m$(cat)\e[0m")`
-(*) Check whether laptop is running on battery or cable: `eval "$(printf "echo %s \$((%i * 100 / %i))\n" $(cat $(find /sys -name energy_now 2>/dev/null | head -1 | xargs dirname)/{status,energy_{now,full}}))%"`
 (*) Unset all http proxy related environment variables in one go in the current shell: `eval "unset $(printenv | grep -ioP '(?:https?|no)_proxy' | tr '\n' ' ')"`
 (*) Create a nicely formatted example of a shell command and its output: `example() { echo "EXAMPLE:"; echo; echo "    $@"; echo; echo "OUTPUT:"; echo ; eval "$@" | sed 's/^/    /';  }`
 (*) Set pcap & SUID Bit for priv. network programs (like nmap): `export BIN=`which nmap` && sudo setcap cap_net_raw,cap_net_admin+eip $BIN && sudo chown root $BIN && sudo chmod u+s $BIN`
 (*) Store Host IP in variable: `export IP="$(hostname -I | awk '{print $1}')"`
 (*) This will take the last two commands from bash_history and  open your editor with the commands on separated lines: `fc -1 -2`
-(*) Downmix first audio stream from 7.1 to 5.1 keeping all other streams: `ffmpeg -i in.mkv -map 0 -c copy -c:a:0 aac -ac:a:0 6 out.mkv`
-(*) Rotate a video file by 90 degrees CW: `ffmpeg -i in.mov -c copy -metadata:s:v:0 rotate=90 out.mov`
-(*) Rotate a video file by 90 degrees CW: `ffmpeg -i in.mov -vf "transpose=1" out.mov`
-(*) Download screenshot or frame from YouTube video at certain timestamp: `ffmpeg -ss 8:14 -i $(youtube-dl -f 299 --get-url URL) -vframes 1 -q:v 2 out.jpg`
-(*) Capture video of a linux desktop: `ffmpeg -video_size 1024x768 -framerate 25 -f x11grab -i :0.0+100,200 output.mp4`
-(*) List human readable files: `file *|grep 'ASCII text'|sort  -rk2`
+(*) List human readable files: `file * | grep 'ASCII text' | sort  -rk2`
 (*) Rename / move Uppercase filenames to lowercase filenames current directory: `FileList=$(ls); for FName in $FileList; do LowerFName=$(echo "$FName" | tr '[:upper:]' '[:lower:]'); echo $FName" rename/move to $LowerFName"; mv $FName $LowerFName;  done`
 (*) PHP7 - Fix incompatibility errors like: Parse error: syntax error, unexpected new (T_NEW) in file.php on line...: `find "$(realpath ./)" -type f \( -iname "*.php" -or -iname "*.inc" \) -exec sed -i -r "s~=[[:space:]]*&[[:space:]]*new[[:space:]]+~= new ~gi" {} \;`
-(*) Edit, view or execute last modified file with a single key-press: `f() { ls -lart;e="ls -tarp|grep -v /|tail -9";j=${e/9/1};g=${e/9/9|nl -nln};h=$(eval $j);eval $g;read -p "e|x|v|1..9 $(eval $j)?" -n 1 -r;case $REPLY in e) joe $h;;v)cat $h;;x) eval $h;;[1-9]) s=$(eval $g|egrep ^$REPLY) && touch "${s:7}" && f;;esac ; }`
+(*) Edit, view or execute last modified file with a single key-press: `f() { ls -lart;e="ls -tarp | grep -v / | tail -9";j=${e/9/1};g=${e/9/9 | nl -nln};h=$(eval $j);eval $g;read -p "e|x|v|1..9 $(eval $j)?" -n 1 -r;case $REPLY in e) joe $h;;v)cat $h;;x) eval $h;;[1-9]) s=$(eval $g | egrep ^$REPLY) && touch "${s:7}" && f;;esac ; }`
 (*) Visual alert with keyboard LEDs: `for a in $(seq 16); do xdotool key Num_Lock;sleep .5; xdotool key Caps_Lock;done`
-(*) Save a copy of all debian packages in the form in which they are installed and configured on your system: `for a in $(sudo dpkg --get-selections|cut -f1); do dpkg-repack $a|awk '{if (system("sleep .5 && exit 2") != 2) exit; print}';done`
+(*) Save a copy of all debian packages in the form in which they are installed and configured on your system: `for a in $(sudo dpkg --get-selections | cut -f1); do dpkg-repack $a | awk '{if (system("sleep .5 && exit 2") != 2) exit; print}';done`
 (*) Switch all connected PulseAudio bluetooth devices to A2DP profile: `for card in $(pacmd list-cards | grep 'name: ' | sed 's/.*<\(.*\)>.*/\1/'); do pacmd set-card-profile $card a2dp_sink; done`
 (*) Silently deletes lines containing a specific string in a bunch of files: `for file in $(egrep 'abc|def' *.sql | cut -d":" -f1 | uniq); do    sed -i '/abc/d' ./$file ; sed -i '/def/d' ./$file; done`
 (*) Find a file and then copy to tmp folder: `for file in `ls | grep -i 'mumbai|pune|delhi'` ; do cp $file /tmp/ ; done `
@@ -1225,31 +1254,16 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Download all default installed apk files from your android.: `for i in $(adb shell pm list packages | awk -F':' '{print $2}'); do adb pull "$(adb shell pm path $i | awk -F':' '{print $2}')"; mv *.apk $i.apk 2&> /dev/null ;done`
 (*) Shell bash iterate number range with for loop: `for i in $(seq 1 5) ; do echo $i ; done`
 (*) Shell bash iterate number range with for loop: `for i in {1..10}; do echo $i; done`
-(*) Quickly ping range of IP addresses and return only those that are online: `{ for i in {1..254}; do ping -c 1 -W 1  192.168.1.$i & done } | grep "64 bytes"`
+(*) Quickly ping range of IP adresses and return only those that are online: `{ for i in {1..254}; do ping -c 1 -W 1  192.168.1.$i & done } | grep "64 bytes"`
 (*) Scan all open ports without any required program: `for i in {1..65535}; do (echo < /dev/tcp/127.0.0.1/$i) &>/dev/null && printf "\n[+] Open Port at\n: \t%d\n" "$i" || printf "."; done`
-(*) Download all .key files from your android device to your pc.: `for i in `adb shell "su -c find /data /system -name '*.key'"`; do mkdir -p ".`dirname $i`";adb shell "su -c cat $i" > ".$i";done`
 (*) Convert raw camera image to jpeg: `for i in *.CR2; do ufraw-batch $i --out-type=jpeg --output $i.jpg; done;`
 (*) Individually 7zip all files in current directory: `for i in *.*; do 7z a "$i".7z "$i"; done`
 (*) Rename all files in a directory to the md5 hash: `for i in *; do sum=$(md5sum $i); mv  -- "$i" "${sum%% *}"; done`
-(*) Checks size of directory & delete it if its to small: `for i in *;  do test -d "$i" && ( rclone size "$i" --json -L 2> /dev/null | jq --arg path "$i" 'if .bytes < 57462360 then ( { p: $path , b: .bytes}) else "none" end' | grep -v none | jq -r '.p' | parallel -j3 rclone purge "{}" -v -P ); done`
+(*) Checks size of directory and delete it if it's too small: `for i in *;  do test -d "$i" && ( rclone size "$i" --json -L 2> /dev/null | jq --arg path "$i" 'if .bytes < 57462360 then ( { p: $path , b: .bytes}) else "none" end' | grep -v none | jq -r '.p' | parallel -j3 rclone purge "{}" -v -P ); done`
 (*) Get all Google ipv4/6 subnets for a iptables firewall for example (updated version): `for NETBLOCK in $(echo _netblocks.google.com _netblocks2.google.com _netblocks3.google.com); do nslookup -q=TXT $NETBLOCK ; done | tr " " "\n" | grep ^ip[46]: | cut -d: -f2- | sort`
 (*) WSL: Change the current directory converting a Windows path to a Linux Path: `function _cd() { local dir; dir="$(sed -e 's~\([a-z]\):~/mnt/\L\1~gi' <<< "${*//'\'/"/"}" )"; if [ -d "$dir" ]; then cd "$dir" || exit; fi; }`
 (*) Uniquely (sort of) color text so you can see changes: `function colorify() { n=$(bc <<< "$(echo ${1}|od -An -vtu1 -w100000000|tr -d ' ') % 7"); echo -e "\e[3${n}m${1}\e[0m"; }`
-(*) Worse alternative to <ctrl+r>: `function memo() { awk '! seen[$0]++' <<< $(grep -i "$@" ~/.bash_history ); }`
 (*) Autocomplete directories (CWDs) of other ZSH processes (MacOS version): `function _xterm_cwds() { for pid in $(pgrep -x zsh); do reply+=$(lsof -p $pid | grep cwd | awk '{print $9}') done }; function xcd() { cd $1 }; compctl -K _xterm_cwds xcd`
-(*) Pull multiple repositories in child folders (a.k.a. I'm back from leave script) [Windows]: `gci -Directory | foreach {Push-Location $_.Name; git fetch --all; git checkout master; git pull; Pop-Location}`
-(*) Powershell one-line script to remove the bracketed date from filenames: `Get-ChildItem -Recurse | Where-Object { $_.Name -match " ?\(\d\d\d\d_\d\d_\d\d \d\d_\d\d_\d\d UTC\)" } | Rename-Item -NewName { $_.Name -replace " ?\(\d\d\d\d_\d\d_\d\d \d\d_\d\d_\d\d UTC\)", ""}`
-(*) Delete all local git branches that have been merged and deleted from remote: `git branch -d $( git branch -vv | grep '\[[^:]\+: gone\]' | awk '{print $1}' | xargs )`
-(*) Delete all local branches that have been merged into master [Windows]: `git branch --merged origin/master | Where-Object {  !$_.Contains('master') } | ForEach-Object { git branch -d $_.trim() }`
-(*) Cleanup remote git repository of all branches already merged into master: `git branch --remotes --merged | grep -v master | sed 's@ origin/@:@' | xargs git push origin`
-(*) Delete all local branches that are not master [Windows]: `git branch | Where-Object { !$_.Contains('master') } | ForEach-Object { git branch -D $_.Trim() }`
-(*) Copy current branch to clipboard [Windows]: `(git branch | Where-Object { $_.Contains('*') } | Select-Object -First 1).Trim('*').Trim() | Set-Clipboard`
-(*) Initialise git in working directory with latest Visual Studio .gitignore [Windows]: `git init; (Invoke-WebRequest https://raw.githubusercontent.com/github/gitignore/master/VisualStudio.gitignore -UseBasicParsing).Content | Out-File -FilePath .gitignore -Encoding utf8; git add -A`
-(*) Get full git commit history of single file: `git log -p --name-only --follow <file>`
-(*) Open browser from terminal to create PR after pushing something in Git in MAC: `git remote -v |grep origin|tail -1|awk '{print $2}'|cut -d"@" -f2|sed 's/:/\//g'|xargs -I {} open -a "Google Chrome" https://{}`
-(*) Print github url for the current url: `git remote -v | sed -n '/github.com.*push/{s/^[^[:space:]]\+[[:space:]]\+//;s|git@github.com:|https://github.com/|;s/\.git.*//;p}'`
-(*) Push to all (different) remotes in git directory without having to combine them.: `git remote | while read line ; do git push $line; done`
-(*) Stage all files for commit except those that are *.config at any level within your git repo [Windows]: `git status | Where-Object {$_.Contains('modified') -and !$_.Contains('.config')} | ForEach-Object { git add $_.Replace('modified:','').Trim() }`
 (*) Find out how much ram memory has your video (graphic) card: `glxinfo |grep -i -o 'device|memory\|[0-9]\{1,12\} MB'|head -n 1`
 (*) Add a mysql user: `grant all on *.* to 'dba'@'localhost' identified by 'dba123' with grant option;`
 (*) Colorize grep output: `grep --color -E 'pattern|$' file`
@@ -1303,7 +1317,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Mysql status: `mysqladmin status >> /home/status.txt 2>> /home/status_err.txt`
 (*) InnoDB related parameters: `mysqladmin variables | egrep '(innodb_log_file|innodb_data_file)'`
 (*) Mysql backup utility: `mysqlbackup --port=3306 --protocol=tcp --user=dba --password=dba  --with-timestamp  --backup-dir=/tmp/toback/ --slave-info backup-and-apply-log  --innodb_data_file_path=ibdata1:10M:autoextend --innodb_log_files_in_group=2 --innodb_log_file_size=5242880`
-(*) Repair all mySQL/mariaDB databases: `mysqlcheck --repair --all-databases -u root -p<PASSWORD>`
+(*) Reapair all mySQL/mariaDB databases: `mysqlcheck --repair --all-databases -u root -p<PASSWORD>`
 (*) Monitor ETA using pv command: `mysqldump --login-path=mypath sbtest sbtest4 |  pv  --progress  --size  200m  -t  -e  -r  -a > dump.sql`
 (*) Backup all data in compressed format: `mysqldump --routines --all-databases | gzip > /home/mydata.sql.gz 2> /home/mydata.date '+\%b\%d'.err`
 (*) Check mysql server performance: `mysqlslap --query=/home/ec2-user/insert.txt --concurrency=123 --iterations=1  --create-schema=test`
@@ -1316,7 +1330,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Nmap fast scan all ports target: `nmap  -p0-65535 192.168.1.254 -T5`
 (*) Network Discover in a one liner: `nmap -sn 192.168.1.0/24 -oG - | awk '$4=="Status:" && $5=="Up" {print $0}'|column -t`
 (*) Display live hosts on the network: `nmap -sP "$(ip -4 -o route get 1 | cut -d ' ' -f 7)"/24 | grep report | cut -d ' ' -f 5-`
-(*) Quickly ping range of IP addresses and return only those that are online: `nmap -sP 192.168.0.0/24`
+(*) Quickly ping range of IP adresses and return only those that are online: `nmap -sP 192.168.0.0/24`
 (*) Show a prettified list of nearby wireless APs: `nmcli device wifi list`
 (*) List all global top level modles, then remove ALL npm packages with xargs: `npm ls -gp --depth=0 | awk -F/ '/node_modules/ && !/\/npm$/ {print $NF}' | xargs npm -g rm; npm -g uninstall npm`
 (*) Convert rich text on the clipboard to Markdown in OS X: `osascript -e'get the clipboard as"RTF "'|sed 's/«data RTF //;s/»//'|xxd -r -p|textutil -convert html -stdin -stdout|pandoc -f html -t markdown_strict --no-wrap --atx-headers`
@@ -1345,7 +1359,7 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Top 10 Memory Processes: `ps aux | sort -rk 4,4 | head -n 10`
 (*) List packages manually installed with process currently running: `ps -eo cmd | awk '{print $1}'| sort -u | grep "^/" | xargs dpkg -S 2>/dev/null | awk -F: '{print $1}' | sort -u | xargs apt-mark showmanual`
 (*) Debug pytest failures in the terminal: `pytest --pdbcls pudb.debugger:Debugger --pdb --capture=no`
-(*) Generate Cryptographically Secure RANDOM PASSWORD: `python -c "import string; import random;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(16)))"`
+(*) Generrate Cryptographically Secure RANDOM PASSWORD: `python -c "import string; import random;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(16)))"`
 (*) Bootstrap python-pip & setuptools: `python -m ensurepip --default-pip && python -m pip install --upgrade pip setuptools wheel`
 (*) Serve current directory tree at http://$HOSTNAME:8000/: `python -m SimpleHTTPServer 8080`
 (*) KDE Console Logout command (with confirmation dialog): `qdbus org.kde.ksmserver /KSMServer logout 1 0 0`
@@ -1448,7 +1462,6 @@ At last check, commandlinefu had 564 pages of oneliners. I have 25 pages so far 
 (*) Website recursive offline mirror with wget: `wget --mirror --convert-links --adjust-extension --page-requisites  --recursive  --no-parent  www.example.com`
 (*) Write a bootable Linux .iso file directly to a USB-stick: `wget -O /dev/sdb https://cdimage.ubuntu.com/daily-live/current/eoan-desktop-amd64.iso`
 (*) Compute newest kernel version from Makefile on Torvalds' git repository: `wget -qO - https://raw.githubusercontent.com/torvalds/linux/master/Makefile | head -n5 | grep -E '\ \=\ [0-9]{1,}' | cut -d' ' -f3 | tr '\n' '.' | sed -e "s/\.$//"`
-(*) Application network trace based on application name: `while(1 -eq 1 ) {Get-Process -Name *APPNAME* | Select-Object -ExpandProperty ID | ForEach-Object {Get-NetTCPConnection -OwningProcess $_} -ErrorAction SilentlyContinue }`
 (*) Watches every second, a directory listing as it changes: `while :; do clear; ls path/to/dir | wc -l; sleep 1; done`
 (*) Console clock: `while sleep 1; do     tput sc;     tput cup 0 $(($(tput cols)-29));     date;     tput rc; done &`
 (*) Alert visually until any key is pressed: `while true; do echo -e "\e[?5h\e[38;5;1m A L E R T  $(date)"; sleep 0.1; printf \\e[?5l; read -s -n1 -t1 && printf \\e[?5l && break; done`
