@@ -11,37 +11,33 @@ System information commands
 (*) Quick and dirty hardware summary: `(printf "\nCPU\n\n"; lscpu; printf "\nMEMORY\n\n"; free -h; printf "\nDISKS\n\n"; lsblk; printf "\nPCI\n\n"; lspci; printf "\nUSB\n\n"; lsusb; printf "\nNETWORK\n\n"; ifconfig) | less`
 (*) Percental CPU scaled load average: `printf "System load (1m/5m/15m): "; for l in 1 2 3 ; do printf "%.1f%s" "$(( $(cat /proc/loadavg | cut -f $l -d " ") * 100 / $(nproc) ))" "% "; done; printf "\n"`
 (*) Check whether laptop is running on battery or cable: `eval "$(printf "echo %s \$((%i * 100 / %i))\n" $(cat $(find /sys -name energy_now 2>/dev/null | head -1 | xargs dirname)/{status,energy_{now,full}}))%"`
+(*) Get battery stats: `DIR=$(find /sys -name energy_now -exec dirname {} \; 2>/dev/null | head -1) && for STAT in $(find $DIR -maxdepth 1 -type f); do printf "%s %s\n" "$(basename $STAT)" "$(cat $STAT)"; done`
+(*) Is your machine plugged in?: `cat /sys/class/power_supply/AC/online`
+(*) Print your cpu intel architecture family: `cat /sys/devices/cpu/caps/pmu_name`
+(*) (OSX) Get CPU thermal data: `sysctl machdep.xcpm.cpu_thermal_level`
+(*) Quick integer CPU benchmark: `time cat /proc/cpuinfo |grep proc|wc -l|xargs seq|parallel -N 0 echo "2^2^20" '|' bc`
+(*) Small CPU benchmark with PI, bc and time.: `time cat /proc/cpuinfo |grep proc|wc -l|xargs seq|parallel -N 0 echo "scale=4000\; a\(1\)\*4" '|' bc -l`
 
 (*) Summarize the size of current directory on disk in a human-readable format: `du -sh`
 (*) See free disk space in a human readable format: `df -h`
 (*) Currently mounted filesystems in nice layout: `mount | column -t`
 (*) Get the top 10 largest files ordered by size descending, starting from the current folder, recursively: `find . -printf '%s %p\n'| sort -nr | head -10`
 (*) Find 10 largest folders: `du -hsx * | sort -rh | head -10`
+(*) Watches every second, a directory listing as it changes: `while :; do clear; ls path/to/dir | wc -l; sleep 1; done`
+(*) Find top 10 largest files in /var directory (subdirectories and hidden files included ): `tree -ihafF /var | tr '[]' ' '| sort -k1hr|head -10`
+(*) Tree command limit depth for recusive directory list: `tree -L 2 -u -g -p -d`
 
 (*) List of commands you use most often: `history | awk '{a[$2]++}END{for(i in a){print a[i] " " i}}' | sort -rn | head`
 (*) List of commands you use most often: `history | awk '{print $2}' | sort | uniq -c | sort -rn | head`
 
 (*) Query my external IP address: `curl -4 https://icanhazip.com`
 (*) #su List processes that are actively using a port: `netstat -tulpn | grep LISTEN`
-(*) List currently running processes: `ps auxww`
-(*) List all process of current user (full info): `ps --user NAME -F`
-(*) Show most memory intensive process: `ps axch -o cmd:15,%mem --sort=-%mem`
-(*) Show most CPU intensive process: `ps axch -o cmd:15,%cpu --sort=-%cpuw`
 
-(*) Show systemctl failed units: `systemctl --failed`
-(*) Show the status of a unit: `systemctl status NAMEOFUNIT`
-(*) Show all installed services: `systemctl list-unit-files --state=enabled --no-pager`
+(*) List contents of directory, sort by access time: `ls -ltr`
+(*) Create a file and manipulate the date: `touch -d '-1 year' /tmp/oldfile`
 
-(*) #su Flash an image onto a USB drive using cat: `cat path/to/archlinux-version-x86_64.iso > /dev/sdx`
-(*) #su Flash an image onto a USB drive using cp: `cp path/to/archlinux-version-x86_64.iso /dev/sdx`
-(*) #su Flash an image onto a USB drive using dd: `dd bs=4M if=path/to/archlinux-version-x86_64.iso of=/dev/sdx status=progress oflag=sync`
-(*) #su Flash an image onto a USB drive using tee: `tee < path/to/archlinux-version-x86_64.iso > /dev/sdx`
-
-(*) #su Mount an ISO: `mount -o loop /path/to/image.iso /media/mountpoint`
-(*) #su Rip an ISO: run `isosize -x /dev/sr0` to determine sector count and size, then run `dd if=/dev/sr0 of=discimage.iso bs=SECTOR_SIZE count=SECTOR_COUNT status=progress`
-
-(*) List input devices: `xinput list` (e.g. to see Touchpad input on a laptop)
-(*) Disable touchpad (and possibly add to `.xprofile`): `xinput disable 'SynPS/2 Synaptics TouchPad'`
+Administration, Processes and Daemons
+=====================================
 
 (*) List all running processes: `ps aux`
 (*) List all running processes including the full command string: `ps auxww`
@@ -50,12 +46,48 @@ System information commands
 (*) List all processes of the current user as a tree: `ps --user $(id -u) f`
 (*) Get the parent PID of a process: `ps -o ppid= -p pid`
 (*) Sort processes by memory consumption: `ps --sort size`
+(*) List currently running processes: `ps auxww`
+(*) List all process of current user (full info): `ps --user NAME -F`
+(*) Show most memory intensive process: `ps axch -o cmd:15,%mem --sort=-%mem`
+(*) Show most CPU intensive process: `ps axch -o cmd:15,%cpu --sort=-%cpuw`
+(*) Monitor my process group tree: `watch "ps --forest -o pid=PID,tty=TTY,stat=STAT,time=TIME,pcpu=CPU,cmd=CMD -g $(ps -o sid= -p $(pgrep -f "<my_process_name>"))"`
+(*) Show top 50 running processes ordered by highest memory/cpu usage refreshing every 1s: `watch -n1 "ps aux --sort=-%mem,-%cpu | head -n 50"`
+(*) Perform Real-time Process Monitoring Using Watch Utility: `watch -n 1 'ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head'`
+(*) Sort processes by CPU Usage: `ps auxk -%cpu | head -n10`
+(*) Top 10 Memory Processes (reduced output to applications and %usage only): `ps aux | sort -rk 4,4 | head -n 10 | awk '{print $4,$11}'`
+(*) Top 10 Memory Processes: `ps aux | sort -rk 4,4 | head -n 10`
 
 (*) List all of the signals kill can send: `kill -l`
 (*) Hang up process: `kill -1 process_id`
 (*) Send interrupt to process: `kill -2 process_id`
 (*) Immediately terminate a process: `kill -9 process_id`
 (*) Hang up all processes that match a name: `pkill -9 "process_name"`
+
+(*) Show systemctl failed units: `systemctl --failed`
+(*) Show the status of a unit: `systemctl status NAMEOFUNIT`
+(*) Show all installed services: `systemctl list-unit-files --state=enabled --no-pager`
+(*) #su Programmatic way to find and set your timezone: `timedatectl set-timezone $(curl -s worldtimeapi.org/api/ip.txt | sed -n 's/^timezone: //p')`
+(*) #su Add a DNS server on the fly: `systemd-resolve --interface <NombreInterfaz> --set-dns <IPDNS> --set-domain mydomain.com`
+(*) #su Restart Bluetooth: `systemctl restart bluetooth`
+(*) #su Command to logout all the users in one command: `who | awk '!/root/{ cmd="/sbin/pkill -KILL -u " $1; system(cmd)}'`
+
+(*) List all accessed configuration files while executing a program in linux terminal (improved version): `strace 2>&1 <any_executable> | egrep -o "\".*\.conf\""`
+(*) Find which config-file is read: `strace 2>&1  geany | grep geany.conf`
+(*) Linux system calls of MySQL process: `strace -c -p $(pidof -s mysqld) -f -e trace=all`
+
+(*) Using a single sudo to run multiple && arguments: `sudo -s <<< 'apt update -y && apt upgrade -y'`
+(*) Using a single sudo to run multiple && arguments: `sudo sh -c 'apt update -y && apt upgrade -y'`
+
+Devices and Storage
+===================
+
+(*) #su Flash an image onto a USB drive using cat: `cat path/to/archlinux-version-x86_64.iso > /dev/sdx`
+(*) #su Flash an image onto a USB drive using cp: `cp path/to/archlinux-version-x86_64.iso /dev/sdx`
+(*) #su Flash an image onto a USB drive using dd: `dd bs=4M if=path/to/archlinux-version-x86_64.iso of=/dev/sdx status=progress oflag=sync`
+(*) #su Flash an image onto a USB drive using tee: `tee < path/to/archlinux-version-x86_64.iso > /dev/sdx`
+(*) #su Write a bootable Linux .iso file directly to a USB-stick: `wget -O /dev/sdb https://cdimage.ubuntu.com/daily-live/current/eoan-desktop-amd64.iso`
+(*) #su Mount an ISO: `mount -o loop /path/to/image.iso /media/mountpoint`
+(*) #su Rip an ISO: run `isosize -x /dev/sr0` to determine sector count and size, then run `dd if=/dev/sr0 of=discimage.iso bs=SECTOR_SIZE count=SECTOR_COUNT status=progress`
 
 `finddevs.sh` (poor man's lsusb):
 
@@ -73,21 +105,47 @@ for sysdevpath in $(find /sys/bus/usb/devices/usb*/ -name dev); do
 done
 }}}
 
-Fundamental Commands
-====================
-
 Grep
-----
-
-(*) List contents of directory, sort by access time: `ls -ltr`
+====
+(*) Search for a pattern within a file: `grep "search_pattern" path/to/file`
+(*) Search for an exact string (disables regular expressions): `grep --fixed-strings "exact_string" path/to/file`
+(*) Search for a pattern in all files recursively in a directory, showing line numbers of matches, ignoring binary files: `grep --recursive --line-number --binary-files=without-match "search_pattern" path/to/directory`
+(*) Use extended regular expressions (supports `?`, `+`, `{}`, `()` and `|`), in case-insensitive mode: `grep --extended-regexp --ignore-case "search_pattern" path/to/file`
+(*) Print 3 lines of context around, before, or after each match: `grep --context|before-context|after-context=3 "search_pattern" path/to/file`
+(*) Print file name and line number for each match: `grep --with-filename --line-number "search_pattern" path/to/file`
+(*) Search for lines matching a pattern, printing only the matched text: `grep --only-matching "search_pattern" path/to/file`
+(*) Search stdin for lines that do not match a pattern: `cat path/to/file | grep --invert-match "search_pattern"`
 (*) Invert matching lines with `-v`: `grep -v "roses" poem.txt`
 (*) TODO look ahead/behind with `-A`, `-B`, `-C` switches
 (*) TODO only keep what grep found with `-o`
 (*) Find (grep) files with oldpattern and replace with newpattern: `grep /path/to/search -rl -e "oldpattern" | xargs sed -i "s/oldpattern/newpattern/g"`
 (*) Find (grep) strings in files, in current directory, recursively (-r), printing line numbers (-n): `grep "STRING" -rnw .`
+(*) Colorize grep output: `grep --color -E 'pattern|$' file`
+(*) Highlight with grep and still output file contents: `grep --color -E 'pattern|' file`
+(*) Print hugepage consumption of each process: `grep -e AnonHugePages  /proc/*/smaps | awk  '{ if($2>4) print $0} ' |  awk -F "/" '{system("cat /proc/" $3 "/cmdline");printf("\n");print $0; printf("\n");}'`
+(*) Find Apache Root document: `grep -e '^[[:blank:]]*DocumentRoot[[:blank:]]\S'`
+(*) Extract email addresses from some file (or any other pattern): `grep -Eio '([[:alnum:]_.-]{1,64}@[[:alnum:]_.-]{1,252}?\.[[:alpha:].]{2,6})'`
+(*) Extract queries from mysql general log: `grep -Eo '( *[^ ]* *){4}Invoice_Template( *[^ ]* *){4}' /mysql-bin-log/mysql-gen.log | head -10000 | sort -u`
+(*) Get all lines that start with a dot or period: `grep '^\.' file`
+(*) Grep for minus (-) sign: `grep -- -`
+(*) Find passwords that has been stored as plain text in NetworkManager: `grep -H '^psk=' /etc/NetworkManager/system-connections/*`
+(*) Find Apache Root document: `grep -i 'DocumentRoot' /usr/local/apache/conf/httpd.conf`
+(*) Show OS release incl version.: `grep -m1 -h [0-9] /etc/{*elease,issue} 2>/dev/null | head -1`
+(*) Delete at start of each line until character: `grep -Po '^(.*?:\K)?.*'`
+(*) Get rid of lines with non ascii characters: `grep -v $'[^\t\r -~]' my-file-with-non-ascii-characters`
+
+Heads and Tails
+===============
+
+(*) Filter the output of a file continously using tail and grep: `tail -f path/to/file | grep your-search-filter`
+(*) Filter the output of a file continously using tail and grep: `tail -f $FILENAME | grep --line-buffered $PATTERN`
+(*) Realtime lines per second in a log file, with history: `tail -f access.log | pv -l -i10 -r -f 2>&1 >/dev/null  | tr /\\r \ \\n`
+(*) Display the end of a logfile as new lines are added to the end: `tail -f logfile`
+(*) Tail a log and replace according to a sed pattern: `tail -F logfile|while read l; do sed 's/find/replace/g' <<< $l; done`
+(*) Re-execute a command using a saved /proc/pid/cmdline file: `tail -zn+2 $CMDLINE_FILENAME | xargs -0 $COMMAND`
 
 Find
-----
+====
 
 (*) Find all files in current directory exclude `.wine` and `.git` directories: `find . -type f \! \( -path '*/\.wine/*' -o -path '*/\.git/*' \)`
 (*) Delete all files in all subdirectories by extension: `find . -name "*.jpg" -delete`
@@ -125,7 +183,7 @@ Find
 (*) Find directory with most inodes/files: `find / -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n | tail`
 
 Zip
----
+===
 
 (*) Zip all JPG files in the current directory to a zip file: `zip images.zip *.jpg`
 (*) Zip multiple files and directories recursively: `zip -r archive.zip *.jpg ./mydir1 ./mydir2`
@@ -138,7 +196,7 @@ Zip
 (*) List files within a specified archive (without extracting them): `zip -sf compressed.zip`
 
 Gzip
-----
+====
 
 (*) Compress a file, replacing it with a gzipped compressed version: `gzip file.ext`
 (*) Decompress a file, replacing it with the original uncompressed version: `gzip -d file.ext.gz`
@@ -153,7 +211,7 @@ Gzip
 (*) List the contents of a compressed file: `gunzip --list file.txt.gz`
 
 Bzip2
------
+=====
 
 (*) Compress a file: `bzip2 path/to/file_to_compress`
 (*) Decompress a file: `bzip2 -d path/to/compressed_file.bz2`
@@ -161,7 +219,7 @@ Bzip2
 (*) Extracts blocks from damaged .bz2 files: `bzip2recover damaged_file_name`
 
 xz
---
+==
 
 (*) Compress a file to the xz file format: `xz file`
 (*) Decompress a xz file: `xz -d file.xz`
@@ -173,7 +231,7 @@ xz
 (*) Compress a file using the best compression: `xz -9 file`
 
 Tar and Compression
--------------------
+===================
 
 (*) List the contents of a tar file: `tar tvf source.tar`
 (*) Create an archive from files: `tar cf target.tar file1 file2 file3`
@@ -189,7 +247,7 @@ Tar and Compression
 (*) Zgrep across multiple files: `find . -name "file-pattern*.gz" -exec zgrep -H 'pattern' {} \;`
 
 Sed
----
+===
 
 (*) Replace the first occurrence of a regular expression in each line of a file, and print the result: `sed 's/regex/replace/' filename`
 (*) Replace all occurrences of an extended regular expression in a file, and print the result: `sed -r 's/regex/replace/g' filename`
@@ -209,7 +267,7 @@ Sed
 (*) Remove ^M characters from file using sed: `sed 's/\r//g' < input.txt >  output.txt`
 
 Diff
-----
+====
 
 (*) Comparison between the execution output of the last and penultimate command: `diff <(!!) <(!-2)`
 (*) Show the difference: `diff file1 file2 --side-by-side --suppress-common-lines`
@@ -217,16 +275,6 @@ Diff
 (*) Check difference between two file directories recursively: `diff <(tree /dir/one) <(tree /dir/two)`
 
 (*) Close virtual terminal or logout, keeping all subprocess running: `disown -a && exit`
-
-X
-=
-
-(*) Display information about key presses: `showkey -a`
-(*) Show information about a window by clicking on it: `xwininfo`
-(*) Send specific key strokes to a window: `xdotool`
-(*) Fetch specific window properties: `xprop`
-(*) Output text on to the clipboard: `echo "hello" | xclip -i -sel clip`
-(*) Get text from the clipboard: `xclip -o -sel clip`
 
 Perl
 ====
@@ -243,6 +291,19 @@ Perl
 (*) Shuffle lines via perl: `seq 1 9 | perl -e 'print sort { (-1,1)[rand(2)] } <>'`
 (*) Shuffle lines via perl: `seq 1 9 | perl -MList::Util=shuffle -e 'print shuffle <>;'`
 
+X
+=
+
+(*) Display information about key presses: `showkey -a`
+(*) Show information about a window by clicking on it: `xwininfo`
+(*) Send specific key strokes to a window: `xdotool`
+(*) Fetch specific window properties: `xprop`
+(*) Output text on to the clipboard: `echo "hello" | xclip -i -sel clip`
+(*) Get text from the clipboard: `xclip -o -sel clip`
+(*) List input devices: `xinput list` (e.g. to see Touchpad input on a laptop)
+(*) Disable touchpad (and possibly add to `.xprofile`): `xinput disable 'SynPS/2 Synaptics TouchPad'`
+(*) Make window transparent (50% opacity) in Gnome shell: `xprop -format _NET_WM_WINDOW_OPACITY 32c -set _NET_WM_WINDOW_OPACITY 0x7FFFFFFF`
+(*) Set RGB gamma of secondary monitor: `secondscreen=$(xrandr -q | grep " connected" | sed -n '2 p' | cut -f 1 -d ' '); [ "$secondscreen" ] && xrandr --output $secondscreen --gamma 0.6:0.75:1`
 
 man
 ===
@@ -272,11 +333,81 @@ Pacman
 (*) Clean up cached packages: `pacman -Sc`
 (*) Search and remove found packages: `pacman -Rns $(pacman -Qsq SEARCHSTRING)`
 (*) List packages and their sizes: `LC_ALL=C pacman -Qi | wak '/^Name/{name=$3} /^Installed Size/{print $4$5, name}' | sort -h`
+(*) Sort installed packages by size: `LC_ALL=C pacman -Qi | egrep '^(Name|Installed)' | cut -f2 -d':' | paste - - | column -t | sort -nk 2 | grep MiB`
+(*) Search for missing libraries using pacman: `pacman -Fs libusb-0.1.so.4`
 
 Dpkg
 ====
 
 (*) Rough size estimate of installed debian packages: `echo $[ ($(dpkg-query -s $(dpkg --get-selections | grep -oP '^.*(?=\binstall)') | grep -oP '(?<=Installed-Size: )\d+' | tr '\n' '+' | sed 's/+$//')) / 1024 ]`
+(*) List the binaries installed by a Debian package: `binaries () { dpkg -L "$1" | grep -Po '.*/bin/\K.*'; }`
+(*) List the binaries installed by a Debian package: `binaries () { for f in $(dpkg -L "$1" | grep "/bin/"); do basename "$f"; done; }`
+(*) List all ubuntu installed packages in a single line: `dpkg --get-selections | grep -Evw 'deinstall$' | cut -f1 | sort -u | xargs`
+(*) List all ubuntu installed packages in a single line: `dpkg --get-selections | grep -v deinstall | sort -u | cut -f 1 | tr '\r\n' ' ' | sed '$s/ $/\n/'`
+(*) Get the full description of a randomly selected package from the list of installed packages on a debian system: `dpkg-query --status $(dpkg --get-selections | awk '{print NR,$1}' | grep -oP "^$( echo $[ ( ${RANDOM} % $(dpkg --get-selections| wc -l) + 1 ) ] ) \K.*")`
+(*) #su Save a copy of all debian packages in the form in which they are installed and configured on your system: `for a in $(sudo dpkg --get-selections | cut -f1); do dpkg-repack $a | awk '{if (system("sleep .5 && exit 2") != 2) exit; print}';done`
+(*) List packages manually installed with process currently running: `ps -eo cmd | awk '{print $1}'| sort -u | grep "^/" | xargs dpkg -S 2>/dev/null | awk -F: '{print $1}' | sort -u | xargs apt-mark showmanual`
+
+Rpm
+===
+
+(*) Show version of httpd package: `rpm -q httpd`
+(*) List versions of all matching packages: `rpm -qa 'mariadb*'`
+(*) Forcibly install a package regardless of currently installed versions: `rpm -U package_name.rpm --force`
+(*) Identify owner of a file and show version of the package: `rpm -qf /etc/postfix/main.cf`
+(*) List package-owned files: `rpm -ql kernel`
+(*) Show scriptlets from an RPM file: `rpm -qp --scripts package_name.rpm`
+(*) Show changed, missing and/or incorrectly installed files of matching packages: `rpm -Va 'php-*'`
+(*) Extract rpm package name, version and release using some fancy sed regex: `rpm -qa | sed 's/^\(.*\)-\([^-]\{1,\}\)-\([^-]\{1,\}\)$/\1 \2 \3/' | sort | column -t`
+
+General networking
+==================
+
+(*) List interfaces with detailed info: `ip address`
+(*) List interfaces with brief network layer info: `ip -brief address`
+(*) List interfaces with brief link layer info: `ip -brief link`
+(*) Display the routing table: `ip route`
+(*) Show neighbors (ARP table): `ip neighbour`
+(*) Make an interface up/down: `ip link set interface up/down`
+(*) Add/Delete an IP address to an interface: `ip addr add/del ip/mask dev interface`
+(*) Add a default route: `ip route add default via ip dev interface`
+(*) Watch how many tcp connections there are per state every two seconds: `watch -c "netstat -natp 2>/dev/null | tail -n +3 | awk '{print \$6}' | sort | uniq -c"`
+(*) Watch how many tcp connections there are per state every two seconds: `watch -c "netstat -nt | awk 'FNR > 3 {print \$6}' | sort | uniq -c"`
+(*) Watch TCP, UDP open ports in real time with socket summary.: `watch ss -stplu`
+(*) Fast portscanner via xargs: `xargs -i -P 1200 nc -zvn {} 22 < textfile-with-hosts.txt`
+(*) Check whether IPv6 is enabled: `printf "IPv6 is "; [ $(cat /proc/sys/net/ipv6/conf/all/disable_ipv6) -eq 0 ] && printf "enabled\n" || printf "disabled\n"`
+
+(*) Capture SMTP / POP3 Email: `sudo tcpdump -nn -l port 25 | grep -i 'MAIL FROM\|RCPT TO'`
+(*) Capture FTP Credentials and Commands: `sudo tcpdump -nn -v port ftp or ftp-data`
+(*) Capture all plaintext passwords: `sudo tcpdump port http or port ftp or port smtp or port imap or port pop3 or port telnet -l -A | egrep -i -B5 'pass=|pwd=|log=|login=|user=|username=|pw=|passw=|passwd=|password=|pass:|user:|username:|password:|login:|pass |user '`
+(*) Extract HTTP Passwords in POST Requests: `sudo tcpdump -s 0 -A -n -l | egrep -i "POST /|pwd=|passwd=|password=|Host:"`
+(*) (Powershell) telnet in Windows: `Test-NetConnection -ComputerName example.com -Port 443`
+
+(*) Display all TCP sockets: `ss -t -a`
+(*) Display all TCP sockets with process SELinux security contexts: `ss -t -a -Z`
+(*) Display all UDP sockets: `ss -u -a`
+(*) Display all established ssh connections: `ss -o state established '( dport = :ssh or sport = :ssh )'`
+(*) Find all local processes connected to X server: `ss -x src /tmp/.X11-unix/*`
+(*) List all the tcp sockets in state FIN-WAIT-1 for our apache to network 193.233.7/24 and look at their timers.: `ss -o state fin-wait-1 '( sport = :http or sport = :https )' dst 193.233.7/24`
+(*) List sockets in all states from all socket tables but TCP: `ss -a -A 'all,!tcp'`
+(*) Find all clients connected to HTTP or HTTPS ports: `ss -o state established '( dport = :http or sport = :https )'`
+(*) Show all current listening programs: `ss -plunt`
+
+(*) Transfer file from local to remote host: `rsync path/to/local_file remote_host:path/to/remote_directory`
+(*) Transfer file from remote host to local: `rsync remote_host:path/to/remote_file path/to/local_directory`
+(*) Transfer file in [a]rchive (to preserve attributes) and compressed ([z]ipped) mode with [v]erbose and [h]uman-readable [P]rogress: `rsync -azvhP path/to/local_file remote_host:path/to/remote_directory`
+(*) Transfer a directory and all its children from a remote to local: `rsync -r remote_host:path/to/remote_directory path/to/local_directory`
+(*) Transfer directory contents (but not the directory itself) from a remote to local: `rsync -r remote_host:path/to/remote_directory/ path/to/local_directory`
+(*) Transfer a directory [r]ecursively, in [a]rchive to preserve attributes, resolving contained soft[l]inks , and ignoring already transferred files [u]nless newer: `rsync -rauL remote_host:path/to/remote_file path/to/local_directory`
+(*) Transfer file over SSH and delete local files that do not exist on remote host: `rsync -e ssh --delete remote_host:path/to/remote_file path/to/local_file`
+(*) Transfer file over SSH using a different port than the default and show global progress: `rsync -e 'ssh -p port' --info=progress2 remote_host:path/to/remote_file path/to/local_file`
+(*) Rsync should continue even if connection lost: `rsync --archive --recursive --compress --partial --progress --append root@123.123.123.123:/backup/somefile.txt.bz2 /home/ubuntu/`
+(*) Rsync using SSH and outputing results to a text file: `rsync --delete --stats -zaAxh -e ssh /local_directory/ username@IP_of_remote:/Remote_Directory/ > /Text_file_Directory/backuplog.txt`
+(*) Rsync using pem file: `rsync -e 'ssh -i /root/my.pem' -avz /mysql/db/data_summary.* ec2-1-2-4-9.compute-1.amazonaws.com:/mysql/test/`
+
+(*) Run a http server in the current directory tree (http://localhost:8080/) : `python -m http.server 8080 && $BROWSER http://localhost:8080`
+(*) Super fast port scanner: `time seq 65535 | parallel -k --joblog portscan -j9 --pipe --cat -j200% -n9000  --tagstring  '\033[30;3{=$_=++$::color%8=}m'  'nc -vz localhost $(head -n1 {})-$(tail -n1 {})'`
+(*) Fast ports canner via parallel: `parallel -j200% -n1 -a textfile-with-hosts.txt nc -vz {} ::: 22`
 
 Network Manager
 ===============
@@ -326,106 +457,30 @@ man 7 nm-openvswitch
 (*) Imports an OpenVPN configuration to NetworkManager: `nmcli con import type openvpn file ~/Downloads/frootvpn.ovpn`
 (*) For more Network Manager examples: `man nmcli-examples`
 
-PulseAudio and ALSA (not so much)
-=================================
+MySQL
+=====
 
-PulseAudio is a general purpose sound server.
-It is intended to run as a middleware between your applications and your hardware devices, either using ALSA or OSS.
-It also offers easy network streaming across local devices using Avahi if enabled.
-PulseAudioclients can send audio to "sinks" and receive audio from "sources".
-So, sinks are outputs (audio goes there), sources are inputs (audio comes from there).
+(*) Mysql status: `mysqladmin status >> /home/status.txt 2>> /home/status_err.txt`
+(*) InnoDB related parameters: `mysqladmin variables | egrep '(innodb_log_file|innodb_data_file)'`
+(*) Mysql backup utility: `mysqlbackup --port=3306 --protocol=tcp --user=dba --password=dba  --with-timestamp  --backup-dir=/tmp/toback/ --slave-info backup-and-apply-log  --innodb_data_file_path=ibdata1:10M:autoextend --innodb_log_files_in_group=2 --innodb_log_file_size=5242880`
+(*) Reapair all mySQL/mariaDB databases: `mysqlcheck --repair --all-databases -u root -p<PASSWORD>`
+(*) Monitor ETA using pv command: `mysqldump --login-path=mypath sbtest sbtest4 |  pv  --progress  --size  200m  -t  -e  -r  -a > dump.sql`
+(*) Backup all data in compressed format: `mysqldump --routines --all-databases | gzip > /home/mydata.sql.gz 2> /home/mydata.date '+\%b\%d'.err`
+(*) Check mysql server performance: `mysqlslap --query=/home/ec2-user/insert.txt --concurrency=123 --iterations=1  --create-schema=test`
+(*) Check mysql capacity to handle traffic: `mysqlslap  --query=/root/select_query_cp.sql --concurrency=10 --iterations=5  --create-schema=cvts1`
 
-(*) Set the volume of sink 1 to 75%: `pactl set-sink-volume 1 0.75`
-(*) Set the volume to 75% on the default sink: `pamixer --set-volume 75`
-(*) Toggle mute on the default sink (using the special name `@DEFAULT_SINK@`): `pactl set-sink-mute @DEFAULT_SINK@ toggle`
-(*) Toggle mute on a sink other than the default: `pamixer --toggle-mute --sink ID`
-(*) Increase the volume on default sink by 5%: `pamixer --increase 5`
-(*) Decrease the volume on a source by 5%: `pamixer --decrease 5 --source ID`
-(*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
-(*) Use the allow boost option to increase, decrease, or set the volume above 100%: `pamixer --set-volume 105 --allow-boost`
-(*) Mute the default sink (use `--unmute` instead to unmute): `pamixer --mute`
+Security and Encryption
+=======================
 
-(*) Change the default sink (output) to 1: `pactl set-default-sink 1`
-(*) List all sinks and sources with their corresponding IDs: `pamixer --list-sinks --list-sources`
-(*) List all sources: `LANG=C pactl list | grep -A2 'Source #' | grep 'Name: ' | cut -d" " -f2`
-(*) List all sinks: `pactl list sinks short`
-(*) Create a sink: `pacmd load-module module-null-sink sink_name=MySink && pacmd update-sink-proplist MySink device.description=MySink`
-
-{{{sh
-SOURCE=$(pactl list | grep -A2 'Source #' | grep 'Name: ' | cut -d" " -f2 | fzf --prompt="Select source >")
-SINK=$(pactl list | grep -A2 'Sink #' | grep 'Name: ' | cut -d" " -f2 | fzf --prompt="Select sink >")
-PULSE_SOURCE="$SOURCE" PULSE_SINK="$SINK" ffplay "https://holiday.stream.publicradio.org/holiday_yc.aac"
-}}}
-
-Bluetooth
-=========
-
-So much to do here - probably - skip this unless you know what you're doing.
-
-- On Arch Linux, install packages `bluez`, `bluez-utils`, and recommended `pulseaudio-bluetooth`
-- Enable bluetooth with `systemctl enable --now bluetooth`
-- `bluetoothctl`
-	* `power on`
-	* `agent on`
-	* `default-agent`
-	* `scan on`
-	* `pair <TAB>`
-	* `connect <TAB>`
-
-TIPS::
-* `org.bluez.Error.Failed` error
-	- *Make sure your device is ON, accepting BLUETOOTH connections, and/or PAIRING*
-	- Is `bluetooth.service` running?
-	- Check out logs `systemctl status bluetooth`
-	- Restart pulseaudio: `pulseaudio -k`, then try connecting again
-* By default, bluetooth power is not on. Change this: https://wiki.archlinux.org/index.php/bluetooth#Auto_power-on_after_boot
-* To automate bluetoothctl commands, use `echo -e "<command1>\n<command2>\n" | bluetoothctl`
-
-Printing
-========
-
-Again, lots to do. Reader beware.
-
-- `pacman -S cups cups-pdf gutenprint system-config-printer`
-- `systemctl enable --now cups` (reboot may be necessary regardless)
-- `system-config-printer`
-- Google search for the PPD file and add it manually
-	- e.g. https://www.openprinting.org/printer/Ricoh/Ricoh-SP_C440DN
-
-* https://gist.github.com/edoz90/660a2a67b9bc8a815ba537530137636a
-* https://www.openprinting.org/printer/Ricoh/Ricoh-MP_9003
-* https://wiki.linuxfoundation.org/openprinting/database/cupsdocumentation
-* https://wiki.archlinux.org/index.php/CUPS#Printer_Drivers
-
-http://localhost:631 is the CUPS web interface.
-
-Helpful commands:
-`lpstat -s` to view the status of known printers
-`lpoptions -l` to list all known options
-`lpoptions -d Ricoh-SP-C440DN` to list printing options for Ricoh
-`lpr -P Ricoh-SP-C440DN <file>` to print <file> to Ricoh
-
-More:
-https://wiki.archlinux.org/index.php/CUPS#CLI_tools
-
-Hashes, Passwords, Encryption, and Secrets
-==========================================
-
-SSH - OpenSSH (thanks, puffy!)
-------------------------------
-
-(*) Generate a SSH key: `ssh-keygen`
-(*) Add a key to SSH agent: `eval "$(ssh-agent -s) ` and `ssh-add ~/.ssh/NAMEOFYOURKEY`
-(*) Copy `~/.ssh/id_rsa.pub` to remote-server.org: `$ ssh-copy-id -i ~/.ssh/is_rsa.pub username@remote-server.org`
-(*) Specify the port that SSH should use: `$ ssh-copy-id -i ~/.ssh/id_ed25519.pub -p 221 username@remote-server.org`
-(*) Use a specific key to copy a file: `scp -i ~/.ssh/private_key local_file remote_host:/path/remote_file`
-(*) Infinite loop ssh: `while true; do ssh login@10.0.0.1; if [[ $? -ne 0 ]]; then echo "Nope, keep trying!"; fi; sleep 10; done`
-
-SSH security (make sure you can login using your key first!) `/etc/ssh/sshd_config`:
-    `PasswordAuthentication no` and `PermitRootLogin no`
+(*) Command shell generate random strong password: `len=20; tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${len} | xargs`
+(*) Generate a random password 30 characters long: `tr -c -d "a-zA-Z0-9" </dev/urandom | dd bs=30 count=1 2>/dev/null;echo`
+(*) Generate cryptographically secure password: `python -c "import string; import random;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(16)))"`
+(*) Compute and check MD5 message digest: `md5sum -c filename.md5`
+(*) Dump obfuscated passwords from Google Chrome and Chromium.: `sqlite3 -header -csv -separator "," ~/.config/google-chrome/Default/Login\ Data "SELECT * FROM logins" > ~/Passwords.csv`
+(*) Dump obfuscated passwords from Brave: `sqlite3 -header -csv -separator "," ~/.config/BraveSoftware/Brave-Browser/Default/Login\ Data "SELECT * FROM logins" > ~/Passwords.csv`
 
 Password Store
---------------
+==============
 
 (*) Initiate a password-store (requires gpg key): `pass init <same-email-as-full-gen-key>`
 (*) Allow git to manage the password-store: `pass git init`
@@ -441,7 +496,7 @@ Password Store
 TODO: how do we move the store safely? bring keys? can we remotely access the store and have some security still?
 
 Passwords and Secrets
----------------------
+=====================
 
 Don't even bother - there's too much security risk here.
 I have this here for my own notes.
@@ -463,29 +518,29 @@ To import keys:
 * Use `shred -uz` (careful!) to destroy the private key in the old location
 
 Unlocking keyrings (convenience vs. security)
----------------------------------------------
+=============================================
 
 This activates `sudopass` to allow `w!!` in vim, and `neomutt` syncing with `isync`
 	1. Transfer gnupg keys to new machine or create a new one `gpg --full-key-gen`
 	2. Initialize a password store `pass init EMAIL`
 	3. Add your sudo password with `pass add local/USER@HOSTNAME`
-	4. Because my gnupg lives elsewhere,
+	4. Because my gnupg lives in `~/.local/share/gnupg`:
 		- Need `~/.pam_environment` with:
 			GNUPGHOME DEFAULT=@{HOME}/.local/share/gnupg
 			XDG_CONFIG_HOME DEFAULT=@{HOME}/.config
-	5. Install `pam-gnupg` (AUR / GitHug) and` inetutils` (enable `hostname`)
+	5. Install `pam-gnupg` (AUR / GitHug) and` inetutils` (enables `hostname`)
 	6. Add `auth optional pam_gnupg.so` to `/etc/pam.d/system-local-login`
 		(see https://github.com/cruegge/pam-gnupg#setup-guide if you are using a login manager)
-	7. Add keygrip from `gpg -K --with-keygrip` to `~/.config/pam-gnupg`
-	   (`gpg -K --with-keygrip | tail -n2 | grep -Po "(?<=Keygrip = ).*" >> ~/.config/pam-gnupg`)
+	7. Add keygrip to `~/.config/pam-gnupg`:
+	   `gpg -K --with-keygrip | tail -n2 | grep -Po "(?<=Keygrip = ).*" >> ~/.config/pam-gnupg`
 
 	NOTE: GnuPG may complain about unsafe permissions on gnupg directory:
-	  	- Files in `gnupg` should be `600` and directories `700` (use `chmod`)
-		- `find -type f $GNUPGHOME -exec chmod 600 {}`
-
+	  	- Files in `gnupg` should be `600` and directories `700`. Do:
+		  `find -type f $GNUPGHOME -exec chmod 600 {}`
+		  `find -type d $GNUPGHOME -exec chmod 700 {}`
 
 GPG - GnuPG
------------
+===========
 
 (*) Sign `doc.txt` without encryption (writes output to `doc.txt.asc`): `gpg --clearsign doc.txt`
 (*) Encrypt `doc.txt` for alice@example.com (output to `doc.txt.gpg`): `gpg --encrypt --recipient alice@example.com doc.txt`
@@ -494,13 +549,32 @@ GPG - GnuPG
 (*) Import a public key: `gpg --import public.gpg`
 (*) Export public key for alice@example.com (output to stdout): `gpg --export --armor alice@example.com`
 (*) Export private key for alice@example.com (output to stdout): `gpg --export-secret-keys --armor alice@example.com`
-(*) Make an encrypted archive of local dir/ on remote machine using ssh: `tar -c dir/ | gzip | gpg -c | ssh user@remote 'dd of=dir.tar.gz.gpg'`
-(*) Encrypted archive with openssl and tar: `tar --create --file - --posix --gzip -- <dir> | openssl enc -e -aes256 -out <file>`
 
-(*) Compute and check MD5 message digest: `md5sum -c filename.md5`
+SSH - OpenSSH (thanks, puffy!)
+==============================
+
+(*) Connect to a server using SSH: `ssh user@host`
+(*) Generate a SSH key: `ssh-keygen`
+(*) Generate SSH public key from the private key: `ssh-keygen -y -f privatekey.pem > publickey.pem`
+(*) Copy `~/.ssh/id_rsa.pub` to remote-server.org: `$ ssh-copy-id -i ~/.ssh/is_rsa.pub username@remote-server.org`
+(*) (Powershell) Copy SSH id without ssh-copy-id: `Get-Contents ~/.ssh/id_rsa.pub | ssh user@123.45.67.89 "cat >> ~/.ssh/authorized_keys"`
+(*) Sometimes SSH still won't use your key - make sure you've added it: `eval "$(ssh-agent -s) && ssh-add ~/.ssh/NAMEOFYOURKEY`
+(*) SSH connection through host in the middle: `ssh -J user@reachable_host user@unreacheable_host`
+(*) Specify the ID and port that SSH should use: `$ ssh-copy-id -i ~/.ssh/id_ed25519.pub -p 221 username@remote-server.org`
+(*) Copy a file to a remote server: `scp path/to/local_file user@host:/path/remote_file`
+(*) Make an encrypted archive of local dir/ on remote machine using ssh: `tar -c dir/ | gzip | gpg -c | ssh user@remote 'dd of=dir.tar.gz.gpg'`
+(*) Use a specific key to copy a file: `scp -i ~/.ssh/private_key local_file remote_host:/path/remote_file`
+(*) Infinite loop ssh: `while true; do ssh login@10.0.0.1; if [[ $? -ne 0 ]]; then echo "Nope, keep trying!"; fi; sleep 10; done`
+(*) Port forwarding: `ssh -L8888:localhost:80 -i nov15a.pem ubuntu@123.21.167.60`
+(*) Append a pub key from pem file and save in remote server accessing with another key: `ssh-keygen -y -f user-key.pem | ssh user@host -i already_on_remote_server_key.pem 'cat >> ~/.ssh/authorized_keys'`
+(*) Backup VPS disk to another host: `ssh root@vps.example -p22 "cat /dev/sda1 | gzip -1 - " > vps.sda1.img.gz`
+(*) Test your bash skills: `ssh bandit0@bandit.labs.overthewire.org -p 2220`
+
+SSH security (make sure you can login using your key first!) `/etc/ssh/sshd_config`:
+    `PasswordAuthentication no` and `PermitRootLogin no`
 
 OpenSSL
--------
+=======
 
 (*) Encrypt a file using OpenSSL: `openssl aes-256-cbc -a -salt -iter 5 -in data.tar.gz -out data.enc`
 (*) Decrypt a file using OpenSSL: `openssl aes-256-cbc -d -a -iter 5 -in data.enc -out data_decrypted.tar.gz`
@@ -519,12 +593,13 @@ OpenSSL
 (*) Finding the fingerprint of a given certificate: `openssl x509 -in cert.pem -fingerprint -noout`
 (*) Generate a certificate signing request based on an existing certificate. certificate.crt MUST be exists before !: `openssl x509 -x509toreq -in certificate.crt -out CSR.csr -signkey privateKey.key`
 (*) Connect to a server and show full certificate chain: `openssl s_client -showcerts -host example.com -port 443 </dev/null`
+(*) Encrypted archive with openssl and tar: `tar --create --file - --posix --gzip -- <dir> | openssl enc -e -aes256 -out <file>`
 
-Nmap
-====
+TODO (*) Whois filtering the important information: `whois commandlinefu.com | grep -E '^\s{3}'`
 
-Target Specification
---------------------
+Nmap Target Specification
+=========================
+
 (*) Scan a single IP: `nmap 192.168.1.1`
 (*) Scan specific IPs: `nmap 192.168.1.1 192.168.2.1`
 (*) Scan a range: `nmap 192.168.1.1-254`
@@ -534,8 +609,9 @@ Target Specification
 (*) Scan 100 random hosts: `nmap -iR 100`
 (*) Exclude listed hosts: `nmap --exclude 192.168.1.1`
 
-Scan Techniques
----------------
+Nmap Scan Techniques
+====================
+
 (*) TCP SYN port scan (Default): `nmap 192.168.1.1 -sS`
 (*) TCP connect port scan (Default without root privilege): `nmap 192.168.1.1 -sT`
 (*) UDP port scan: `nmap 192.168.1.1 -sU`
@@ -543,8 +619,9 @@ Scan Techniques
 (*) TCP Window port scan: `nmap 192.168.1.1 -sW`
 (*) TCP Maimon port scan: `nmap 192.168.1.1 -sM`
 
-Host Discovery
---------------
+Nmap Host Discovery
+===================
+
 (*) No Scan. List targets only: `nmap 192.168.1.1-3 -sL`
 (*) Disable port scanning. Host discovery only.: `nmap 192.168.1.1/24 -sn`
 (*) Disable host discovery. Port scan only.: `nmap 192.168.1.1-5 -Pn`
@@ -553,9 +630,13 @@ Host Discovery
 (*) UDP discovery on port x. Port 40125 by default: `nmap 192.168.1.1-5 -PU53`
 (*) ARP discovery on local network: `nmap 192.168.1.1-1/24 -PR`
 (*) Never do DNS resolution: `nmap 192.168.1.1 -n`
+(*) Display live hosts on the network: `nmap -sP "$(ip -4 -o route get 1 | cut -d ' ' -f 7)"/24 | grep report | cut -d ' ' -f 5-`
+(*) Quickly ping range of IP adresses and return only those that are online: `nmap -sP 192.168.0.0/24`
+(*) Dump top 10 ports tcp/udp from nmap: `nmap -oA derp --top-ports 10 localhost>/dev/null;grep 'services\=' derp.xml | sed -r 's/.*services\=\"(.*)(\"\/>)/\1/g'`
 
-Port Specifications
--------------------
+Nmap Port Specifications
+========================
+
 (*) Port scan for port x: `nmap 192.168.1.1 -p 21`
 (*) Port range: `nmap 192.168.1.1 -p 21-100`
 (*) Port scan multiple TCP and UDP ports: `nmap 192.168.1.1 -p U:53,T:21-25,80`
@@ -566,24 +647,27 @@ Port Specifications
 (*) Leaving off initial port in range makes the scan start at port 1: `nmap 192.168.1.1 -p-65535`
 (*) Leaving off end port in range makes the scan go through to port 65535: `nmap 192.168.1.1 -p0-`
 
-Service and Version Detection
------------------------------
+Nmap Service and Version Detection
+==================================
+
 (*) Attempts to determine the version of the service running on port: `nmap 192.168.1.1 -sV`
 (*) Intensity level 0 to 9. Higher number increases possibility of correctness: `nmap 192.168.1.1 -sV --version-intensity 8`
 (*) Enable light mode. Lower possibility of correctness. Faster: `nmap 192.168.1.1 -sV --version-light`
 (*) Enable intensity level 9. Higher possibility of correctness. Slower: `nmap 192.168.1.1 -sV --version-all`
 (*) Enables OS detection, version detection, script scanning, and traceroute: `nmap 192.168.1.1 -A`
 
-OS Detection
-------------
+Nmap OS Detection
+=================
+
 (*) Remote OS detection using TCP/IP stack fingerprinting: `nmap 192.168.1.1 -O`
 (*) If at least one open and one closed TCP port are not found it will not try OS detection against host: `nmap 192.168.1.1 -O --osscan-limit`
 (*) Makes Nmap guess more aggressively: `nmap 192.168.1.1 -O --osscan-guess`
 (*) Set the maximum number x of OS detection tries against a target: `nmap 192.168.1.1 -O --max-os-tries 1`
 (*) Enables OS detection, version detection, script scanning, and traceroute: `nmap 192.168.1.1 -A`
 
-Timing and Performance
-----------------------
+Nmap Timing and Performance
+===========================
+
 (*) Paranoid (0) Intrusion Detection System evasion: `nmap 192.168.1.1 -T0`
 (*) Sneaky (1) Intrusion Detection System evasion: `nmap 192.168.1.1 -T1`
 (*) Polite (2) slows down the scan to use less bandwidth and use less target machine resources: `nmap 192.168.1.1 -T2`
@@ -601,8 +685,9 @@ Specify the maximum number of port scan probe retransmissions
 Send packets no slower than <numberr> per second
 Send packets no faster than <number> per second
 
-NSE Scripts
------------
+Nmap NSE Scripts
+================
+
 (*) Scan with default NSE scripts. Considered useful for discovery and safe: `nmap 192.168.1.1 -sC`
 (*) Scan with default NSE scripts. Considered useful for discovery and safe: `nmap 192.168.1.1 --script default`
 (*) Scan with a single script. Example banner: `nmap 192.168.1.1 --script=banner`
@@ -611,8 +696,9 @@ NSE Scripts
 (*) Scan default, but remove intrusive scripts: `nmap 192.168.1.1 --script "not intrusive"`
 (*) NSE script with arguments: `nmap --script snmp-sysdescr --script-args snmpcommunity=admin 192.168.1.1`
 
-Useful NSE Script Examples
---------------------------
+Nmap Useful NSE Script Examples
+===============================
+
 (*) http site map generator: `nmap -Pn --script=http-sitemap-generator scanme.nmap.org`
 (*) Fast search for random web servers: `nmap -n -Pn -p 80 --open -sV -vvv --script banner,http-title -iR 1000`
 (*) Brute forces DNS hostnames guessing subdomains: `nmap -Pn --script=dns-brute domain.com`
@@ -622,8 +708,9 @@ Useful NSE Script Examples
 (*) Check for SQL injections: `nmap -p80 --script http-sql-injection scanme.nmap.org`
 (*) Example IDS Evasion command: `nmap -f -t 0 -n -Pn –data-length 200 -D 192.168.1.101,192.168.1.102,192.168.1.103,192.168.1.23 192.168.1.1`
 
-Firewall / IDS Evasion and Spoofing
------------------------------------
+Nmap Firewall / IDS Evasion and Spoofing
+========================================
+
 (*) Requested scan (including ping scans) use tiny fragmented IP packets. Harder for packet filters: `nmap 192.168.1.1 -f`
 (*) Set your own offset size: `nmap 192.168.1.1 --mtu 32`
 (*) Send scans from spoofed IPs: `nmap -D 192.168.1.101,192.168.1.102, 192.168.1.103,192.168.1.23 192.168.1.1`
@@ -633,13 +720,16 @@ Firewall / IDS Evasion and Spoofing
 (*) Relay connections through HTTP/SOCKS4 proxies: `nmap --proxies http://192.168.1.1:8080, http://192.168.1.2:8080 192.168.1.1`
 (*) Appends random data to sent packets: `nmap --data-length 200 192.168.1.1`
 
-Output
-------
+Nmap Output
+===========
+
 (*) Normal output to the file normal.file: `nmap 192.168.1.1 -oN normal.file`
 (*) XML output to the file xml.file: `nmap 192.168.1.1 -oX xml.file`
 (*) Grepable output to the file grep.file: `nmap 192.168.1.1 -oG grep.file`
 (*) Output in the three major formats at once: `nmap 192.168.1.1 -oA results`
 (*) Grepable output to screen.: `nmap 192.168.1.1 -oG -`
+(*) Nmap get all active online ips  from specific network: `nmap -n -sn 192.168.1.0/24 -oG - | awk '/Up$/{print $2}'`
+(*) Network Discover in a one liner: `nmap -sn 192.168.1.0/24 -oG - | awk '$4=="Status:" && $5=="Up" {print $0}'|column -t`
 (*) Append a scan to a previous scan file: `nmap 192.168.1.1 -oN file.file --append-output`
 (*) Increase the verbosity level (use -vv or more for greater effect): `nmap 192.168.1.1 -v`
 (*) Increase debugging level (use -dd or more for greater effect): `nmap 192.168.1.1 -d`
@@ -650,7 +740,8 @@ Output
 (*) Resume a scan: `nmap --resume results.file`
 
 Helpful Nmap Output Examples
-----------------------------
+============================
+
 (*) Scan for web servers and grep to show which IPs are running web servers: `nmap -p80 -sV -oG - --open 192.168.1.1/24 | grep open`
 (*) Generate a list of the IPs of live hosts: `nmap -iR 10 -n -oX out.xml | grep "Nmap" | cut -d " " -f5 > live-hosts.txt`
 (*) Append IP to the list of live hosts: `nmap -iR 10 -n -oX out2.xml | grep "Nmap" | cut -d " " -f5 >> live-hosts.txt`
@@ -658,8 +749,9 @@ Helpful Nmap Output Examples
 (*) Convert nmap xml files to html files: `xsltproc nmap.xml -o nmap.html`
 (*) Convert nmap xml files to html files: `grep " open " results.nmap | sed -r 's/ +/ /g' | sort | uniq -c | sort -rn | less`
 
-Miscellaneous Options
----------------------
+Nmap Miscellaneous Options
+==========================
+
 (*) Discovery only on ports x, no port scan: `nmap -iR 10 -PS22-25,80,113,1050,35000 -v -sn`
 (*) Arp discovery only on local network, no port scan: `nmap 192.168.1.1-1/24 -PR -sn -vv`
 (*) Traceroute to random targets, no port scan: `nmap -iR 10 -sn -traceroute`
@@ -700,77 +792,14 @@ Git
 (*) Print all git repos from a user (only curl and grep): `USERNAME=username && curl -s https://api.github.com/users/${USERNAME}/repos?per_page=1000 | grep -oP '(?<="git_url": ").*(?="\,)'`
 (*) Print all git repos from a user: `USERNAME=username && curl -s "https://api.github.com/users/${USERNAME}/repos?per_page=1000" | jq '.[].git_url'`
 (*) Print all git repos from a user: `USERNAME=username && curl -s "https://api.github.com/users/${USERNAME}/repos?per_page=1000" | python <(echo "import json,sys;v=json.load(sys.stdin);for i in v:; print(i['git_url']);" | tr ';' '\n')`
-
-Android ADB and Droidcam
-========================
-
-(*) Launches camera via adb: `adb shell "input keyevent KEYCODE_CAMERA"`
-(*) Lists keys: `adb shell getevent -pl`
-(*) List installed packages: `adb shell pm list packages`
-(*) Open application: `adb shell monkey -p com.dev47apps.droidcamx 1`
-(*) Send on/off key press (activates screen): `adb shell input keyevent 26`
-(*) Download all .key files from your android device to your pc.: `for i in `adb shell "su -c find /data /system -name '*.key'"`; do mkdir -p ".`dirname $i`";adb shell "su -c cat $i" > ".$i";done`
-
-You want to be able to combine an audio and microphone sink to share while live streaming: https://www.reddit.com/r/archlinux/comments/klmyec/how_to_play_audio_files_as_input/ghaclhs?utm_source=share&utm_medium=web2x&context=3
-
-(*) List all sinks (or other types - sinks are outputs and sink-inputs are active audio streams): `pactl list sinks short`
-(*) Change the default sink (output) to 1 (the number can be retrieved via the `list` subcommand): `pactl set-default-sink 1`
-(*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
-(*) Set the volume of sink 1 to 75%: `pactl set-sink-volume 1 0.75`
-(*) Toggle mute on the default sink (using the special name `@DEFAULT_SINK@`): `pactl set-sink-mute @DEFAULT_SINK@ toggle`
-
-Droidcam - DroidcamX
---------------------
-
-Home security, using your phone as a camera, what's not to love?
-DroidcamX is worth the $5 or whatever - it's really good.
-
-ADB setup
----------
-  * (Phone) Install `Droidcam` app - `DroidcamX` is a way better alternative (not free)
-  * (Phone) Enable USB debugging (research this for your phone)
-  * Install linux headers (e.g. `linux-headers-lts` for the lts kernel, etc.)
-  * Install `adb` and `droidcam` packages (installs `v4l2loopback-dc-dkms`)
-  * Create a video loopback device `sudo modprobe v4l2loopback_dc video_nr=42`
-  * Optional? Start adb, `adb start-server`
-  * (Phone) confirm connection (a dialog box should open)
-  * Confirm connection to phone, `adb devices`
-
-Droidcam video only (over USB)
-------------------------------
-  1. `droidcam-cli -v adb 4747 &` or `droidcam`
-
-Droidcam with video and microphone
-----------------------------------
-  1. Load `droidcam` on phone and then on computer
-  2. Create a pulse-alsa loopback device: `pacmd load-module module-alsa-source device=hw:Loopback,1,0`
-  3. Run `pactl list short sources` to verify the ID of the loopback device (used in ffmpeg recording)
-  4. Use `pavucontrol` to verify that the phone microphone is active
-
-Viewing the feed
-----------------
-  * `ffplay /dev/videoX` - replace X with your device
-  * Flipped video: `ffplay -vf "vflip,hflip" /dev/video0`
-
-Increase the resolution available to droidcam
----------------------------------------------
-  * `sudo rmmod v4l2loopback_dc`
-  * `sudo insmod /lib/modules/`uname -r`/kernel/extramodules/v4l2loopback-dc.ko width=1920 height=1080`
-  Restart the droidcam client to reload the settings, and test it out. You can keep changing the resolution.
-  Edit the text file /etc/modprobe.d/droidcam.conf with the new options to make the change stick.
-
-  Example:
-  `/etc/modprobe.d/droidcam.conf`
-  options v4l2loopback_dc width=1920 height=1080
-  options snd-aloop index=0
-
-  It’s also possible to invert the video size (eg. 480×640, width=480 height=640), which will make the webcam vertical and rotate the video 90º.
-  Not all programs may load the webcam with inverted parameters (eg. Discord does not) but many do (eg. Zoom and OBS).
+TODO (*) Create a patch
+TODO (*) Apply a patch
 
 Image Magick
 ============
 
 (*) Convert image formats: `magick in.jpg out.gif`
+(*) Convert all PNGs in a folder to WEBP using all available cores: `parallel magick {} {.}.webp ::: *.png`
 (*) Scale an image to 25% of width: `magick image.jpg -resize 25%x image_smaller.jpg`
 (*) Resize an image to 100px wide: `magick image.jpg -resize 100x image_smaller.jpg`
 (*) Resize all images in directory to 25% of original: `mogrify -scale 25% -path ./thumbs *.*`
@@ -792,8 +821,8 @@ Image Magick
     - Add the mask
       	`magick master.JPG -fuzz 5% -bordercolor white -border 1 -fill none -draw "alpha 0,0 floodfill" -shave 1x1 result.png`
 
-Exiftool
-========
+More Image Manipulation and Processing
+======================================
 
 (*) Print DateTimeOriginal from EXIF data for all files in folder: `for i in *.jpg; do identify -format %[EXIF:DateTimeOriginal] $i; echo; done`
 (*) Exiftool adjust Date & Time of pictures: `"exiftool(-k).exe" "-DateTimeOriginal-=0:0:0 0:25:0" .`
@@ -804,8 +833,42 @@ Exiftool
 (*) Extract all GPS positions from a AVCHD video.: `exiftool -ee -p "$gpslatitude, $gpslongitude, $gpstimestamp" a.m2ts`
 (*) Use CreationDate metadata on .mov files to rename and modify the created/modify file dates on Mac: `exiftool '-MDItemFSCreationDate<CreationDate' '-FileModifyDate<CreationDate' '-filename<CreationDate' -d %Y-%m-%d_%H-%M-%S%%+c.%%le . -ext mov`
 
+(*) Convert raw camera image to jpeg: `for i in *.CR2; do ufraw-batch $i --out-type=jpeg --output $i.jpg; done;`
+(*) Check a directory of PNG files for errors: `ls *.png |parallel --nice 19 --bar --will-cite "pngcheck -q {}"`
+
+PulseAudio and ALSA (not so much)
+=================================
+
+PulseAudio is a general purpose sound server.
+It is intended to run as a middleware between your applications and your hardware devices, either using ALSA or OSS.
+It also offers easy network streaming across local devices using Avahi if enabled.
+PulseAudioclients can send audio to "sinks" and receive audio from "sources".
+So, sinks are outputs (audio goes there), sources are inputs (audio comes from there).
+
+(*) Set the volume of sink 1 to 75%: `pactl set-sink-volume 1 0.75`
+(*) Set the volume to 75% on the default sink: `pamixer --set-volume 75`
+(*) Toggle mute on the default sink (using the special name `@DEFAULT_SINK@`): `pactl set-sink-mute @DEFAULT_SINK@ toggle`
+(*) Toggle mute on a sink other than the default: `pamixer --toggle-mute --sink ID`
+(*) Increase the volume on default sink by 5%: `pamixer --increase 5`
+(*) Decrease the volume on a source by 5%: `pamixer --decrease 5 --source ID`
+(*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
+(*) Use the allow boost option to increase, decrease, or set the volume above 100%: `pamixer --set-volume 105 --allow-boost`
+(*) Mute the default sink (use `--unmute` instead to unmute): `pamixer --mute`
+
+(*) Change the default sink (output) to 1: `pactl set-default-sink 1`
+(*) List all sinks and sources with their corresponding IDs: `pamixer --list-sinks --list-sources`
+(*) List all sources: `LANG=C pactl list | grep -A2 'Source #' | grep 'Name: ' | cut -d" " -f2`
+(*) List all sinks: `pactl list sinks short`
+(*) Create a sink: `pacmd load-module module-null-sink sink_name=MySink && pacmd update-sink-proplist MySink device.description=MySink`
+
+{{{sh
+SOURCE=$(pactl list | grep -A2 'Source #' | grep 'Name: ' | cut -d" " -f2 | fzf --prompt="Select source >")
+SINK=$(pactl list | grep -A2 'Sink #' | grep 'Name: ' | cut -d" " -f2 | fzf --prompt="Select sink >")
+PULSE_SOURCE="$SOURCE" PULSE_SINK="$SINK" ffplay "https://holiday.stream.publicradio.org/holiday_yc.aac"
+}}}
+
 FFmpeg (simple)
-=====================
+===============
 
 A good x264 read: `x264 --fullhelp`
 
@@ -824,6 +887,7 @@ A good x264 read: `x264 --fullhelp`
 (*) Downmix first audio stream from 7.1 to 5.1 keeping all other streams: `ffmpeg -i in.mkv -map 0 -c copy -c:a:0 aac -ac:a:0 6 out.mkv`
 (*) Download screenshot or frame from YouTube video at certain timestamp: `ffmpeg -ss 8:14 -i $(youtube-dl -f 299 --get-url URL) -vframes 1 -q:v 2 out.jpg`
 (*) ffmpeg fade from video 1 to video 2 (start at 20 seconds for 2 sec): `ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex "xfade=offset=20:duration=2" v1_to_v2.mp4`
+(*) Sliding overlay (does it work?): `ffmpeg -i lights.mp4 -i street.mp4 -filter_complex "overlay=x='if(gte(t,2), -w+(t-2)*20, NAN)" -t 10 output.mp4`
 
 FFMPEG transition effects:
   'custom' 'fade' 'wipeleft' 'wiperight' 'wipeup' 'wipedown' 'slideleft' 'slideright' 'slideup'
@@ -833,6 +897,7 @@ FFMPEG transition effects:
   'diagtr' 'diagbl' 'diagbr' 'hlslice' 'hrslice' 'vuslice' 'vdslice' 'hblur'
   'fadegrays' 'wipetl' 'wipetr' 'wipebl' 'wipebr' 'squeezeh' 'squeezev'
 
+(*) Concatenate two or more videos read from a file (see `man ffmpeg` for proper file format): `ffmpeg -f concat -safe 0 -i mylist.txt -c copy output.mp4`
 (*) Stabilize a video: `ffmpeg -i video.mp4 -vf vidstabtransform=smoothing=30 video_stab.mp4`
 (*) Extract frames from a video: `ffmpeg -i file.mpg -r 1/1 $filename%03d.bmp`
 (*) Lossless conversion of a movie to mkv, adding cover art: `ffmpeg -i in.mkv -i cover.jpg -map 0 -map 1 -c copy -c:v:1 png -disposition:v:1 attached_pic -sameq out.mkv`
@@ -844,23 +909,68 @@ FFMPEG transition effects:
 (*) Write file and also play it (video + audio): `ffmpeg -f v4l2 -i /dev/video0 -map 0 -c:v libx264 -f tee "output.mp4|[f=nut]pipe:" | ffplay pipe:`
 (*) Screen capture with mic input (ALSA): `ffmpeg -f x11grab -s 1440x900 -i :0.0 -f alsa -i hw:0 out.mkv`
 
-Noise-reducing pre-built models
--------------------------------
+Using Noise-reducing Pre-built Models for ffmpeg
+================================================
 
-Reduce background noise: https://superuser.com/questions/733061/reduce-background-noise-and-optimize-the-speech-from-an-audio-clip-using-ffmpeg
-
-(*) Use a highpass/lowpass filter (e.g. to enhance speech): `ffmpeg -i <nput_file> -af "highpass=f=200, lowpass=f=3000" <output_file>`
+(*) Use a highpass/lowpass filter to enhance speech: `ffmpeg -i in.mp4 -af "highpass=f=200, lowpass=f=3000" out.mp4`
 (*) Use RNNoise-Models to enhance speech-based audio ( https://github.com/GregorR/rnnoise-models ): `ffmpeg -i input.mp4 -af "arnndn=m=bd.rnnn" -c:v copy denoised.mp4`
 (*) Volume boost: `ffmpeg -i denoised.mp4 -af "volume=4" -c:v copy boosted.mp4`
 
-Concatenate two or more videos read from a file:
-------------------------------------------------
-`cat mylist.txt`
-   file '/path/to/file1'
-   file '/path/to/file2'
-   file '/path/to/file3'
+Streaming, Combining Multiple Sources, Capturing Devices (more ffmpeg and friends)
+==================================================================================
 
-`ffmpeg -f concat -safe 0 -i mylist.txt -c copy output.mp4`
+(*) Get stream URIs with youtube-dl: `youtube-dl -g "URL"`
+(*) Grab a video with youtube-dl but limit the size of the video to 1920x?: `youtube-dl -f 'bestvideo[width<=1920]+bestaudio' $URI`
+(*) Grab audio only with youtube-dl: `youtube-dl -f bestaudio --add-metadata --extract-audio --audio-format mp3 --audio-quality 0 <Video-URL>`
+(*) Loop stream a video on the local network: `ffmpeg -stream_loop -1 -i .\campfire.mkv -preset ultrafast -vcodec libx264 -tune zerolatency -b 900k -f mpegts udp://localhost:1234`
+(*) YouTube stream a video (must have audio): `KEY="your-key-goes-here" && FPS=24 && ffmpeg -stream_loop -1 -re -i "VIDEO_SOURCE" -c:v libx264 -pix_fmt yuv420p -preset superfast -r $FPS -g $(($FPS * 2)) -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
+(*) YouTube stream desktop and default microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re -f x11grab -i :0.0 -f pulse -ac 2 -i default -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
+(*) YouTube stream webcam (here `/dev/video1`, use `v4l2-ctl` to confirm) and default microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re /dev/video1 -f pulse -ac 2 -i default -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
+TODO (*) YouTube stream desktop with open webcam and default microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re /dev/video1 -f pulse -ac 2 -i default -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
+(*) (Windows) YouTube webcam and microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re -f dshow -rtbufsize 100M -i video="Integrated Camera" -f dshow -i audio="Microphone Array (Realtek(R) Audio)" -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
+(*) Capture main screen (:0) and the default Pulse Audio sink: `ffmpeg -video_size 1366x768 -framerate 30 -f x11grab -i :0.0 -f pulse -ac 2 -i default -c:v libx264rgb -crf 0 -preset ultrafast -c:a libopus output.mkv`
+(*) Take the audio of the first source and the video of the second source and combine: `ffmpeg -i "https://ycradio.stream.publicradio.org/ycradio.aac" -i "video.mp4" -c:a aac -c:v copy -map 0:a:0 -map 1:v:0 -f matroska out.mkv`
+(*) Merge a video that contains audio with an audio stream: `ffmpeg -i "https://hygge.stream.publicradio.org/hygge.aac" -i "walk_in_the_rain.mp4" -c:a aac -c:v copy -filter_complex "[0:a][1:a]amerge=inputs=2[aout]" -map "[aout]" -map 1:v:0 -f matroska - | ffplay -`
+(*) Visual spectrograph of an audio stream: `ffmpeg -i "https://nightride.fm/stream/nightride.m4a" -filter_complex "[0:a]avectorscope=s=480x480:zoom=1.5:rc=0:gc=200:bc=0:rf=0:gf=40:bf=0,format=yuv420p[v]; [v]pad=854:480:187:0[out]" -map "[out]" -map 0:a -b:v 700k -b:a 360k -f matroska - | ffplay -`
+
+
+Create an awesome fireplace, classical music combo!
+---------------------------------------------------
+
+{{{sh
+FIRE_V="$(youtube-dl -f 137 -g http://www.youtube.com/watch?v=-wKiNZ-u-HAs)" && \
+FIRE_A="$(youtube-dl -f 251 -g http://www.youtube.com/watch?v=-wKiNZ-u-HAs)" && \
+AUDIO="https://holiday.stream.publicradio.org/holiday_yc.aac" && \
+ffmpeg \
+	-i "$FIRE_V" \
+	-i "$FIRE_A" \
+	-i "$AUDIO" \
+	-filter_complex "[1:a][2:a]amerge=inputs=2[a]" \
+	-map "[a]" -map 0:v:0
+	-c:a aac -c:v copy \
+	-f matroska - | ffplay -
+}}}
+
+(Windows) FFmpeg
+================
+
+`gdigrab` works out of the box but better alternatives exist: https://trac.ffmpeg.org/wiki/Capture/Desktop#Windows
+
+(*) (Windows) Get names of devices for commands below: `ffmpeg -list_devices true -f dshow -i dummy`
+(*) (Windows) Play borderless webcam (mpv): `mpv -border=no -no-osc --ontop av://dshow:video="NAMEOFWEBCAM"`
+(*) (Windows) Play borderless webcam (ffplay): `ffplay -noborder -probesize 32 -sync ext -f dshow -i video="Integrated Camera" -vf scale=320:-1`
+(*) (Windows) Capture desktop using gdigrab: `ffmpeg -f gdigrab -framerate 30 -i desktop -f dshow -i audio="NAMEOFMICROPHONE" -c:v libx264rgb -crf 0 -preset ultrafast output.mkv`
+(*) (Windows) Capture a region of the desktop: `ffmpeg -f gdgrab -framerate 6 -offset_x 10 -offset_y 20 -video_size vga -i desktop out.mpg`
+(*) (Windows) Capture a window by window title: `ffmpeg -f gdigrab -framerate 6 -i title=Calculator out.mpg`
+(*) (Windows) Capture desktop using a virtual device (need 3rd party - see trac URL above): `ffmpeg -f dshow -i video="UScreenCapture" -f dshow -i audio="NAMEOFMICROPHONE" output.mkv`
+
+(Windows) Borderless (and movable) webcam stream with good latency
+==================================================================
+
+Borderless means not movable (it lacks a titlebar). AutoHotKey to the rescue:
+  1. Get AutoHotkey and enable WinDrag.ahk ( https://wwwautohotkey.com/boards/viewtopic.php?t=57703 )
+  2. Verify your video device: `ffmpeg -list_devices true -f dshow -i dummy`
+  3. Play a borderless video using `ffplay` or `mpv` (see above)
 
 More complex tasks with ffmpeg
 ==============================
@@ -920,144 +1030,96 @@ ffmpeg \
     -c:v libx264 -t '30' -f matroska -  | ffplay -autoexit -left 30 -top 30 -
 }}}
 
-Live video, downloading video, and ffmpeg streaming
-===================================================
+Bluetooth Discovery and Connection Steps
+========================================
 
-(*) Get stream URIs with youtube-dl: `youtube-dl -g "URL"`
-(*) Grab a video with youtube-dl but limit the size of the video to 1920x?: `youtube-dl -f 'bestvideo[width<=1920]+bestaudio' $URI`
-(*) Grab audio only with youtube-dl: `youtube-dl -f bestaudio --add-metadata --extract-audio --audio-format mp3 --audio-quality 0 <Video-URL>`
+1. List available controllers: `bluetoothctl -- list`
+2. Select default controller: `bluetoothctl -- select`
+3. power on: `bluetoothctl -- power on`
+4. agent on: `bluetoothctl -- agent on`
+5. `bluetoothctl -- default-agent`
+6. `bluetoothctl -- scan on`
+7. `bluetoothctl -- pair <DEVICE>`
+8. `bluetoothctl -- connect <DEVICE>`
 
-Loop stream a video on the local network
-----------------------------------------
-Only tested on Windows, `mpv udp://localhost:1234` plays it, as an example:
-{{{sh
-  ffmpeg
-  -stream_loop -1 -i .\campfire.mkv
-  -preset ultrafast -vcodec libx264
-  -tune zerolatency -b 900k -f mpegts
-  udp://localhost:1234
-}}}
+Bluetoothctl commands
+=====================
 
-NOTE: Youtube requires both a video and audio component to be able to stream!
-Youtube streaming a video source (must have audio)
---------------------------------------------------
-{{{sh
-KEY="your-key-goes-here" && FPS=24 && ffmpeg \
-	-stream_loop -1 \
-	-re -i "VIDEO_SOURCE" \
-	-c:v libx264 -pix_fmt yuv420p -preset superfast \
-	-r $FPS -g $(($FPS * 2)) \
-	-b:v 1500k -c:a aac \
-	-f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"
-}}}
+(*) List available controllers: `bluetoothctl -- list`
+(*) Controller information: `bluetoothctl -- show`
+(*) Select default controller: `bluetoothctl -- select`
+(*) List available devices: `bluetoothctl -- devices`
+(*) List paired devices: `bluetoothctl -- paired-devices`
+(*) Set controller alias: `bluetoothctl -- system-alias`
+(*) Reset controller alias: `bluetoothctl -- reset-alias`
+(*) Set controller power: `bluetoothctl -- power on`
+(*) Set controller pairable mode: `bluetoothctl -- pairable`
+(*) Set controller discoverable mod: `-- discoverable`
+(*) Set discoverable timeout: `bluetoothctl -- discoverable-timeout`
+(*) Enable/disable agent with given capabilit: `-- agent`
+(*) Set agent as the default one: `bluetoothctl -- default-agent`
+(*) Enable/disable advertising with given typ: `-- advertise`
+(*) Set device alias: `bluetoothctl -- set-alias`
+(*) Scan for devices: `bluetoothctl -- scan`
+(*) Device information: `bluetoothctl -- info`
+(*) Pair with device: `bluetoothctl -- pair`
+(*) Cancel pairing with device: `bluetoothctl -- cancel-pairing`
+(*) Trust device: `bluetoothctl -- trust`
+(*) Untrust device: `bluetoothctl -- untrust`
+(*) Block device: `bluetoothctl -- block`
+(*) Unblock device: `bluetoothctl -- unblock`
+(*) Remove device: `bluetoothctl -- remove`
+(*) Connect device: `bluetoothctl -- connect`
+(*) Disconnect device: `bluetoothctl -- disconnect`
 
-Another one (webcam + mic, Windoze dshow example)
--------------------------------------------------
-{{{sh
-KEY="your-key-goes-here" && ffmpeg \
-	-stream_loop -1 -re \
-	-f dshow -rtbufsize 100M -i video="Integrated Camera" \
-	-f dshow -i audio="Microphone Array (Realtek(R) Audio)" \
-	-c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 \
-	-b:v 1500k -c:a aac \
-	-f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"
-}}}
+tips:
+* `org.bluez.Error.Failed` error
+	- *Make sure your device is ON, accepting BLUETOOTH connections, and/or PAIRING*
+	- Is `bluetooth.service` running?
+	- Check out logs `systemctl status bluetooth`
+	- Restart pulseaudio: `pulseaudio -k`, then try connecting again
+* By default, bluetooth power is not on. Change this: https://wiki.archlinux.org/index.php/bluetooth#Auto_power-on_after_boot
+* To automate bluetoothctl commands, use `echo -e "<command1>\n<command2>\n" | bluetoothctl`
 
-Capture main screen (:0) and the default Pulse Audio sink
----------------------------------------------------------
-{{{sh
-ffmpeg \
-  -video_size 1366x768 \
-  -framerate 30 \
-  -f x11grab -i :0.0 \
-  -f pulse -ac 2 -i default \
-  -c:v libx264rgb -crf 0 -preset ultrafast\
-  -c:a libopus output.mkv
-}}}
+Printing
+========
 
-Create an awesome fireplace, classical music combo!
----------------------------------------------------
+Again, lots to do. Reader beware.
 
-{{{sh
-FIRE_V="$(youtube-dl -f 137 -g http://www.youtube.com/watch?v=-wKiNZ-u-HAs)" && \
-FIRE_A="$(youtube-dl -f 251 -g http://www.youtube.com/watch?v=-wKiNZ-u-HAs)" && \
-AUDIO="https://holiday.stream.publicradio.org/holiday_yc.aac" && \
-ffmpeg \
-	-i "$FIRE_V" \
-	-i "$FIRE_A" \
-	-i "$AUDIO" \
-	-filter_complex "[1:a][2:a]amerge=inputs=2[a]" \
-	-map "[a]" -map 0:v:0
-	-c:a aac -c:v copy \
-	-f matroska - | ffplay -
-}}}
+- `pacman -S cups cups-pdf gutenprint system-config-printer`
+- `systemctl enable --now cups` (reboot may be necessary regardless)
+- `system-config-printer`
+- Google search for the PPD file and add it manually
+	- e.g. https://www.openprinting.org/printer/Ricoh/Ricoh-SP_C440DN
 
-Combine a video and an audio stream simultaneously
---------------------------------------------------
-{{{sh
-ffmpeg \
-	-i "https://ycradio.stream.publicradio.org/ycradio.aac" \
-	-i "$HOME/Videos/new_zealand_na_small.mp4" \
-	-c:a aac -c:v copy \
-	-map 0:a:0 -map 1:v:0 \
-	-f matroska out.mkv
-}}}
+* https://gist.github.com/edoz90/660a2a67b9bc8a815ba537530137636a
+* https://www.openprinting.org/printer/Ricoh/Ricoh-MP_9003
+* https://wiki.linuxfoundation.org/openprinting/database/cupsdocumentation
+* https://wiki.archlinux.org/index.php/CUPS#Printer_Drivers
 
-Play a video that contains audio, MERGE with an audio stream
-------------------------------------------------------------
-{{{sh
-ffmpeg \
-	-i "https://hygge.stream.publicradio.org/hygge.aac" \
-	-i "/home/marian/Videos/walk_in_the_rain.mp4" \
-	-c:a aac \
-	-c:v copy \
-	-filter_complex "[0:a][1:a]amerge=inputs=2[aout]" \
-	-map "[aout]" \
-	-map 1:v:0 \
-	-f matroska - | ffplay -
-}}}
+http://localhost:631 is the CUPS web interface.
 
-Visual spectrograph of an audio stream
---------------------------------------
-{{{sh
-ffmpeg -i "https://nightride.fm/stream/nightride.m4a" \
-	-filter_complex "[0:a]avectorscope=s=480x480:zoom=1.5:rc=0:gc=200:bc=0:rf=0:gf=40:bf=0,format=yuv420p[v]; [v]pad=854:480:187:0[out]" \
-	-map "[out]" -map 0:a \
-	-b:v 700k -b:a 360k \
-	-f matroska \
-	- | ffplay -
-}}}
+Helpful commands:
+`lpstat -s` to view the status of known printers
+`lpoptions -l` to list all known options
+`lpoptions -d Ricoh-VW-440DN` to list printing options for Ricoh
+`lpr -P Ricoh-VW-440DN <file>` to print <file> to Ricoh
 
-(*) Sliding overlay (does it work?): `ffmpeg -i lights.mp4 -i street.mp4 -filter_complex "overlay=x='if(gte(t,2), -w+(t-2)*20, NAN)" -t 10 output.mp4`
-
-ffmpeg and Windoze
-------------------
-
-`gdigrab` works out of the box but better alternatives exist: https://trac.ffmpeg.org/wiki/Capture/Desktop#Windows
-
-(*) (Windows) Get names of devices for commands below: `ffmpeg -list_devices true -f dshow -i dummy`
-(*) (Windows) Play borderless webcam (mpv): `mpv -border=no -no-osc --ontop av://dshow:video="NAMEOFWEBCAM"`
-(*) (Windows) Play borderless webcam (ffplay): `ffplay -noborder -probesize 32 -sync ext -f dshow -i video="Integrated Camera" -vf scale=320:-1`
-(*) (Windows) Capture desktop using gdigrab: `ffmpeg -f gdigrab -framerate 30 -i desktop -f dshow -i audio="NAMEOFMICROPHONE" -c:v libx264rgb -crf 0 -preset ultrafast output.mkv`
-(*) (Windows) Capture a region of the desktop: `ffmpeg -f gdgrab -framerate 6 -offset_x 10 -offset_y 20 -video_size vga -i desktop out.mpg`
-(*) (Windows) Capture a window by window title: `ffmpeg -f gdigrab -framerate 6 -i title=Calculator out.mpg`
-(*) (Windows) Capture desktop using a virtual device (need 3rd party - see trac URL above): `ffmpeg -f dshow -i video="UScreenCapture" -f dshow -i audio="NAMEOFMICROPHONE" output.mkv`
-
-Borderless (and movable) webcam stream with good latency (no sound)
-  1. Get AutoHotkey, and enable WinDrag.ahk ( https://wwwautohotkey.com/boards/viewtopic.php?t=57703 )
-  2. List video devices: `ffmpeg -list_devices true -f dshow -i dummy`
-  3. Play a borderless stream (see above)
+More:
+https://wiki.archlinux.org/index.php/CUPS#CLI_tools
 
 Combos
 ======
 
 (*) Print all colours in terminal: `(x=$(tput op) y=$(printf %76s);for i in {0..256};do o=00$i;echo -e ${o:${#o}-3:3} $(tput setaf $i;tput setab $i)${y// /=}$x;done)`
-(*) Remove ANSI colour escape codes from a file: `sed 's/\x1b\[[0-9;]*m//g' file.txt`
+(*) Remove ANSI colour escape codes from a file: `sed 's/\x1b\[[0-9;]*m//g'`
 (*) Output the final destination of a URL: `curl -Ls -o /dev/null -w %{url_effective} https://startingurlgoeshere`
 (*) Watch CPU usage, update once per sec: `watch -n1 grep \"cpu MHz\" /proc/cpuinfo`
 (*) Get device info for all USB devices: `echo /sys/bus/usb/devices/* | xargs udevadm info -q property -p`
 (*) Download an entire website: `wget --random-wait -r -p -e robots=off -U mozilla http://www.example.com`
+(*) Website recursive offline mirror with wget: `wget --mirror --convert-links --adjust-extension --page-requisites  --recursive  --no-parent  www.example.com`
 (*) Download a single page saved as `wget_result.html`, implementing a custom user-agent: `wget -O wget_result.html --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.58 Safari/537.36" "https://ca.camelcamelcamel.com/search?sq=rk+royal+kludge"`
+(*) List top 100 djs from https://djmag.com/top100djs: `lynx -listonly -nonumbers -dump https://djmag.com/top100djs|sed '1d'|cut -d- -f5,6,7|sed -n '180,$p'|nl --number-format=rn --number-width=3|sed 's/-/ /g'|sed -e 's/.*/\L&/' -e 's/\<./\u&/g'`
 (*) lynx - Get a text-only version of a website: `lynx -dump "URL" >> dump.txt`
 (*) Magnify a mouse-selected part of a screen: `slop | xargs xzoom -source`
 (*) To find out fonts that the `brave` browser is using: `for proc in $(ps -o pid --no-headers -C brave); do (lsof -p $proc | grep fonts | cut -f4); done`
@@ -1065,14 +1127,13 @@ Combos
 (*) Boot a flash disk in QEMU to test it: `qemu-system-x86_64 -rtc base=localtime -m 2G -vga std -drive file=/dev/sdb,readonly,cache=none,format=raw,if=virtio`
 (*) Convert JSON to YAML: `yq . -y <example.json`
 (*) From all PDF files in all subdirectories, extract two metadata fields (here: Creator and Producer) into a CSV table: `echo "File;Creator;Producer";find . -name '*.pdf' -print0 | while IFS= read -d $'\0' line;do echo -n "$line;";pdfinfo "$line" | perl -ne 'if(/^(Creator|Producer):\s*(.*)$/){print"$2";if ($1 eq "Producer"){exit}else{print";"}}';echo;done 2>/dev/null`
-
 (*) Fetch current outside temperature at location bc-32 (Canada, see weather.gc.ca): `curl -s https://weather.gc.ca/rss/city/bc-32.xml | grep -oP '(?<=Current Conditions: )\d{1,}\.\d{1,}'`
 (*) Convert a website into a PDF: `wkhtmltopdf "https://weather.gc.ca/city/pages/bc-32_metric_e.html" - | zathura -`
 
 Powershell
 ==========
 
-  Because sometimes you gotta use the Windoze.
+Because sometimes you gotta use the Windoze.
 
 (*) (Powershell) Change directory (`cd` works as well): `Set-Location .\mydir`
 (*) (Powershell) Find files, recursively (`find . -type f` on linux): `Get-ChildItem -Filter '*myfile*' -Recurse -File`
@@ -1119,11 +1180,8 @@ Vim and Neovim
   Open man page for word under the cursor: `<Shift-k>`
   You really like a colorscheme except for one thing. [How to change that properly in your virmc](https://gist.github.com/romainl/379904f91fa40533175dfaec4c833f2f).
 
-Other guides
-============
-
 Push and pull with git using SSH
---------------------------------
+================================
 
   You need a SSH key pair to start.
   Check `~/.ssh` for one, or put one there if you have one on another machine.
@@ -1140,7 +1198,7 @@ Push and pull with git using SSH
   SHA256:br9IjFspm1vxR3iA35FWE+4VTyz1hYVLIE2t1/CeyWQ (DSA)
 
 QEMU: Run a VM not using virt-manager
--------------------------------------
+=====================================
 
   * Check for virtualization and kernel support for KVM
   * Install `QEMU` and a *libvert* frontend like `virt-viewer`
@@ -1152,7 +1210,7 @@ QEMU: Run a VM not using virt-manager
   * Fire it up! `qemu-system-x86_64 -enable-kvm -bios /usr/share/edk2-ovmf/x64/OVMF.fd -m 4G -cpu host -smp 2 -drive file=path/to/myVM,format=raw`
 
 QEMU: Run a VM using virt-manager
----------------------------------
+=================================
 
   Handy for win10: `https://dennisnotes.com/note/20180614-ubuntu-18.04-qemu-setup/`
 
@@ -1166,7 +1224,7 @@ QEMU: Run a VM using virt-manager
         `virsh net-start default`
 
 Run VirtualBox Arch Linux headless on Windows and ssh into it
--------------------------------------------------------------
+=============================================================
 
   Why? It's like having your own custom WSL.
 
@@ -1188,13 +1246,14 @@ Run VirtualBox Arch Linux headless on Windows and ssh into it
   `ssh user@127.0.0.1 -p 2222`
 
 Run a simple X server and connect to it
----------------------------------------
+=======================================
+
   * install `tigervnc`
   * run `vncpasswd` which encrypts and stores your password in `~/.vnc/passwd`
   * run `x0vncserver -rfbauth ~/.vnc/passwd`
 
 Send mail in the command line using msmtp
------------------------------------------
+=========================================
 
 {{{sh
 printf "To: recipient@somedomain.com\n \
@@ -1207,12 +1266,74 @@ This is the body of the message" \
 (*) Send mail in the command line using neomutt: `neomutt -e 'set content_type="text/html"' user@mail.com -s "subject" < email.html``
 
 Tether computer to mobile Wifi
-------------------------------
-Connect device and turn on usb tethering, and then:
+==============================
+
+Connect tetherable device, confirm connection and turn on usb tethering, and then:
 	- `lsmod | grep usbnet`
 	- `dmesg | grep usb0` (note your interface)
 	- `ifconfig YOUR_INTERFACE_NAME_HERE up`
 	- `dhcpcd interface_name`
+
+Android ADB and Droidcam
+========================
+
+(*) Launches camera via adb: `adb shell "input keyevent KEYCODE_CAMERA"`
+(*) Lists keys: `adb shell getevent -pl`
+(*) List installed packages: `adb shell pm list packages`
+(*) Uninstall bloatware on your android device without root.: `adb shell pm uninstall --user 0 com.package.name`
+(*) Open application: `adb shell monkey -p com.dev47apps.droidcamx 1`
+(*) Send on/off key press (activates screen): `adb shell input keyevent 26`
+(*) Download all .key files from your android device to your pc.: `for i in $(adb shell "su -c find /data /system -name '*.key'"); do mkdir -p ".$(dirname $i)";adb shell "su -c cat $i" > ".$i";done`
+
+You want to be able to combine an audio and microphone sink to share while live streaming: https://www.reddit.com/r/archlinux/comments/klmyec/how_to_play_audio_files_as_input/ghaclhs?utm_source=share&utm_medium=web2x&context=3
+
+(*) List all sinks (or other types - sinks are outputs and sink-inputs are active audio streams): `pactl list sinks short`
+(*) Change the default sink (output) to 1 (the number can be retrieved via the `list` subcommand): `pactl set-default-sink 1`
+(*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
+(*) Set the volume of sink 1 to 75%: `pactl set-sink-volume 1 0.75`
+(*) Toggle mute on the default sink (using the special name `@DEFAULT_SINK@`): `pactl set-sink-mute @DEFAULT_SINK@ toggle`
+
+Droidcam ADB setup
+==================
+
+Home security, using your phone as a webcam, what's not to love?
+DroidcamX is worth the $5 or whatever - it's really good.
+
+  * (Phone) Install `Droidcam` app - `DroidcamX` is a way better alternative (not free)
+  * (Phone) Enable USB debugging (research this for your phone)
+  * Install linux headers (e.g. `linux-headers-lts` for the lts kernel, etc.)
+  * Install `adb` and `droidcam` packages (installs `v4l2loopback-dc-dkms`)
+  * Create a video loopback device `sudo modprobe v4l2loopback_dc video_nr=42`
+  * Optional? Start adb, `adb start-server`
+  * (Phone) confirm connection (a dialog box should open)
+  * Confirm connection to phone, `adb devices`
+
+(*) Open a droidcam connection with video only: `droidcam-cli -v adb 4747 & mpv /dev/video0`
+(*) Flip the webcam stream playing in ffplay: `ffplay -vf "vflip,hflip" /dev/video0`
+
+Droidcam with video and microphone (TODO)
+=========================================
+
+  1. Load `droidcam` on phone and then on computer
+  2. Create a pulse-alsa loopback device: `pacmd load-module module-alsa-source device=hw:Loopback,1,0`
+  3. Run `pactl list short sources` to verify the ID of the loopback device (used in ffmpeg recording)
+  4. Use `pavucontrol` to verify that the phone microphone is active
+
+Increase the resolution available to droidcam
+=============================================
+
+  * `sudo rmmod v4l2loopback_dc`
+  * `sudo insmod /lib/modules/`uname -r`/kernel/extramodules/v4l2loopback-dc.ko width=1920 height=1080`
+  Restart the droidcam client to reload the settings, and test it out. You can keep changing the resolution.
+  Edit the text file /etc/modprobe.d/droidcam.conf with the new options to make the change stick.
+
+  Example:
+  `/etc/modprobe.d/droidcam.conf`
+  options v4l2loopback_dc width=1920 height=1080
+  options snd-aloop index=0
+
+  It’s also possible to invert the video size (eg. 480×640, width=480 height=640), which will make the webcam vertical and rotate the video 90º.
+  Not all programs may load the webcam with inverted parameters (eg. Discord does not) but many do (eg. Zoom and OBS).
 
 New oneliners (thanks commandlinefu)
 ====================================
@@ -1238,8 +1359,6 @@ New oneliners (thanks commandlinefu)
 (*) Banner Grabber: `bash -c 'exec 3<>/dev/tcp/google.com/80; echo EOF>&3; cat<&3'`
 (*) Show which line of a shell script is currently executed: `bash -x foo.sh`
 (*) Calculate pi to an arbitrary number of decimal places: `bc -l <<< "scale=1000; 4*a(1)"`
-(*) List the binaries installed by a Debian package: `binaries () { dpkg -L "$1" | grep -Po '.*/bin/\K.*'; }`
-(*) List the binaries installed by a Debian package: `binaries () { for f in $(dpkg -L "$1" | grep "/bin/"); do basename "$f"; done; }`
 (*) Add keybindings for cycling through completions (or for inserting the last or first completion) in Bash: `bind '"\er":menu-complete-backward';bind '"\es":menu-complete'`
 (*) Bitcoin Brainwallet Private Key Calculator: `bitgen hex 12312381273918273128937128912c3b1293cb712938cb12983cb192cb1289b3 info`
 (*) AWK Calculator: `calc(){ awk "BEGIN{ print $* }" ;}; calc "((3+(2^3)) * 34^2 / 9)-75.89"`
@@ -1251,15 +1370,12 @@ New oneliners (thanks commandlinefu)
 (*) SFTP upload through HTTPS proxy: `cat myFile.json | ssh root@remoteSftpServer -o "ProxyCommand=nc.openbsd -X connect -x proxyhost:proxyport %h %p" 'cat > myFile.json'`
 (*) Batch-Convert text file containing youtube links to mp3: `cat playlist.txt | while read line; do youtube-dl --extract-audio --audio-format mp3 -o "%(title)s.%(ext)s" ytsearch:"$line"  ;done`
 (*) Parse and format IP:port currently in listen state without net tools: `cat /proc/net/tcp | grep " 0A " | sed 's/^[^:]*: \(..\)\(..\)\(..\)\(..\):\(....\).*/echo $((0x\4)).$((0x\3)).$((0x\2)).$((0x\1)):$((0x\5))/g' | bash`
-(*) Check whether laptop is running on battery or cable: `cat /sys/class/power_supply/AC/online`
-(*) Print your cpu intel architecture family: `cat /sys/devices/cpu/caps/pmu_name`
 (*) Convert epoch date to human readable date format in a log file.: `cat /var/log/mosquitto/mosquitto.log | awk -F : '{"date -d @"$1 |& getline D; print D, $0}'`
 (*) Get the full path of a bash script's Git repository head.: `(cd "$(dirname "${BASH_SOURCE[0]}")" && git rev-parse --show-toplevel)`
 (*) Access folder "-": `cd -- -`
 (*) Jump to home dir and list all, not older than 3 days, with full-path, hidden/non-hidden files/subdirectories: `cd && tree -aicfnF --timefmt %Y%j-%d-%b-%y | grep $(date +%Y%j)'\|'$[$(date +%Y%j)-1]'\|'$[$(date +%Y%j)-2]`
 (*) Set a user password without passwd: `chpasswd <<< "user:newpassword"`
 (*) Clear terminal Screen: `clear`
-(*) Convert & rename all filenames to lower case: `convmv --lower --notest FILE`
 (*) After typing lots of commands in windows, save them to a batch file quickly: `copy con batchfilename.bat`
 (*) Remove multiple entries of the same command in .bash_history with preserving the chronological order: `cp -a  ~/.bash_history ~/.bash_history.bak && perl -ne 'print unless $seen{$_}++'  ~/.bash_history.bak >~/.bash_history`
 (*) Create backup copy of file, adding suffix of the date of the file modification (NOT today's date): `cp file{,.$(date -d @$(stat -c '%Y' file) "+%y%m%d")}`
@@ -1287,9 +1403,6 @@ New oneliners (thanks commandlinefu)
 (*) Show allocated disk space:: `df -klP -t xfs -t ext2 -t ext3 -t ext4 -t reiserfs | grep -oE ' [0-9]{1,}( +[0-9]{1,})+' | awk '{sum_used += $1} END {printf "%.0f GB\n", sum_used/1024/1024}'`
 (*) Show used disk space:: `df -klP -t xfs -t ext2 -t ext3 -t ext4 -t reiserfs | grep -oE ' [0-9]{1,}( +[0-9]{1,})+' | awk '{sum_used += $2} END {printf "%.0f GB\n", sum_used/1024/1024}'`
 (*) Update all Docker Images: `docker images --format "{{.Repository}}:{{.Tag}}" | grep ':latest' | xargs -L1 docker pull`
-(*) List all ubuntu installed packages in a single line: `dpkg --get-selections | grep -Evw 'deinstall$' | cut -f1 | sort -u | xargs`
-(*) List all ubuntu installed packages in a single line: `dpkg --get-selections | grep -v deinstall | sort -u | cut -f 1 | tr '\r\n' ' ' | sed '$s/ $/\n/'`
-(*) Get the full description of a randomly selected package from the list of installed packages on a debian system: `dpkg-query --status $(dpkg --get-selections | awk '{print NR,$1}' | grep -oP "^$( echo $[ ( ${RANDOM} % $(dpkg --get-selections| wc -l) + 1 ) ] ) \K.*")`
 (*) Determine if booted as EFI/UEFI or BIOS: `[[ -d "/sys/firmware/efi" ]] && echo "UEFI" || echo "BIOS"`
 (*) List the size (in human readable form) of all sub folders from the current location: `du -h -d1`
 (*) Du command without showing other mounted file systems: `du -h --max-depth=1 --one-file-system /`
@@ -1329,7 +1442,6 @@ New oneliners (thanks commandlinefu)
 (*) PHP7 - Fix incompatibility errors like: Parse error: syntax error, unexpected new (T_NEW) in file.php on line...: `find "$(realpath ./)" -type f \( -iname "*.php" -or -iname "*.inc" \) -exec sed -i -r "s~=[[:space:]]*&[[:space:]]*new[[:space:]]+~= new ~gi" {} \;`
 (*) Edit, view or execute last modified file with a single key-press: `f() { ls -lart;e="ls -tarp | grep -v / | tail -9";j=${e/9/1};g=${e/9/9 | nl -nln};h=$(eval $j);eval $g;read -p "e|x|v|1..9 $(eval $j)?" -n 1 -r;case $REPLY in e) joe $h;;v)cat $h;;x) eval $h;;[1-9]) s=$(eval $g | egrep ^$REPLY) && touch "${s:7}" && f;;esac ; }`
 (*) Visual alert with keyboard LEDs: `for a in $(seq 16); do xdotool key Num_Lock;sleep .5; xdotool key Caps_Lock;done`
-(*) Save a copy of all debian packages in the form in which they are installed and configured on your system: `for a in $(sudo dpkg --get-selections | cut -f1); do dpkg-repack $a | awk '{if (system("sleep .5 && exit 2") != 2) exit; print}';done`
 (*) Switch all connected PulseAudio bluetooth devices to A2DP profile: `for card in $(pacmd list-cards | grep 'name: ' | sed 's/.*<\(.*\)>.*/\1/'); do pacmd set-card-profile $card a2dp_sink; done`
 (*) Silently deletes lines containing a specific string in a bunch of files: `for file in $(egrep 'abc|def' *.sql | cut -d":" -f1 | uniq); do    sed -i '/abc/d' ./$file ; sed -i '/def/d' ./$file; done`
 (*) Find a file and then copy to tmp folder: `for file in `ls | grep -i 'mumbai|pune|delhi'` ; do cp $file /tmp/ ; done `
@@ -1346,7 +1458,6 @@ New oneliners (thanks commandlinefu)
 (*) Shell bash iterate number range with for loop: `for i in {1..10}; do echo $i; done`
 (*) Quickly ping range of IP adresses and return only those that are online: `{ for i in {1..254}; do ping -c 1 -W 1  192.168.1.$i & done } | grep "64 bytes"`
 (*) Scan all open ports without any required program: `for i in {1..65535}; do (echo < /dev/tcp/127.0.0.1/$i) &>/dev/null && printf "\n[+] Open Port at\n: \t%d\n" "$i" || printf "."; done`
-(*) Convert raw camera image to jpeg: `for i in *.CR2; do ufraw-batch $i --out-type=jpeg --output $i.jpg; done;`
 (*) Individually 7zip all files in current directory: `for i in *.*; do 7z a "$i".7z "$i"; done`
 (*) Rename all files in a directory to the md5 hash: `for i in *; do sum=$(md5sum $i); mv  -- "$i" "${sum%% *}"; done`
 (*) Checks size of directory and delete it if it's too small: `for i in *;  do test -d "$i" && ( rclone size "$i" --json -L 2> /dev/null | jq --arg path "$i" 'if .bytes < 57462360 then ( { p: $path , b: .bytes}) else "none" end' | grep -v none | jq -r '.p' | parallel -j3 rclone purge "{}" -v -P ); done`
@@ -1356,27 +1467,13 @@ New oneliners (thanks commandlinefu)
 (*) Autocomplete directories (CWDs) of other ZSH processes (MacOS version): `function _xterm_cwds() { for pid in $(pgrep -x zsh); do reply+=$(lsof -p $pid | grep cwd | awk '{print $9}') done }; function xcd() { cd $1 }; compctl -K _xterm_cwds xcd`
 (*) Find out how much ram memory has your video (graphic) card: `glxinfo |grep -i -o 'device|memory\|[0-9]\{1,12\} MB'|head -n 1`
 (*) Add a mysql user: `grant all on *.* to 'dba'@'localhost' identified by 'dba123' with grant option;`
-(*) Colorize grep output: `grep --color -E 'pattern|$' file`
-(*) Highlight with grep and still output file contents: `grep --color -E 'pattern|' file`
-(*) Print hugepage consumption of each process: `grep -e AnonHugePages  /proc/*/smaps | awk  '{ if($2>4) print $0} ' |  awk -F "/" '{system("cat /proc/" $3 "/cmdline");printf("\n");print $0; printf("\n");}'`
-(*) Find Apache Root document: `grep -e '^[[:blank:]]*DocumentRoot[[:blank:]]\S'`
-(*) Extract email addresses from some file (or any other pattern): `grep -Eio '([[:alnum:]_.-]{1,64}@[[:alnum:]_.-]{1,252}?\.[[:alpha:].]{2,6})'`
-(*) Extract queries from mysql general log: `grep -Eo '( *[^ ]* *){4}Invoice_Template( *[^ ]* *){4}' /mysql-bin-log/mysql-gen.log | head -10000 | sort -u`
-(*) Get all lines that start with a dot or period: `grep '^\.' file`
-(*) Grep for minus (-) sign: `grep -- -`
-(*) Find passwords that has been stored as plain text in NetworkManager: `grep -H '^psk=' /etc/NetworkManager/system-connections/*`
-(*) Find Apache Root document: `grep -i 'DocumentRoot' /usr/local/apache/conf/httpd.conf`
-(*) Show OS release incl version.: `grep -m1 -h [0-9] /etc/{*elease,issue} 2>/dev/null | head -1`
-(*) Delete at start of each line until character: `grep -Po '^(.*?:\K)?.*'`
-(*) Get rid of lines with non ascii characters: `grep -v $'[^\t\r -~]' my-file-with-non-ascii-characters`
 (*) Reduce PDF Filesize: `gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dBATCH  -dQUIET  -dColorImageResolution=600 -dMonoImageResolution=600 -sOutputFile=output.pdf input.pdf`
-(*) IBM AIX: Extract a .tar.gz archive in one shot: `gunzip -c file.tar.gz | tar -xvf -`
 (*) Factory reset your harddrive. (BE CAREFUL!): `hdparm --yes-i-know-what-i-am-doing --dco-restore /dev/sdX`
 (*) Calculate the distance between two geographic coordinates points (latitude longitude): `h(){ echo $@|awk '{d($1,$2,$3,$4);} function d(x,y,x2,y2,a,c,dx,dy){dx=r(x2-x);dy=r(y2-y);x=r(x);x2=r(x2);a=(sin(dx/2))^2+cos(x)*cos(x2)*(sin(dy/2))^2;c=2*atan2(sqrt(a),sqrt(1-a)); printf("%.4f",6372.8*c);} function r(g){return g*(3.1415926/180.);}';}`
 (*) Bruteforce Synology NAS Logins with Hydra: `hydra  -I -V -T 5 -t 2  -s 5001 -M /tmp/syno https-post-form '/webman/login.cgi?enable_syno_token=yes:username=^USER^&passwd=^PASS^&OTPcode=:S=true' -L ./ruby-syno-brut/user -P ruby-syno-brut/passlist-short-2.txt`
 (*) Iso to USB with dd and show progress status: `image="file.iso";drive="/dev/null";sudo -- sh -c 'cat '"${image}"'|(pv -n -s $(stat --printf="%s" '"${image}"')|dd of='"${drive}"' obs=1M oflag=direct) 2>&1| dialog --gauge "Writing Image '"${image}"' to Drive '"${drive}"'" 10 70 7'`
 (*) Block all brute force attacks in realtime (IPv4/SSH): `inotifywait -r -q --format %w /var/log/auth.log|grep -i "Failed pass"|tail -n 1|grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}';iptables -I INPUT -i eth0 -s "$(cat /var/log/auth.log|grep "authentication failure; l"|awk -Frhost= '{print $2}'|tail -n 1)" -j DROP`
-(*) To create files with specific permission:: `install -b -m 777 /dev/null file.txt`
+(*) To create files with specific permission: `install -b -m 777 /dev/null file.txt`
 (*) Show current network interface in use: `ip addr | awk '/state UP/ {print $2}' | sed 's/.$//'`
 (*) Extract all ip addresses from both ip and ifconfig commands output: `ip a | grep -oP '(?<=inet |addr:)(?:\d+\.){3}\d+'`
 (*) Show your current network interface in use: `ip r show default | awk '{print $5}'`
@@ -1384,7 +1481,6 @@ New oneliners (thanks commandlinefu)
 (*) Keytool using BouncyCastle as security provider to add a PKCS12 certificate store: `keytool -importkeystore -providerpath bcprov.jar -provider BouncyCastleProvider -srckeystore <filename.pfx> -srcstoretype pkcs12 -srcalias <src-alias> -destkeystore <filename.ks> -deststoretype BCPKCS12 -destalias <dest-alias>`
 (*) Keytool view all entries in a keystore with BouncyCastle as security provider: `keytool -list -providerpath bcprov-jdk15on-1.60.jar -provider org.bouncycastle.jce.provider.BouncyCastleProvider -storetype BCPKCS12 -storepass <passphrase> -keystore <filename>`
 (*) Trim disk image for best compression before distributing: `kpartx -av disk.img && mkdir disk && mount /dev/mapper/loop0p1 disk && fstrim -v disk && umount disk && kpartx -d disk.img`
-(*) Command shell generate random strong password: `len=20; tr -dc A-Za-z0-9_ < /dev/urandom | head -c ${len} | xargs`
 (*) Countdown Clock: `let T=$(date +%s)+3*60;while [ $(date +%s) -le $T ]; do let i=$T-$(date +%s); echo -ne "\r$(date -d"0:0:$i" +%H:%M:%S)"; sleep 0.3; done`
 (*) Listen to a song from youtube with youtube-dl and mpv: `listen-to-yt() { if [[ -z "$1" ]]; then echo "Enter a search string!"; else mpv "$(youtube-dl --default-search 'ytsearch1:' \"$1\" --get-url | tail -1)"; fi }`
 (*) Display list of available printers: `lpstat -p`
@@ -1394,170 +1490,83 @@ New oneliners (thanks commandlinefu)
 (*) List current   processes  writing to hard drive: `lsof | grep -e "[[:digit:]]\+w"`
 (*) Find wich ports you probably want to open in your firewall on a fresh installed machine: `lsof -i -nlP | awk '{print $9, $8, $1}' | sed 's/.*://' | sort -u`
 (*) Find out  how much ram memory has your video (graphic) card: `lspci|grep -i "VGA Compatible Controller"|cut -d' ' -f1|xargs lspci -v -s|grep ' prefetchable'`
-(*) Check a directory of PNG files for errors: `ls *.png |parallel --nice 19 --bar --will-cite "pngcheck -q {}"`
 (*) List files size sorted and print total size in a human readable format without sort, awk and other commands.: `ls -sSh /path | head`
 (*) Scan multiple log subdirectories for the latest log files and tail them: `ls /var/log/* -ld | tr -s " " | cut -d" " -f9 | xargs -i{} sh -c 'echo "\n---{}---\n"; tail -n50 {}/`ls -tr {} | tail -n1`'`
-(*) List top 100 djs from https://djmag.com/top100djs: `lynx -listonly -nonumbers -dump https://djmag.com/top100djs|sed '1d'|cut -d- -f5,6,7|sed -n '180,$p'|nl --number-format=rn --number-width=3|sed 's/-/ /g'|sed -e 's/.*/\L&/' -e 's/\<./\u&/g'`
 (*) Scan whole internet and specific port in humanistic time: `masscan 0.0.0.0/0 -p8080,8081,8082 --max-rate 100000 --banners --output-format grepable --output-filename /tmp/scan.xt --exclude 255.255.255.255`
 (*) Create multiple subfolders in one command.: `mkdir -p /path/folder{1..4}`
 (*) Create multiple subfolders in one command.: `mkdir -p /path/{folder1,folder2,folder3,folder4}`
 (*) Create ext4 filesystem with big count of inodes: `mkfs.ext4 -T news /dev/sdcXX`
 (*) Convert CSV to JSON with miller: `mlr --c2j --jlistwrap cat file.csv`
 (*) Premiumize - create a ddl & save the URL in variable MYLINK: `MYLINK=$(curl  'https://www.premiumize.me/api/transfer/directdl?apikey=dzx3rqwrxme8iazu' \   -H 'accept: application/json' \   -H 'Content-Type: application/x-www-form-urlencoded'  --data-raw 'src='$URL | jq -r '.content[] | .link' )`
-(*) Mysql status: `mysqladmin status >> /home/status.txt 2>> /home/status_err.txt`
-(*) InnoDB related parameters: `mysqladmin variables | egrep '(innodb_log_file|innodb_data_file)'`
-(*) Mysql backup utility: `mysqlbackup --port=3306 --protocol=tcp --user=dba --password=dba  --with-timestamp  --backup-dir=/tmp/toback/ --slave-info backup-and-apply-log  --innodb_data_file_path=ibdata1:10M:autoextend --innodb_log_files_in_group=2 --innodb_log_file_size=5242880`
-(*) Reapair all mySQL/mariaDB databases: `mysqlcheck --repair --all-databases -u root -p<PASSWORD>`
-(*) Monitor ETA using pv command: `mysqldump --login-path=mypath sbtest sbtest4 |  pv  --progress  --size  200m  -t  -e  -r  -a > dump.sql`
-(*) Backup all data in compressed format: `mysqldump --routines --all-databases | gzip > /home/mydata.sql.gz 2> /home/mydata.date '+\%b\%d'.err`
-(*) Check mysql server performance: `mysqlslap --query=/home/ec2-user/insert.txt --concurrency=123 --iterations=1  --create-schema=test`
-(*) Check mysql capacity to handle traffic: `mysqlslap  --query=/root/select_query_cp.sql --concurrency=10 --iterations=5  --create-schema=cvts1`
 (*) Hacking the Technicolor TG799vac  (and unlocking features for openwrt): `::::::;nc 192.168.1.144 1337 -e /bin/sh;rm /etc/dropbear/*;uci set dropbear.lan.PasswordAuth='on';uci set dropbear.lan.RootPasswordAuth='on';uci set dropbear.lan.Interface='lan';uci set dropbear.lan.enable='1';/etc/init.d/dropbear restart; uci commit`
 (*) Which processes are listening on a specific port (e.g. port 80): `netstat -nap|grep 80|grep LISTEN`
 (*) Show which programs are listening on TCP ports: `netstat -tlpn`
-(*) Nmap get all active online ips  from specific network: `nmap -n -sn 192.168.1.0/24 -oG - | awk '/Up$/{print $2}'`
-(*) Dump top 10 ports tcp/udp from nmap: `nmap -oA derp --top-ports 10 localhost>/dev/null;grep 'services\=' derp.xml | sed -r 's/.*services\=\"(.*)(\"\/>)/\1/g'`
-(*) Nmap fast scan all ports target: `nmap  -p0-65535 192.168.1.254 -T5`
-(*) Network Discover in a one liner: `nmap -sn 192.168.1.0/24 -oG - | awk '$4=="Status:" && $5=="Up" {print $0}'|column -t`
-(*) Display live hosts on the network: `nmap -sP "$(ip -4 -o route get 1 | cut -d ' ' -f 7)"/24 | grep report | cut -d ' ' -f 5-`
-(*) Quickly ping range of IP adresses and return only those that are online: `nmap -sP 192.168.0.0/24`
-(*) Show a prettified list of nearby wireless APs: `nmcli device wifi list`
 (*) List all global top level modles, then remove ALL npm packages with xargs: `npm ls -gp --depth=0 | awk -F/ '/node_modules/ && !/\/npm$/ {print $NF}' | xargs npm -g rm; npm -g uninstall npm`
 (*) Convert rich text on the clipboard to Markdown in OS X: `osascript -e'get the clipboard as"RTF "'|sed 's/«data RTF //;s/»//'|xxd -r -p|textutil -convert html -stdin -stdout|pandoc -f html -t markdown_strict --no-wrap --atx-headers`
 (*) List the URLs of tabs of the frontmost Chrome window in OS X: `osascript -e{'set text item delimiters to linefeed','tell app"google chrome"to url of tabs of window 1 as text'}`
-(*) Arch Linux: Search for missing libraries using pacman: `pacman -Fs libusb-0.1.so.4`
-(*) Sort installed package on ArchLinux  from low to high: `pacman -Qi | egrep '^(Name|Installed)' | cut -f2 -d':' | paste - - | column -t | sort -nk 2 | grep MiB`
-(*) PulseAudio: set the volume via command line: `pactl set-sink-volume @DEFAULT_SINK@ +5%`
-(*) Converts all pngs in a folder to webp using all available cores: `parallel cwebp -q 80 {} -o {.}.webp ::: *.png`
-(*) Fast portscanner via Parallel: `parallel -j200% -n1 -a textfile-with-hosts.txt nc -vz {} ::: 22`
 (*) Patator: A Hydra brute force alternative: `patator ssh_login host=192.168.1.16 port=22 user=FILE0 0=user.lst password=FILE1 1=pass.lst -x ignore:mesg='Authentication failed.'`
 (*) Create POSIX tar archive: `pax -wf archive.tar /path`
-(*) Uninstall bloatware on your android device without root.: `pm uninstall --user 0 com.package.name`
-(*) Converts all pngs in a folder to webp, quality can be choosed as a argument: `pngwebp(){ arg1=$1  for i in *.png;   do name=`echo "${i%.*}"`;   echo $name;  cwebp -q $1 "${i}" -o "${name}.webp" done  }`
 (*) Print CPU load in percent: `printf "1-minute load average: %.1f%%\n" \ $(bc <<<"$(cut -d ' ' -f 1 /proc/loadavg) * 100")`
 (*) Alert visually until any key is pressed: `printf "\e[38;5;1m"; while true; do printf "\e[?5h A L E R T %s\n" "$(date)"; sleep 0.1; printf "\e[?5l"; read -r -s -n1 -t1 && printf "\e[39m" && break; done`
 (*) Seconds since epoch to ISO timestamp: `printf '%(%FT%T)T\n' 1606752450`
-(*) Check whether IPv6 is enabled: `printf "IPv6 is "; [ $(cat /proc/sys/net/ipv6/conf/all/disable_ipv6) -eq 0 ] && printf "enabled\n" || printf "disabled\n"`
 (*) Draw line separator (using knoppix5 idea): `printf '*%.s' {1..40}; echo`
 (*) Draw line separator (using knoppix5 idea): `printf "%.s*" {1..40}; printf "\n"`
 (*) Make M-n, M-m, and M-, insert the zeroth, first, and second argument of the previous command in Bash: `printf %s\\n '"\en": "\e0\e."' '"\em": "\e1\e."' '"\e,": "\e2\e."'>>~/.inputrc`
-(*) Print a horizontal line: `printf "%`tput cols`s"|sed "s/ /_/g"`
+(*) Print a horizontal line: `printf "%$(tput cols)s"|sed "s/ /_/g"`
 (*) Print a horizontal line: `printf -v _hr "%*s" $(tput cols) && echo ${_hr// /${1--}}`
-(*) Sort processes by CPU Usage: `ps auxk -%cpu | head -n10`
-(*) Top 10 Memory Processes (reduced output to applications and %usage only): `ps aux | sort -rk 4,4 | head -n 10 | awk '{print $4,$11}'`
-(*) Top 10 Memory Processes: `ps aux | sort -rk 4,4 | head -n 10`
-(*) List packages manually installed with process currently running: `ps -eo cmd | awk '{print $1}'| sort -u | grep "^/" | xargs dpkg -S 2>/dev/null | awk -F: '{print $1}' | sort -u | xargs apt-mark showmanual`
 (*) Debug pytest failures in the terminal: `pytest --pdbcls pudb.debugger:Debugger --pdb --capture=no`
-(*) Generrate Cryptographically Secure RANDOM PASSWORD: `python -c "import string; import random;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(16)))"`
 (*) Bootstrap python-pip & setuptools: `python -m ensurepip --default-pip && python -m pip install --upgrade pip setuptools wheel`
-(*) Serve current directory tree at http://$HOSTNAME:8000/: `python -m SimpleHTTPServer 8080`
 (*) KDE Console Logout command (with confirmation dialog): `qdbus org.kde.ksmserver /KSMServer logout 1 0 0`
 (*) Calculate your total world compile time. (Gentoo Distros): `qlist -I | xargs qlop -t | awk '{ if ($2 < 5400) secs += $2} END { printf("%dh:%dm:%ds\n", secs / 3600, (secs % 3600) / 60, secs % 60); }'`
 (*) Print compile time in seconds package by package (Gentoo Distros): `qlist -I | xargs qlop -t |sort -t" " -rnk2`
 (*) Shell bash iterate number range with for loop: `rangeBegin=10; rangeEnd=20; for numbers in $(eval echo "{$rangeBegin..$rangeEnd}"); do echo $numbers;done`
 (*) Shell bash iterate number range with for loop: `rangeBegin=10; rangeEnd=20; for ((numbers=rangeBegin; numbers<=rangeEnd; numbers++)); do echo $numbers; done`
-(*) Bitcoin Brainwallet Private Key Calculator: `(read -r passphrase; b58encode 80$( brainwallet_exponent "$passphrase" )$( brainwallet_checksum "$passphrase" ))`
-(*) Rename anime fansubs: `rename -n 's/[_ ]?[\[\(]([A-Z0-9-+,\.]+)[\]\)][_ ]?//ig' '[subs4u]_Mushishi_S2_22_(hi10p,720p,ger.sub)[47B73AEB].mkv'`
 (*) Add prefix of 0 place holders for a string: `rename 's/\d+/sprintf("%04d",$&)/e' *`
 (*) Rename all files in lower case: `rename 'y/A-Z/a-z/' *`
 (*) Identify all amazon cloudformation scripts recursively using ripgrep: `rg -l "AWSTemplateFormatVersion: '2010-09-09'" *`
 (*) Route add default gateway: `route add default gw 192.168.10.1 //OR// ip route add default via 192.168.10.1 dev eth0 //OR// ip route add default via 192.168.10.1`
 (*) Show your current network interface in use: `route | grep -m1 ^default | awk '{print $NF}'`
-(*) Extract rpm package name, version and release using some fancy sed regex: `rpm -qa | sed 's/^\(.*\)-\([^-]\{1,\}\)-\([^-]\{1,\}\)$/\1 \2 \3/' | sort | column -t`
-(*) Rsync should continue even if connection lost: `rsync --archive --recursive --compress --partial --progress --append root@123.123.123.123:/backup/somefile.txt.bz2 /home/ubuntu/`
-(*) Rsync using SSH and outputing results to a text file: `rsync --delete --stats -zaAxh -e ssh /local_directory/ username@IP_of_remote:/Remote_Directory/ > /Text_file_Directory/backuplog.txt`
-(*) Rsync using pem file: `rsync -e 'ssh -i /root/my.pem' -avz /mysql/db/data_summary.* ec2-1-2-4-9.compute-1.amazonaws.com:/mysql/test/`
 (*) Check host port access using only Bash:: `s="$(cat 2>/dev/null < /dev/null > /dev/tcp/${target_ip}/${target_port} & WPID=$!; sleep 3 && kill $! >/dev/null 2>&1 & KPID=$!; wait $WPID && echo 1)" ; s="${s:-0}"; echo "${s}" | sed 's/0/2/;s/1/0/;s/2/1/'`
 (*) VI/VIM Anonymize email address in log file: `%s/.\{5\}@.\{5\}/XXXXX@XXXXXX/g`
-(*) Set RGB gamma of secondary monitor: `secondscreen=$(xrandr -q | grep " connected" | sed -n '2 p' | cut -f 1 -d ' '); [ "$secondscreen" ] && xrandr --output $secondscreen --gamma 0.6:0.75:1`
 (*) Shell bash iterate number range with for loop: `seq 10 20`
 (*) Generate a sequence of numbers.: `seq 12`
 (*) Shuffle lines via bash: `seq 1 9 | sort -R`
 (*) Draw mesh: `seq -s " \\_/" 256|tr -d "0-9"|fold -70`
 (*) Draw line separator: `seq -s '*' 40|tr -c '*' '*' && echo`
 (*) Draw line separator (using knoppix5 idea): `seq -s '*' 40 | tr -dc '[*\n]'`
-(*) Draw honeycomb: `seq -ws "\\__/" 99|fold -69|tr "0-9" " "`
-(*) Add date stamp to filenames of photos by Sony Xperia camera app: `(setopt CSH_NULL_GLOB; cd /path/to/Camera\ Uploads; for i in DSC_* MOV_*; do mv -v $i "$(date +%F -d @$(stat -c '%Y' $i)) $i"; done)`
 (*) Stream a youtube video with mpv where $1 is the youtube link.: `setsid mpv --input-ipc-server=/tmp/mpvsoc$(date +%s) -quiet "$1" >/dev/null 2>&1`
 (*) See n most used commands in your bash history: `sort ~/.bash_history|uniq -c|sort -n|tail -n 10`
 (*) Sort by IP address: `sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4`
 (*) Sort list of email addresses by domain.tld: `sort -t@ -k2 emails.txt`
-(*) Decrypt passwords from Google Chrome and Chromium.: `sqlite3 -header -csv -separator "," ~/.config/google-chrome/Default/Login\ Data "SELECT * FROM logins" > ~/Passwords.csv`
-(*) Test your bash skills.: `ssh bandit0@bandit.labs.overthewire.org -p 2220`
-(*) SSH Copy ed25519 key into your host: `ssh-copy-id -i your-ed25519-key user@host`
-(*) SSH connection through host in the middle: `ssh -J user@reachable_host user@unreacheable_host`
-(*) Generate SSH public key from the private key: `ssh-keygen -y -f privatekey.pem > publickey.pem`
-(*) Append a pub key from pem file and save in remote server accessing with another key: `ssh-keygen -y -f user-key.pem | ssh user@host -i already_on_remote_server_key.pem 'cat >> ~/.ssh/authorized_keys'`
-(*) Port forwarding: `ssh -L8888:localhost:80 -i nov15a.pem ubuntu@123.21.167.60`
-(*) Backup VPS disk to another host: `ssh root@vps.example -p22 "cat /dev/sda1 | gzip -1 - " > vps.sda1.img.gz`
-(*) Find all clients connected to HTTP or HTTPS ports: `ss -o state established '( dport = :http or sport = :https )'`
-(*) Show all current listening programs by port and pid with SS instead of netstat: `ss -plunt`
-(*) List all accessed configuration files while executing a program in linux terminal (improved version): `strace 2>&1 <any_executable> |egrep -o "\".*\.conf\""`
-(*) Find which config-file is read: `strace 2>&1  geany |grep geany.conf`
-(*) Linux system calls of MySQL process: `strace -c -p $(pidof -s mysqld) -f -e trace=all`
-(*) Listen YouTube radios streaming: `streamlink --player="cvlc --no-video" "https://www.youtube.com/freecodecamp/live" 720p|& tee /dev/null`
-(*) Blktrace - generate traces of the i/o traffic on block devices: `sudo blktrace -d /dev/sda -o - | blkparse -i -`
 (*) Clear Cached Memory on Ubuntu: `sudo free && sync && sudo echo 3 | sudo tee /proc/sys/vm/drop_caches`
 (*) Manually trim SSD: `sudo fstrim -v /`
-(*) Login history Mac OS X: `% sudo log show --style syslog  --last 2d | awk '/Enter/ && /unlockUIBecomesActive/ {print $1 " " $2}'`
-(*) Using a single sudo to run multiple && arguments: `sudo -s <<< 'apt update -y && apt upgrade -y'`
-(*) Using a single sudo to run multiple && arguments: `sudo sh -c 'apt update -y && apt upgrade -y'`
+(*) (OSX) Login history: `% sudo log show --style syslog  --last 2d | awk '/Enter/ && /unlockUIBecomesActive/ {print $1 " " $2}'`
 (*) Write shell script without opening an editor: `sudo su -c "echo -e \"\x23\x21/usr/bin/sudo /bin/bash\napt-get -y \x24\x40\" > /usr/bin/apt-yes"`
-(*) Restart Bluetooth from terminal: `sudo systemctl restart bluetooth`
-(*) Add a DNS server on the fly: `sudo systemd-resolve --interface <NombreInterfaz> --set-dns <IPDNS> --set-domain mydomain.com`
-(*) Capture SMTP / POP3 Email: `sudo tcpdump -nn -l port 25 | grep -i 'MAIL FROM\|RCPT TO'`
-(*) Capture FTP Credentials and Commands: `sudo tcpdump -nn -v port ftp or ftp-data`
-(*) Capture all plaintext passwords: `sudo tcpdump port http or port ftp or port smtp or port imap or port pop3 or port telnet -l -A | egrep -i -B5 'pass=|pwd=|log=|login=|user=|username=|pw=|passw=|passwd=|password=|pass:|user:|username:|password:|login:|pass |user '`
-(*) Extract HTTP Passwords in POST Requests: `sudo tcpdump -s 0 -A -n -l | egrep -i "POST /|pwd=|passwd=|password=|Host:"`
-(*) Programmatic way to find and set your timezone: `sudo timedatectl set-timezone $(curl -s worldtimeapi.org/api/ip.txt | sed -n 's/^timezone: //p')`
-(*) Enable Synology Debug mode on shell: `sudo /usr/syno/bin/synogear install && sudo su`
-(*) Command to logout all the users in one command: `sudo who | awk '!/root/{ cmd="/sbin/pkill -KILL -u " $1; system(cmd)}'`
-(*) Filter the output of a file continously using tail and grep: `tail -f $FILENAME | grep --line-buffered $PATTERN`
-(*) Realtime lines per second in a log file, with history: `tail -f access.log | pv -l -i10 -r -f 2>&1 >/dev/null  | tr /\\r \ \\n`
-(*) Display the end of a logfile as new lines are added to the end: `tail -f logfile`
-(*) Tail a log and replace according to a sed pattern: `tail -F logfile|while read l; do sed 's/find/replace/g' <<< $l; done`
-(*) Filter the output of a file continously using tail and grep: `tail -f path | grep your-search-filter`
-(*) Re-execute a command using a saved /proc/pid/cmdline file: `tail -zn+2 $CMDLINE_FILENAME | xargs -0 $COMMAND`
-(*) Windows telnet: `Test-NetConnection -ComputerName example.com -Port 443`
-(*) Superfast portscanner: `time seq 65535 | parallel -k --joblog portscan -j9 --pipe --cat -j200% -n9000  --tagstring  '\033[30;3{=$_=++$::color%8=}m'  'nc -vz localhost $(head -n1 {})-$(tail -n1 {})'`
 (*) Tmux start new session with title and execute command: `tmux new-session -d -s "SessionName" "htop"`
-(*) Create a file and manipulate the date: `touch -d '-1 year' /tmp/oldfile`
-(*) Clear terminal Screen: `tput clear`
-(*) Mural graffiti: `tput setaf 1;tput rev;h=$(tput lines);w=$[$(tput cols)/6];c=$(seq -ws '_____|' $[$w+1]|tr -d "0-9");for a in $(seq $[$h/2]);do echo $c;echo ${c//|___/___|};done;tput cup 0;toilet -t -f bigmono12 "?LOVE";tput cup $h`
-(*) Generate a random password 30 characters long: `tr -c -d "a-zA-Z0-9" </dev/urandom | dd bs=30 count=1 2>/dev/null;echo`
-(*) Find top 10 largest files in /var directory (subdirectories and hidden files included ): `tree -ihafF /var | tr '[]' ' '| sort -k1hr|head -10`
-(*) Tree command limit depth for recusive directory list: `tree -L 2 -u -g -p -d`
-(*) Get the running Kernel and Install date: `uname -a;rpm -qi "kernel"-`uname -r`|grep "Install"`
+(*) Clear terminal screen: `tput clear`
 (*) Print umask as letters (e.g. `rwxr-xr-x`) instead of number (e.g. `0022`): `unix-permissions convert.stat $(unix-permissions invert $(umask))`
 (*) Emulate a root (fake) environment without fakeroot nor privileges: `unshare -r --fork --pid unshare -r --fork --pid --mount-proc bash`
-(*) Completely wipe all data on your Synology NAS and reinstall DSM.  (BE CAREFUL): `/usr/syno/sbin/./synodsdefault --factory-default`
-(*) Reinstall a Synology NAS without loosing any data from commandline.: `/usr/syno/sbin/./synodsdefault --reinstall`
-(*) Bash test check validate  if variable is number: `varNUM=12345; re='^[0-9]+$'; if ! [[ $varNUM =~ $re ]] ; then echo "error: Not a number"; fi`
-(*) Watch how many tcp connections there are per state every two seconds.: `watch -c "netstat -natp 2>/dev/null | tail -n +3 | awk '{print \$6}' | sort | uniq -c"`
-(*) Watch how many tcp connections there are per state every two seconds.: `watch -c "netstat -nt | awk 'FNR > 3 {print \$6}' | sort | uniq -c"`
-(*) Watch TCP, UDP open ports in real time with socket summary.: `watch ss -stplu`
-(*) Fast portscanner via xargs: `xargs -i -P 1200 nc -zvn {} 22 < textfile-with-hosts.txt`
-(*) Show top 50 running processes ordered by highest memory/cpu usage refreshing every 1s: `watch -n1 "ps aux --sort=-%mem,-%cpu | head -n 50"`
-(*) Show whats going on restoring files from a spectrum protect backup: `watch -n60 -d 'lsof -w /filesysname|grep -v NAME|awk '\''{$7=int($7/1073741824) " GB"; print $7, $9}'\'''`
-(*) Monitor my process group tree: `watch "ps --forest -o pid=PID,tty=TTY,stat=STAT,time=TIME,pcpu=CPU,cmd=CMD -g $(ps -o sid= -p $(pgrep -f "<my_process_name>"))"`
-(*) Perform Real-time Process Monitoring Using Watch Utility: `watch -n 1 'ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem | head'`
-(*) Website recursive offline mirror with wget: `wget --mirror --convert-links --adjust-extension --page-requisites  --recursive  --no-parent  www.example.com`
-(*) Write a bootable Linux .iso file directly to a USB-stick: `wget -O /dev/sdb https://cdimage.ubuntu.com/daily-live/current/eoan-desktop-amd64.iso`
+TODO (*) Bash test check validate if variable is number: `varNUM=12345; re='^[0-9]+$'; if ! [[ $varNUM =~ $re ]] ; then echo "error: Not a number"; fi`
 (*) Compute newest kernel version from Makefile on Torvalds' git repository: `wget -qO - https://raw.githubusercontent.com/torvalds/linux/master/Makefile | head -n5 | grep -E '\ \=\ [0-9]{1,}' | cut -d' ' -f3 | tr '\n' '.' | sed -e "s/\.$//"`
-(*) Watches every second, a directory listing as it changes: `while :; do clear; ls path/to/dir | wc -l; sleep 1; done`
 (*) Console clock: `while sleep 1; do     tput sc;     tput cup 0 $(($(tput cols)-29));     date;     tput rc; done &`
-(*) Alert visually until any key is pressed: `while true; do echo -e "\e[?5h\e[38;5;1m A L E R T  $(date)"; sleep 0.1; printf \\e[?5l; read -s -n1 -t1 && printf \\e[?5l && break; done`
-(*) Generates a TV noise alike output in the terminal: `while true; do printf "$(awk -v c="$(tput cols)" -v s="$RANDOM" 'BEGIN{srand(s);while(--c>=0){printf("\xe2\x96\\%s",sprintf("%o",150+int(10*rand())));}}')";done`
-(*) Whois filtering the important information: `whois commandlinefu.com | grep -E '^\s{3}'`
 (*) Apply an xdelta patch to a file: `xdelta -d -s original_file delta_patch patched_file`
-(*) Make window transparent (50% opacity) in Gnome shell: `xprop -format _NET_WM_WINDOW_OPACITY 32c -set _NET_WM_WINDOW_OPACITY 0x7FFFFFFF`
-(*) Draw honeycomb: `yes "\\__/ " | tr "\n" " " | fold -$((($COLUMNS-3)/6*6+3)) | head -$LINES`
-
-(*) Get CPU thermal data on MacOS: `sysctl machdep.xcpm.cpu_thermal_level`
-(*) Quick integer CPU benchmark: `time cat /proc/cpuinfo |grep proc|wc -l|xargs seq|parallel -N 0 echo "2^2^20" '|' bc`
-(*) Small CPU benchmark with PI, bc and time.: `time cat /proc/cpuinfo |grep proc|wc -l|xargs seq|parallel -N 0 echo "scale=4000\; a\(1\)\*4" '|' bc -l`
 
 Obscure
 =======
 
 (*) Add timestamp of photos created by the "predictive capture" feature of Sony's Xperia camera app at the beginning of the filename: `(setopt CSH_NULL_GLOB; cd /path/to/Camera\ Uploads; for i in DSCPDC_000*; do mv -v $i "$(echo $i | perl -lpe 's/(DSCPDC_[0-9]{4}_BURST)([0-9]{4})([0-9]{2})([0-9]{2})/$2-$3-$4 $1$2$3$4/')"; done)`
+(*) Add date stamp to filenames of photos by Sony Xperia camera app: `(setopt CSH_NULL_GLOB; cd /path/to/Camera\ Uploads; for i in DSC_* MOV_*; do mv -v $i "$(date +%F -d @$(stat -c '%Y' $i)) $i"; done)`
+(*) Alert visually until any key is pressed: `while true; do echo -e "\e[?5h\e[38;5;1m A L E R T  $(date)"; sleep 0.1; printf \\e[?5l; read -s -n1 -t1 && printf \\e[?5l && break; done`
+(*) Reinstall a Synology NAS without loosing any data from commandline.: `/usr/syno/sbin/./synodsdefault --reinstall`
+(*) Completely wipe all data on your Synology NAS and reinstall DSM.  (BE CAREFUL): `/usr/syno/sbin/./synodsdefault --factory-default`
+(*) Enable Synology Debug mode on shell: `sudo /usr/syno/bin/synogear install && sudo su`
+(*) Rename anime fansubs: `rename -n 's/[_ ]?[\[\(]([A-Z0-9-+,\.]+)[\]\)][_ ]?//ig' '[subs4u]_Mushishi_S2_22_(hi10p,720p,ger.sub)[47B73AEB].mkv'`
+(*) Bitcoin Brainwallet Private Key Calculator: `(read -r passphrase; b58encode 80$( brainwallet_exponent "$passphrase" )$( brainwallet_checksum "$passphrase" ))`
+
+Why though?
+===========
+
+(*) Generates a TV noise alike output in the terminal: `while true; do printf "$(awk -v c="$(tput cols)" -v s="$RANDOM" 'BEGIN{srand(s);while(--c>=0){printf("\xe2\x96\\%s",sprintf("%o",150+int(10*rand())));}}')";done`
+(*) Draw honeycomb: `yes "\\__/ " | tr "\n" " " | fold -$((($COLUMNS-3)/6*6+3)) | head -$LINES`
+(*) Mural graffiti: `tput setaf 1;tput rev;h=$(tput lines);w=$[$(tput cols)/6];c=$(seq -ws '_____|' $[$w+1]|tr -d "0-9");for a in $(seq $[$h/2]);do echo $c;echo ${c//|___/___|};done;tput cup 0;toilet -t -f bigmono12 "?LOVE";tput cup $h`
+(*) Draw honeycomb: `seq -ws "\\__/" 99|fold -69|tr "0-9" " "`
