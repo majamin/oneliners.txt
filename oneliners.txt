@@ -36,6 +36,13 @@ System information commands
 (*) List contents of directory, sort by access time: `ls -ltr`
 (*) Create a file and manipulate the date: `touch -d '-1 year' /tmp/oldfile`
 
+READ THIS: https://github.com/lsof-org/lsof/blob/master/00QUICKSTART
+
+(*) See if a file is being used: `lsof /path/to/file`
+(*) To find out fonts that the `brave` browser is using: `for proc in $(ps -o pid --no-headers -C brave); do (lsof -p $proc | grep fonts | cut -f4); done`
+(*) List current processes writing to hard drive: `lsof | grep -e "[[:digit:]]\+w"`
+(*) Find which ports you probably want to open in your firewall on a fresh installed machine: `lsof -i -nlP | awk '{print $9, $8, $1}' | sed 's/.*://' | sort -u`
+
 Administration, Processes and Daemons
 =====================================
 
@@ -134,6 +141,19 @@ Grep
 (*) Delete at start of each line until character: `grep -Po '^(.*?:\K)?.*'`
 (*) Get rid of lines with non ascii characters: `grep -v $'[^\t\r -~]' my-file-with-non-ascii-characters`
 
+Awk
+===
+
+(*) Print the fifth column (a.k.a. field) in a space-separated file: `awk '{print $5}' filename`
+(*) Print the second column of the lines containing "foo" in a space-separated file: `awk '/foo/ {print $2}' filename`
+(*) Print the last column of each line in a file, using a comma (instead of space) as a field separator: `awk -F ',' '{print $NF}' filename`
+(*) Sum the values in the first column of a file and print the total: `awk '{s+=$1} END {print s}' filename`
+(*) Print every third line starting from the first line: `awk 'NR%3==1' filename`
+(*) Print different values based on conditions: `awk '{if ($1 == "foo") print "Exact match foo"; else if ($1 ~ "bar") print "Partial match bar"; else print "Baz"}' filename`
+(*) Print all lines where the 10th column value equals the specified value : `awk '($10 == value)'`
+(*) Print all the lines which the 10th column value is between a min and a max : `awk '($10 >= min_value && $10 <= max_value)'`
+(*) Print lines in a text file with numbers in first column higher or equal than a value: `awk '$NF >= 134000000 {print $0}' single-column-numbers.txt`
+
 Heads and Tails
 ===============
 
@@ -181,6 +201,7 @@ Find
 (*) Find the top 10 directories containing the highest number of files: `find / -type f ! -regex '^/\(dev\|proc\|run\|sys\).*' | sed 's@^\(.*\)/[^/]*$@\1@' | sort | uniq -c | sort -n | tail -n 10`
 (*) Find all files that have 20 or more MB on every filesystem, change the size and filesystem to your liking: `find / -type f -size +20000k -exec ls -lh {} \; 2> /dev/null | awk '{ print $NF ": " $5 }' | sort -nrk 2,2`
 (*) Find directory with most inodes/files: `find / -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n | tail`
+(*) Find a file and then copy to tmp folder: `for file in `ls | grep -i 'mumbai|pune|delhi'` ; do cp $file /tmp/ ; done `
 
 Zip
 ===
@@ -194,6 +215,13 @@ Zip
 (*) Delete all tmp files from the foo directory in an existing zip file: `zip -d compressed.zip "foo/*.tmp"`
 (*) Archive a directory and its contents to a multi-part split zip file (e.g. 3 GB parts): `zip -r -s 3g compressed.zip path/to/directory`
 (*) List files within a specified archive (without extracting them): `zip -sf compressed.zip`
+
+(*) Extract zip file(s) (for multiple files, separate file paths by spaces): `unzip file(s)`
+(*) Extract zip files(s) to given path: `unzip compressed_file(s) -d path/to/put/extracted_file(s)`
+(*) List the contents of a zip file without extracting: `unzip -l file.zip`
+(*) Extract the contents of the file(s) to stdout alongside the extracted file names: `unzip -c file.zip`
+(*) Extract a zip file created on Windows, containing files with non-ASCII (e.g. Chinese or Japanese characters) filenames: `unzip -O gbk file.zip`
+(*) Make a dedicated folder for each zip file: `for f in *.zip; do unzip -d "${f%*.zip}" "$f"; done`
 
 Gzip
 ====
@@ -265,6 +293,7 @@ Sed
 (*) Delete at start of each line until character: `sed 's/^[^:]*://g'`
 (*) Remove all matches containing a string until its next space: `sed 's/linux-[^ ]* \{0,1\}//g' /path/to/file`
 (*) Remove ^M characters from file using sed: `sed 's/\r//g' < input.txt >  output.txt`
+(*) Replace all backward slashes with forward slashes: `echo 'C:\Windows\' | sed 's|\\|\/|g'`
 
 Diff
 ====
@@ -291,6 +320,20 @@ Perl
 (*) Shuffle lines via perl: `seq 1 9 | perl -e 'print sort { (-1,1)[rand(2)] } <>'`
 (*) Shuffle lines via perl: `seq 1 9 | perl -MList::Util=shuffle -e 'print shuffle <>;'`
 
+Shell things
+============
+
+(*) Change all file extensions from txt to xml: `for file in *.txt; do mv "$file" "${file%.txt}.xml"; done`
+(*) Silently deletes lines containing a specific string in a bunch of files: `for file in $(egrep 'abc|def' *.sql | cut -d":" -f1 | uniq); do    sed -i '/abc/d' ./$file ; sed -i '/def/d' ./$file; done`
+(*) Rename all files in lower case: `for f in $(find); do mv -v "$f" "$(echo $f | tr '[A-Z]' '[a-z]')"; done`
+(*) Shell bash iterate number range with for loop: `for((i=1;i<=10;i++)){ echo $i; }`
+(*) Generate a sequence of numbers.: `for ((i=1; i<=99; ++i)); do echo $i; done`
+(*) Iterate over a number range: `for i in $(seq 1 5) ; do echo $i ; done`
+(*) Iterate over a number range: `for i in {1..10}; do echo $i; done`
+(*) Get a random (uniform) integer between 1 and 100: `echo $(( ( RANDOM % 100 ) + 1))`
+(*) Calculate pi to an arbitrary number of decimal places: `bc -l <<< "scale=1000; 4*a(1)"`
+(*) AWK Calculator: `calc(){ awk "BEGIN{ print $* }" ;}; calc "((3+(2^3)) * 34^2 / 9)-75.89"`
+
 X
 =
 
@@ -304,6 +347,7 @@ X
 (*) Disable touchpad (and possibly add to `.xprofile`): `xinput disable 'SynPS/2 Synaptics TouchPad'`
 (*) Make window transparent (50% opacity) in Gnome shell: `xprop -format _NET_WM_WINDOW_OPACITY 32c -set _NET_WM_WINDOW_OPACITY 0x7FFFFFFF`
 (*) Set RGB gamma of secondary monitor: `secondscreen=$(xrandr -q | grep " connected" | sed -n '2 p' | cut -f 1 -d ' '); [ "$secondscreen" ] && xrandr --output $secondscreen --gamma 0.6:0.75:1`
+(*) Visual alert with keyboard LEDs: `for a in $(seq 16); do xdotool key Num_Lock;sleep .5; xdotool key Caps_Lock;done`
 
 man
 ===
@@ -336,6 +380,20 @@ Pacman
 (*) Sort installed packages by size: `LC_ALL=C pacman -Qi | egrep '^(Name|Installed)' | cut -f2 -d':' | paste - - | column -t | sort -nk 2 | grep MiB`
 (*) Search for missing libraries using pacman: `pacman -Fs libusb-0.1.so.4`
 
+Apt
+===
+
+(*) Update the list of available packages and versions (it's recommended to run this before other `apt` commands): `sudo apt update`
+(*) Search for a given package: `apt search package`
+(*) Show information for a package: `apt show package`
+(*) Install a package, or update it to the latest available version: `sudo apt install package`
+(*) Remove a package (using `purge` instead also removes its configuration files): `sudo apt remove package`
+(*) Upgrade all installed packages to their newest available versions: `sudo apt upgrade`
+(*) List all packages: `apt list`
+(*) List installed packages: `apt list --installed`
+(*) Before any Dell Firmware update on Ubuntu, run: `apt install raidcfg dtk-scripts syscfg smbios-utils sfcb cim-schema dcism`
+(*) Get all upgradable deb packages in a single line: `apt list --upgradable | grep -v 'Listing...' | cut -d/ -f1 | tr '\r\n' ' ' | sed '$s/ $/\n/'`
+
 Dpkg
 ====
 
@@ -360,10 +418,10 @@ Rpm
 (*) Show changed, missing and/or incorrectly installed files of matching packages: `rpm -Va 'php-*'`
 (*) Extract rpm package name, version and release using some fancy sed regex: `rpm -qa | sed 's/^\(.*\)-\([^-]\{1,\}\)-\([^-]\{1,\}\)$/\1 \2 \3/' | sort | column -t`
 
-General networking
+General Networking
 ==================
 
-(*) List interfaces with detailed info: `ip address`
+(*) List interfaces with detailed info: `ip a`
 (*) List interfaces with brief network layer info: `ip -brief address`
 (*) List interfaces with brief link layer info: `ip -brief link`
 (*) Display the routing table: `ip route`
@@ -371,6 +429,12 @@ General networking
 (*) Make an interface up/down: `ip link set interface up/down`
 (*) Add/Delete an IP address to an interface: `ip addr add/del ip/mask dev interface`
 (*) Add a default route: `ip route add default via ip dev interface`
+(*) Show current network interface in use: `ip a | awk '/state UP/ {print $2}' | sed 's/.$//'`
+(*) Extract all ip addresses from both ip and ifconfig commands output: `ip a | grep -oP '(?<=inet |addr:)(?:\d+\.){3}\d+'`
+(*) Show your current network interface in use: `ip r show default | awk '{print $5}'`
+(*) Automatically generate the ip/hostname entry for the /etc/hosts in the current system: `echo "$(ip addr show dev $(ip r | grep -oP 'default.*dev \K\S*') | grep -oP '(?<=inet )[^/]*(?=/)') $(hostname -f) $(hostname -s)"`
+
+(*) Block all IPv4 addresses that has brute forcing our ssh server: `for idiots in "$(cat /var/log/auth.log|grep invalid| grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b')"; do iptables -A INPUT -s "$idiots" -j DROP; done`
 (*) Watch how many tcp connections there are per state every two seconds: `watch -c "netstat -natp 2>/dev/null | tail -n +3 | awk '{print \$6}' | sort | uniq -c"`
 (*) Watch how many tcp connections there are per state every two seconds: `watch -c "netstat -nt | awk 'FNR > 3 {print \$6}' | sort | uniq -c"`
 (*) Watch TCP, UDP open ports in real time with socket summary.: `watch ss -stplu`
@@ -393,6 +457,29 @@ General networking
 (*) Find all clients connected to HTTP or HTTPS ports: `ss -o state established '( dport = :http or sport = :https )'`
 (*) Show all current listening programs: `ss -plunt`
 
+(*) Get your public IP address using Amazon: `curl checkip.amazonaws.com`
+(*) Ultra fast public IP address lookup using Cloudflare's 1.1.1.1: `curl -fSs https://1.1.1.1/cdn-cgi/trace | awk -F= '/ip/ { print $2 }'`
+(*) Download mp3 files linked in a RSS podcast feed: `curl http://radiofrance-podcast.net/podcast09/rss_14726.xml | grep -Eo "(http|https)://[a-zA-Z0-9./?=_%:-]*mp3" | sort -u | xargs wget`
+(*) Offcloud - add a link as remote download: `curl  'https://offcloud.com/api/remote?key=XXXXXX' \   -H 'accept: application/json' \   -H 'Content-Type: application/x-www-form-urlencoded'  --data-raw "url=$MYLINK&remoteOptionId=XXXXX"`
+(*) Check web server port 80 response header: `curl -I <IPaddress>`
+(*) Get a list of top 1000 sites from alexa: `curl -qsSl http://s3.amazonaws.com/alexa-static/top-1m.csv.zip 2>/dev/null | zcat | grep ".de$" | head -1000 | awk -F, '{print $2}'`
+(*) Get Your IP Geographic Location with curl and jq: `curl -s https://ipvigilante.com/$(curl -s https://ipinfo.io/ip) | jq '.data.latitude, .data.longitude, .data.city_name, .data.country_name'`
+(*) Get current stable kernel version string from kernel.org: `curl -s https://www.kernel.org/releases.json | jq '.latest_stable.version' -r`
+(*) Check every URL redirect (HTTP status codes 301/302) with curl: `curl -sLkIv --stderr - http://example.org | grep -i location: | awk {'print $3'} | sed '/^$/d'`
+(*) Check every URL redirect (HTTP status codes 301/302) with curl: `curl -sLkIv --stderr - https://exemple.com | awk 'BEGIN{IGNORECASE = 1};/< location:/ {print $3}'`
+
+(*) Download the contents of a URL to a file (named "foo" in this case): `wget https://example.com/foo`
+(*) Download the contents of a URL to a file (named "bar" in this case): `wget --output-document bar https://example.com/foo`
+(*) Download a single web page and all its resources with 3-second intervals between requests (scripts, stylesheets, images, etc.): `wget --page-requisites --convert-links --wait=3 https://example.com/somepage.html`
+(*) Download all listed files within a directory and its sub-directories (does not download embedded page elements): `wget --mirror --no-parent https://example.com/somepath/`
+(*) Limit the download speed and the number of connection retries: `wget --limit-rate=300k --tries=100 https://example.com/somepath/`
+(*) Download a file from an HTTP server using Basic Auth (also works for FTP): `wget --user=username --password=password https://example.com`
+(*) Continue an incomplete download: `wget --continue https://example.com`
+(*) Download all URLs stored in a text file to a specific directory: `wget --directory-prefix path/to/directory --input-file URLs.txt`
+(*) Download an entire website: `wget --random-wait -r -p -e robots=off -U mozilla http://www.example.com`
+(*) Website recursive offline mirror with wget: `wget --mirror --convert-links --adjust-extension --page-requisites  --recursive  --no-parent  www.example.com`
+(*) Download a single page saved as `wget_result.html`, implementing a custom user-agent: `wget -O wget_result.html --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.58 Safari/537.36" "https://ca.camelcamelcamel.com/search?sq=rk+royal+kludge"`
+
 (*) Transfer file from local to remote host: `rsync path/to/local_file remote_host:path/to/remote_directory`
 (*) Transfer file from remote host to local: `rsync remote_host:path/to/remote_file path/to/local_directory`
 (*) Transfer file in [a]rchive (to preserve attributes) and compressed ([z]ipped) mode with [v]erbose and [h]uman-readable [P]rogress: `rsync -azvhP path/to/local_file remote_host:path/to/remote_directory`
@@ -408,6 +495,9 @@ General networking
 (*) Run a http server in the current directory tree (http://localhost:8080/) : `python -m http.server 8080 && $BROWSER http://localhost:8080`
 (*) Super fast port scanner: `time seq 65535 | parallel -k --joblog portscan -j9 --pipe --cat -j200% -n9000  --tagstring  '\033[30;3{=$_=++$::color%8=}m'  'nc -vz localhost $(head -n1 {})-$(tail -n1 {})'`
 (*) Fast ports canner via parallel: `parallel -j200% -n1 -a textfile-with-hosts.txt nc -vz {} ::: 22`
+
+(*) Quickly ping range of IP adresses and return only those that are online: `{ for i in {1..254}; do ping -c 1 -W 1  192.168.1.$i & done } | grep "64 bytes"`
+(*) Scan all open ports without any required program: `for i in {1..65535}; do (echo < /dev/tcp/127.0.0.1/$i) &>/dev/null && printf "\n[+] Open Port at\n: \t%d\n" "$i" || printf "."; done`
 
 Network Manager
 ===============
@@ -476,6 +566,7 @@ Security and Encryption
 (*) Generate a random password 30 characters long: `tr -c -d "a-zA-Z0-9" </dev/urandom | dd bs=30 count=1 2>/dev/null;echo`
 (*) Generate cryptographically secure password: `python -c "import string; import random;print(''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits + string.ascii_lowercase) for _ in range(16)))"`
 (*) Compute and check MD5 message digest: `md5sum -c filename.md5`
+(*) Rename all files in a directory to the md5 hash: `for i in *; do sum=$(md5sum $i); mv  -- "$i" "${sum%% *}"; done`
 (*) Dump obfuscated passwords from Google Chrome and Chromium.: `sqlite3 -header -csv -separator "," ~/.config/google-chrome/Default/Login\ Data "SELECT * FROM logins" > ~/Passwords.csv`
 (*) Dump obfuscated passwords from Brave: `sqlite3 -header -csv -separator "," ~/.config/BraveSoftware/Brave-Browser/Default/Login\ Data "SELECT * FROM logins" > ~/Passwords.csv`
 
@@ -854,6 +945,7 @@ So, sinks are outputs (audio goes there), sources are inputs (audio comes from t
 (*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
 (*) Use the allow boost option to increase, decrease, or set the volume above 100%: `pamixer --set-volume 105 --allow-boost`
 (*) Mute the default sink (use `--unmute` instead to unmute): `pamixer --mute`
+(*) Switch all connected PulseAudio bluetooth devices to A2DP profile: `for card in $(pacmd list-cards | grep 'name: ' | sed 's/.*<\(.*\)>.*/\1/'); do pacmd set-card-profile $card a2dp_sink; done`
 
 (*) Change the default sink (output) to 1: `pactl set-default-sink 1`
 (*) List all sinks and sources with their corresponding IDs: `pamixer --list-sinks --list-sources`
@@ -861,11 +953,31 @@ So, sinks are outputs (audio goes there), sources are inputs (audio comes from t
 (*) List all sinks: `pactl list sinks short`
 (*) Create a sink: `pacmd load-module module-null-sink sink_name=MySink && pacmd update-sink-proplist MySink device.description=MySink`
 
+(*) List all sinks (or other types - sinks are outputs and sink-inputs are active audio streams): `pactl list sinks short`
+(*) Change the default sink (output) to 1 (the number can be retrieved via the `list` subcommand): `pactl set-default-sink 1`
+(*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
+(*) Set the volume of sink 1 to 75%: `pactl set-sink-volume 1 0.75`
+(*) Toggle mute on the default sink (using the special name `@DEFAULT_SINK@`): `pactl set-sink-mute @DEFAULT_SINK@ toggle`
+
 {{{sh
 SOURCE=$(pactl list | grep -A2 'Source #' | grep 'Name: ' | cut -d" " -f2 | fzf --prompt="Select source >")
 SINK=$(pactl list | grep -A2 'Sink #' | grep 'Name: ' | cut -d" " -f2 | fzf --prompt="Select sink >")
 PULSE_SOURCE="$SOURCE" PULSE_SINK="$SINK" ffplay "https://holiday.stream.publicradio.org/holiday_yc.aac"
 }}}
+
+pacmd list-sinks | grep -A1 "* index"
+  * index: 1
+    name: <alsa_output.pci-0000_00_1b.0.analog-stereo>
+
+DEFAULT_OUTPUT=$(pactl list | grep -A2 'Sink #' | grep 'Name: ' | cut -d" " -f2 | fzf --prompt="Select sink >")
+    DEFAULT_OUTPUT=$(pacmd list-sinks | grep -A1 "* index" | grep -oP "<\K[^ >]+")
+
+alsa_output.pci-0000_00_1b.0.analog-stereo
+Then, we create a combined sink that has only one slave: $DEFAULT_OUTPUT. The sound generated by the app (source) will be forwarded to the slave sink (ie. real output), and we'll also record it. It is different than a null sink where the source sound is not forwarded.
+
+$ pactl load-module module-combine-sink \
+  sink_name=record-n-play slaves=$DEFAULT_OUTPUT \
+  sink_properties=device.description="Record-and-Play"
 
 FFmpeg (simple)
 ===============
@@ -926,7 +1038,8 @@ Streaming, Combining Multiple Sources, Capturing Devices (more ffmpeg and friend
 (*) YouTube stream a video (must have audio): `KEY="your-key-goes-here" && FPS=24 && ffmpeg -stream_loop -1 -re -i "VIDEO_SOURCE" -c:v libx264 -pix_fmt yuv420p -preset superfast -r $FPS -g $(($FPS * 2)) -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
 (*) YouTube stream desktop and default microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re -f x11grab -i :0.0 -f pulse -ac 2 -i default -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
 (*) YouTube stream webcam (here `/dev/video1`, use `v4l2-ctl` to confirm) and default microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re /dev/video1 -f pulse -ac 2 -i default -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
-TODO (*) YouTube stream desktop with open webcam and default microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re /dev/video1 -f pulse -ac 2 -i default -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
+(*) (Windows) YouTube stream desktop with default microphone: `ffmpeg -stream_loop -1 -re -f gdigrab -rtbufsize 100M -i desktop -f dshow -i audio="Microphone Array (Realtek(R) Audio)" -c:v libx264 -pix_fmt yuv420p -preset ultrafast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/YOURKEYGOESHERE"`
+(*) (Windows) Open a borderless webcam with `mpv` (good for streaming purposes): `mpv -border=no -no-osc --ontop --profile=low-latency av://dshow:video="Integrated Camera"`
 (*) (Windows) YouTube webcam and microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re -f dshow -rtbufsize 100M -i video="Integrated Camera" -f dshow -i audio="Microphone Array (Realtek(R) Audio)" -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
 (*) Capture main screen (:0) and the default Pulse Audio sink: `ffmpeg -video_size 1366x768 -framerate 30 -f x11grab -i :0.0 -f pulse -ac 2 -i default -c:v libx264rgb -crf 0 -preset ultrafast -c:a libopus output.mkv`
 (*) Take the audio of the first source and the video of the second source and combine: `ffmpeg -i "https://ycradio.stream.publicradio.org/ycradio.aac" -i "video.mp4" -c:a aac -c:v copy -map 0:a:0 -map 1:v:0 -f matroska out.mkv`
@@ -963,14 +1076,6 @@ ffmpeg \
 (*) (Windows) Capture a region of the desktop: `ffmpeg -f gdgrab -framerate 6 -offset_x 10 -offset_y 20 -video_size vga -i desktop out.mpg`
 (*) (Windows) Capture a window by window title: `ffmpeg -f gdigrab -framerate 6 -i title=Calculator out.mpg`
 (*) (Windows) Capture desktop using a virtual device (need 3rd party - see trac URL above): `ffmpeg -f dshow -i video="UScreenCapture" -f dshow -i audio="NAMEOFMICROPHONE" output.mkv`
-
-(Windows) Borderless (and movable) webcam stream with good latency
-==================================================================
-
-Borderless means not movable (it lacks a titlebar). AutoHotKey to the rescue:
-  1. Get AutoHotkey and enable WinDrag.ahk ( https://wwwautohotkey.com/boards/viewtopic.php?t=57703 )
-  2. Verify your video device: `ffmpeg -list_devices true -f dshow -i dummy`
-  3. Play a borderless video using `ffplay` or `mpv` (see above)
 
 More complex tasks with ffmpeg
 ==============================
@@ -1116,19 +1221,16 @@ Combos
 (*) Output the final destination of a URL: `curl -Ls -o /dev/null -w %{url_effective} https://startingurlgoeshere`
 (*) Watch CPU usage, update once per sec: `watch -n1 grep \"cpu MHz\" /proc/cpuinfo`
 (*) Get device info for all USB devices: `echo /sys/bus/usb/devices/* | xargs udevadm info -q property -p`
-(*) Download an entire website: `wget --random-wait -r -p -e robots=off -U mozilla http://www.example.com`
-(*) Website recursive offline mirror with wget: `wget --mirror --convert-links --adjust-extension --page-requisites  --recursive  --no-parent  www.example.com`
-(*) Download a single page saved as `wget_result.html`, implementing a custom user-agent: `wget -O wget_result.html --user-agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.58 Safari/537.36" "https://ca.camelcamelcamel.com/search?sq=rk+royal+kludge"`
 (*) List top 100 djs from https://djmag.com/top100djs: `lynx -listonly -nonumbers -dump https://djmag.com/top100djs|sed '1d'|cut -d- -f5,6,7|sed -n '180,$p'|nl --number-format=rn --number-width=3|sed 's/-/ /g'|sed -e 's/.*/\L&/' -e 's/\<./\u&/g'`
 (*) lynx - Get a text-only version of a website: `lynx -dump "URL" >> dump.txt`
 (*) Magnify a mouse-selected part of a screen: `slop | xargs xzoom -source`
-(*) To find out fonts that the `brave` browser is using: `for proc in $(ps -o pid --no-headers -C brave); do (lsof -p $proc | grep fonts | cut -f4); done`
 (*) sxiv - Search directory for files and run them as a slideshow: `sxiv -S 2 -i <<< $(find . -type f)`
 (*) Boot a flash disk in QEMU to test it: `qemu-system-x86_64 -rtc base=localtime -m 2G -vga std -drive file=/dev/sdb,readonly,cache=none,format=raw,if=virtio`
 (*) Convert JSON to YAML: `yq . -y <example.json`
 (*) From all PDF files in all subdirectories, extract two metadata fields (here: Creator and Producer) into a CSV table: `echo "File;Creator;Producer";find . -name '*.pdf' -print0 | while IFS= read -d $'\0' line;do echo -n "$line;";pdfinfo "$line" | perl -ne 'if(/^(Creator|Producer):\s*(.*)$/){print"$2";if ($1 eq "Producer"){exit}else{print";"}}';echo;done 2>/dev/null`
 (*) Fetch current outside temperature at location bc-32 (Canada, see weather.gc.ca): `curl -s https://weather.gc.ca/rss/city/bc-32.xml | grep -oP '(?<=Current Conditions: )\d{1,}\.\d{1,}'`
 (*) Convert a website into a PDF: `wkhtmltopdf "https://weather.gc.ca/city/pages/bc-32_metric_e.html" - | zathura -`
+(*) Print out ANSI colours and escape codes: `for x in {0..8}; do for i in {30..37}; do for a in {40..47}; do echo -ne "\e[$x;$i;$a""m\\\e[$x;$i;$a""m\e[0;37;40m "; done; echo; done; done; echo ""`
 
 Powershell
 ==========
@@ -1284,14 +1386,10 @@ Android ADB and Droidcam
 (*) Open application: `adb shell monkey -p com.dev47apps.droidcamx 1`
 (*) Send on/off key press (activates screen): `adb shell input keyevent 26`
 (*) Download all .key files from your android device to your pc.: `for i in $(adb shell "su -c find /data /system -name '*.key'"); do mkdir -p ".$(dirname $i)";adb shell "su -c cat $i" > ".$i";done`
+(*) Download all default installed apk files from your android.: `for i in $(adb shell pm list packages | awk -F':' '{print $2}'); do adb pull "$(adb shell pm path $i | awk -F':' '{print $2}')"; mv *.apk $i.apk 2&> /dev/null ;done`
+(*) Factory reset your android device via commandline.: `am broadcast -a android.intent.action.MASTER_CLEAR`
 
 You want to be able to combine an audio and microphone sink to share while live streaming: https://www.reddit.com/r/archlinux/comments/klmyec/how_to_play_audio_files_as_input/ghaclhs?utm_source=share&utm_medium=web2x&context=3
-
-(*) List all sinks (or other types - sinks are outputs and sink-inputs are active audio streams): `pactl list sinks short`
-(*) Change the default sink (output) to 1 (the number can be retrieved via the `list` subcommand): `pactl set-default-sink 1`
-(*) Move sink-input 627 to sink 1: `pactl move-sink-input 627 1`
-(*) Set the volume of sink 1 to 75%: `pactl set-sink-volume 1 0.75`
-(*) Toggle mute on the default sink (using the special name `@DEFAULT_SINK@`): `pactl set-sink-mute @DEFAULT_SINK@ toggle`
 
 Droidcam ADB setup
 ==================
@@ -1347,21 +1445,14 @@ New oneliners (thanks commandlinefu)
 (*) Replacement of tree command (ignore node_modules): `alias tree='pwd;find . -path ./node_modules -prune -o -print | sort | sed '\''1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'\'''`
 (*) Open clipboard content on vim: `alias vcb='xclip -i -selection clipboard -o | vim -'`
 (*) Faciliate the work for lftp ('all' is needed if you wanna use it with getopts, otherwise its enough with the lftp line): `all="$(echo -e $*| awk '{for(i=3;i<=NF;++i)print $i}'|xargs)"; lftp -e open <HOSTNAME> -p <PORT> -u <USER>:<PASSWORD> -e "$all;exit"`
-(*) Factory reset your android device via commandline.: `am broadcast -a android.intent.action.MASTER_CLEAR`
-(*) Before any Dell Firmware update on Ubuntu, run: `apt install raidcfg dtk-scripts syscfg smbios-utils sfcb cim-schema dcism`
-(*) Get all upgradable deb packages in a single line: `apt list --upgradable | grep -v 'Listing...' | cut -d/ -f1 | tr '\r\n' ' ' | sed '$s/ $/\n/'`
-(*) Split video files using avconv along keyframes: `avconv -i SOURCE.mp4 -f segment -c:v copy -bsf:v h264_mp4toannexb -an -reset_timestamps 1 OUTPUT_%05d.h264`
-(*) Print lines in a text file with numbers in first column higher or equal than a value: `awk '$NF >= 134000000 {print $0}' single-column-numbers.txt`
 (*) Change values from 0 to 100: `awk '{if ($3 =="LAN" && $5 == "0.00" ) print $1,  $2, "LAN",  "288",  "100.00"; else print $1 ,$2, $3, $4, $5 }' sla-avail-2013-Feb > sla-avail-2013-Feb_final`
 (*) Use was ec2 describe instances to retrieve IAM roles for specific ec2 tag to css list: `aws ec2 describe-instances --region us-east-1 --filters "Name=tag:YourTag,Values=YourValue" |  jq '.["Reservations"]|.[]|.Instances|.[]|.IamInstanceProfile.Arn + "," +.InstanceId'`
 (*) Get a list of stale AWS security groups: `aws ec2 describe-vpcs --query 'Vpcs[*].VpcId' --output text | xargs -t -n1 aws ec2 describe-stale-security-groups --vpc-id`
 (*) Rclone - include Service account blobs to your config: `bash -c 'COUNT=0; for i in $(find . -iname "*.json");do ((count=count+1));VAL=`cat ${i} | jq -c '.'` ; echo "[dst$count]";echo "type = drive";echo "scope = drive";echo "service_account_credentials = $VAL" ; echo "team_drive = 0AKLGAlhvkJYyUk9PVA" ;done'`
 (*) Banner Grabber: `bash -c 'exec 3<>/dev/tcp/google.com/80; echo EOF>&3; cat<&3'`
 (*) Show which line of a shell script is currently executed: `bash -x foo.sh`
-(*) Calculate pi to an arbitrary number of decimal places: `bc -l <<< "scale=1000; 4*a(1)"`
 (*) Add keybindings for cycling through completions (or for inserting the last or first completion) in Bash: `bind '"\er":menu-complete-backward';bind '"\es":menu-complete'`
 (*) Bitcoin Brainwallet Private Key Calculator: `bitgen hex 12312381273918273128937128912c3b1293cb712938cb12983cb192cb1289b3 info`
-(*) AWK Calculator: `calc(){ awk "BEGIN{ print $* }" ;}; calc "((3+(2^3)) * 34^2 / 9)-75.89"`
 (*) Shell pocket calculator (pure sh): `calc(){ printf "%.8g\n" $(printf "%s\n" "$*" | bc -l); }`
 (*) Convert JSON object to JavaScript object literal: `cat data.json | json-to-js | pbcopy`
 (*) Generate cryptographically Secure RANDOM PASSWORD: `cat /dev/urandom | tr -c -d '[:alnum:]' | head -c 16;echo`
@@ -1382,16 +1473,6 @@ New oneliners (thanks commandlinefu)
 (*) Create backup copy of file, adding suffix of the date of the file modification (NOT today's date): `cp file{,.$(date -r file "+%y%m%d")}`
 (*) Create backup copy of file, adding suffix of the date of the file modification (NOT today's date): `cp file file.$(date -d @$(stat -c '%Y' file) "+%y%m%d")`
 (*) Clear terminal Screen: `<ctrl+l>`
-(*) Get your public IP address using Amazon: `curl checkip.amazonaws.com`
-(*) Ultra fast public IP address lookup using Cloudflare's 1.1.1.1: `curl -fSs https://1.1.1.1/cdn-cgi/trace | awk -F= '/ip/ { print $2 }'`
-(*) Download mp3 files linked in a RSS podcast feed: `curl http://radiofrance-podcast.net/podcast09/rss_14726.xml | grep -Eo "(http|https)://[a-zA-Z0-9./?=_%:-]*mp3" | sort -u | xargs wget`
-(*) Offcloud - add a link as remote download: `curl  'https://offcloud.com/api/remote?key=XXXXXX' \   -H 'accept: application/json' \   -H 'Content-Type: application/x-www-form-urlencoded'  --data-raw "url=$MYLINK&remoteOptionId=XXXXX"`
-(*) Check web server port 80 response header: `curl -I <IPaddress>`
-(*) Get a list of top 1000 sites from alexa: `curl -qsSl http://s3.amazonaws.com/alexa-static/top-1m.csv.zip 2>/dev/null | zcat | grep ".de$" | head -1000 | awk -F, '{print $2}'`
-(*) Get Your IP Geographic Location with curl and jq: `curl -s https://ipvigilante.com/$(curl -s https://ipinfo.io/ip) | jq '.data.latitude, .data.longitude, .data.city_name, .data.country_name'`
-(*) Get current stable kernel version string from kernel.org: `curl -s https://www.kernel.org/releases.json | jq '.latest_stable.version' -r`
-(*) Check every URL redirect (HTTP status codes 301/302) with curl: `curl -sLkIv --stderr - http://example.org | grep -i location: | awk {'print $3'} | sed '/^$/d'`
-(*) Check every URL redirect (HTTP status codes 301/302) with curl: `curl -sLkIv --stderr - https://exemple.com | awk 'BEGIN{IGNORECASE = 1};/< location:/ {print $3}'`
 (*) Extract column from csv file: `cut -d"," -f9`
 (*) Generate random mac-address using md5sum + sed: `date | md5sum | sed -r 's/(..){3}/\1:/g;s/\s+-$//'`
 (*) Poor man's ntpdate: `date -s "$(curl -sD - www.example.com | grep '^Date:' | cut -d' ' -f3-6)Z"`
@@ -1406,22 +1487,16 @@ New oneliners (thanks commandlinefu)
 (*) Determine if booted as EFI/UEFI or BIOS: `[[ -d "/sys/firmware/efi" ]] && echo "UEFI" || echo "BIOS"`
 (*) List the size (in human readable form) of all sub folders from the current location: `du -h -d1`
 (*) Du command without showing other mounted file systems: `du -h --max-depth=1 --one-file-system /`
-(*) List the size (in human readable form) of all sub folders from the current location: `du -sh *`
 (*) Get total of inodes of root partition: `du --total --inodes / | egrep 'total$'`
-(*) Random number with a normal distribution between 1 and X: `echo $[(${RANDOM}%100+${RANDOM}%100)/2+1]`
 (*) Simplest calculator: `echo $[321*4]`
-(*) Automatically generate the ip/hostname entry for the /etc/hosts in the current system: `echo "$(ip addr show dev $(ip r | grep -oP 'default.*dev \K\S*') | grep -oP '(?<=inet )[^/]*(?=/)') $(hostname -f) $(hostname -s)"`
-(*) Generate a sequence of numbers.: `echo {1..12}`
 (*) Colorize sequences of digits: `echo abcd89efghij340.20kl | grep --color -e "[0-9]\+" -e "$"`
 (*) Produce 10 copies of the same string: `echo boo{,,,,,,,,,,}`
-(*) Replace all backward slashes with forward slashes: `echo 'C:\Windows\' | sed 's|\\|\/|g'`
 (*) Check if port is open on remote machine: `echo >  /dev/tcp/127.0.0.123/8085 && echo "Port is open"`
 (*) Hiding ur evil intent!  Shame on you!: `echo 'doing something very evil' >/dev/null && echo doing something very nice!`
 (*) Check web server port 80 response header: `(echo -e 'GET / HTTP/1.0\r\n\r\n';) | ncat <IPaddress> 80`
 (*) Change user password one liner: `echo -e "linuxpassword\nlinuxpassword" | passwd linuxuser`
 (*) Fork bomb (don't actually execute): `echo -e "\x23\x21/bin/bash\n\.\/\$\0\&\n\.\/\$\0\&" > bomb.sh && ./bomb.sh`
 (*) Pretty print json block that has quotes escaped: `echo 'json_here' | sed 's/\\//g' | jq .`
-(*) Instead of saying RTFM!: `echo "[q]sa[ln0=aln256%Pln256/snlbx]sb729901041524823122snlbxq" | dc`
 (*) Test sendmail: `echo "Subject: test" | /usr/lib/sendmail -v me@domain.com`
 (*) (OSX) Script to change Terminal profiles based on machine name: `echo "tell application \"Terminal\"\n\t set its current settings of selected tab of window 1 to settings set \"$PROFILE\"\n end tell" | osascript;`
 (*) Remove all the characters after last space per line including it: `echo 'The quick brown fox jumps over the lazy dog' | sed 's|\(.*\) .*|\1|'`
@@ -1441,25 +1516,6 @@ New oneliners (thanks commandlinefu)
 (*) Rename / move Uppercase filenames to lowercase filenames current directory: `FileList=$(ls); for FName in $FileList; do LowerFName=$(echo "$FName" | tr '[:upper:]' '[:lower:]'); echo $FName" rename/move to $LowerFName"; mv $FName $LowerFName;  done`
 (*) PHP7 - Fix incompatibility errors like: Parse error: syntax error, unexpected new (T_NEW) in file.php on line...: `find "$(realpath ./)" -type f \( -iname "*.php" -or -iname "*.inc" \) -exec sed -i -r "s~=[[:space:]]*&[[:space:]]*new[[:space:]]+~= new ~gi" {} \;`
 (*) Edit, view or execute last modified file with a single key-press: `f() { ls -lart;e="ls -tarp | grep -v / | tail -9";j=${e/9/1};g=${e/9/9 | nl -nln};h=$(eval $j);eval $g;read -p "e|x|v|1..9 $(eval $j)?" -n 1 -r;case $REPLY in e) joe $h;;v)cat $h;;x) eval $h;;[1-9]) s=$(eval $g | egrep ^$REPLY) && touch "${s:7}" && f;;esac ; }`
-(*) Visual alert with keyboard LEDs: `for a in $(seq 16); do xdotool key Num_Lock;sleep .5; xdotool key Caps_Lock;done`
-(*) Switch all connected PulseAudio bluetooth devices to A2DP profile: `for card in $(pacmd list-cards | grep 'name: ' | sed 's/.*<\(.*\)>.*/\1/'); do pacmd set-card-profile $card a2dp_sink; done`
-(*) Silently deletes lines containing a specific string in a bunch of files: `for file in $(egrep 'abc|def' *.sql | cut -d":" -f1 | uniq); do    sed -i '/abc/d' ./$file ; sed -i '/def/d' ./$file; done`
-(*) Find a file and then copy to tmp folder: `for file in `ls | grep -i 'mumbai|pune|delhi'` ; do cp $file /tmp/ ; done `
-(*) Massive change of file extension (bash): `for file in *.txt; do mv "$file" "${file%.txt}.xml"; done`
-(*) Massive change of file extension (bash): `for file in *.txt; do mv "${file%.txt}{.txt,.xml}"; done`
-(*) Rename all files in lower case: `for f in `find`; do mv -v "$f" "`echo $f | tr '[A-Z]' '[a-z]'`"; done`
-(*) Tar and bz2 a set of folders as individual files: `for f in *screenflow ; do tar cvf "$f.tar.bz2" "$f"; done`
-(*) Make a dedicated folder for each zip file: `for f in *.zip; do unzip -d "${f%*.zip}" "$f"; done`
-(*) Shell bash iterate number range with for loop: `for((i=1;i<=10;i++)){ echo $i; }`
-(*) Generate a sequence of numbers.: `for ((i=1; i<=99; ++i)); do echo $i; done`
-(*) Block all IPv4 addresses that has brute forcing our ssh server: `for idiots in "$(cat /var/log/auth.log|grep invalid| grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b')"; do iptables -A INPUT -s "$idiots" -j DROP; done`
-(*) Download all default installed apk files from your android.: `for i in $(adb shell pm list packages | awk -F':' '{print $2}'); do adb pull "$(adb shell pm path $i | awk -F':' '{print $2}')"; mv *.apk $i.apk 2&> /dev/null ;done`
-(*) Shell bash iterate number range with for loop: `for i in $(seq 1 5) ; do echo $i ; done`
-(*) Shell bash iterate number range with for loop: `for i in {1..10}; do echo $i; done`
-(*) Quickly ping range of IP adresses and return only those that are online: `{ for i in {1..254}; do ping -c 1 -W 1  192.168.1.$i & done } | grep "64 bytes"`
-(*) Scan all open ports without any required program: `for i in {1..65535}; do (echo < /dev/tcp/127.0.0.1/$i) &>/dev/null && printf "\n[+] Open Port at\n: \t%d\n" "$i" || printf "."; done`
-(*) Individually 7zip all files in current directory: `for i in *.*; do 7z a "$i".7z "$i"; done`
-(*) Rename all files in a directory to the md5 hash: `for i in *; do sum=$(md5sum $i); mv  -- "$i" "${sum%% *}"; done`
 (*) Checks size of directory and delete it if it's too small: `for i in *;  do test -d "$i" && ( rclone size "$i" --json -L 2> /dev/null | jq --arg path "$i" 'if .bytes < 57462360 then ( { p: $path , b: .bytes}) else "none" end' | grep -v none | jq -r '.p' | parallel -j3 rclone purge "{}" -v -P ); done`
 (*) Get all Google ipv4/6 subnets for a iptables firewall for example (updated version): `for NETBLOCK in $(echo _netblocks.google.com _netblocks2.google.com _netblocks3.google.com); do nslookup -q=TXT $NETBLOCK ; done | tr " " "\n" | grep ^ip[46]: | cut -d: -f2- | sort`
 (*) WSL: Change the current directory converting a Windows path to a Linux Path: `function _cd() { local dir; dir="$(sed -e 's~\([a-z]\):~/mnt/\L\1~gi' <<< "${*//'\'/"/"}" )"; if [ -d "$dir" ]; then cd "$dir" || exit; fi; }`
@@ -1474,9 +1530,6 @@ New oneliners (thanks commandlinefu)
 (*) Iso to USB with dd and show progress status: `image="file.iso";drive="/dev/null";sudo -- sh -c 'cat '"${image}"'|(pv -n -s $(stat --printf="%s" '"${image}"')|dd of='"${drive}"' obs=1M oflag=direct) 2>&1| dialog --gauge "Writing Image '"${image}"' to Drive '"${drive}"'" 10 70 7'`
 (*) Block all brute force attacks in realtime (IPv4/SSH): `inotifywait -r -q --format %w /var/log/auth.log|grep -i "Failed pass"|tail -n 1|grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}';iptables -I INPUT -i eth0 -s "$(cat /var/log/auth.log|grep "authentication failure; l"|awk -Frhost= '{print $2}'|tail -n 1)" -j DROP`
 (*) To create files with specific permission: `install -b -m 777 /dev/null file.txt`
-(*) Show current network interface in use: `ip addr | awk '/state UP/ {print $2}' | sed 's/.$//'`
-(*) Extract all ip addresses from both ip and ifconfig commands output: `ip a | grep -oP '(?<=inet |addr:)(?:\d+\.){3}\d+'`
-(*) Show your current network interface in use: `ip r show default | awk '{print $5}'`
 (*) Keytool using BouncyCastle as security provider to add a X509 certificate: `keytool -importcert -providerpath bcprov-jdk15on-1.60.jar -provider org.bouncycastle.jce.provider.BouncyCastleProvider -storetype BCPKCS12 -trustcacerts -alias <alias> -file <filename.cer> -keystore <filename>`
 (*) Keytool using BouncyCastle as security provider to add a PKCS12 certificate store: `keytool -importkeystore -providerpath bcprov.jar -provider BouncyCastleProvider -srckeystore <filename.pfx> -srcstoretype pkcs12 -srcalias <src-alias> -destkeystore <filename.ks> -deststoretype BCPKCS12 -destalias <dest-alias>`
 (*) Keytool view all entries in a keystore with BouncyCastle as security provider: `keytool -list -providerpath bcprov-jdk15on-1.60.jar -provider org.bouncycastle.jce.provider.BouncyCastleProvider -storetype BCPKCS12 -storepass <passphrase> -keystore <filename>`
@@ -1487,8 +1540,6 @@ New oneliners (thanks commandlinefu)
 (*) Slow Down Command Output: `ls -alt|awk '{if (system("sleep .5 && exit 2") != 2) exit; print}'`
 (*) Listing today's files only: `ls -al --time-style=+%D| grep `date +%D``
 (*) Display information about the CPU: `lscpu | egrep 'Model name|Socket|Thread|NUMA|CPU\(s\)'`
-(*) List current   processes  writing to hard drive: `lsof | grep -e "[[:digit:]]\+w"`
-(*) Find wich ports you probably want to open in your firewall on a fresh installed machine: `lsof -i -nlP | awk '{print $9, $8, $1}' | sed 's/.*://' | sort -u`
 (*) Find out  how much ram memory has your video (graphic) card: `lspci|grep -i "VGA Compatible Controller"|cut -d' ' -f1|xargs lspci -v -s|grep ' prefetchable'`
 (*) List files size sorted and print total size in a human readable format without sort, awk and other commands.: `ls -sSh /path | head`
 (*) Scan multiple log subdirectories for the latest log files and tail them: `ls /var/log/* -ld | tr -s " " | cut -d" " -f9 | xargs -i{} sh -c 'echo "\n---{}---\n"; tail -n50 {}/`ls -tr {} | tail -n1`'`
@@ -1562,6 +1613,7 @@ Obscure
 (*) Enable Synology Debug mode on shell: `sudo /usr/syno/bin/synogear install && sudo su`
 (*) Rename anime fansubs: `rename -n 's/[_ ]?[\[\(]([A-Z0-9-+,\.]+)[\]\)][_ ]?//ig' '[subs4u]_Mushishi_S2_22_(hi10p,720p,ger.sub)[47B73AEB].mkv'`
 (*) Bitcoin Brainwallet Private Key Calculator: `(read -r passphrase; b58encode 80$( brainwallet_exponent "$passphrase" )$( brainwallet_checksum "$passphrase" ))`
+(*) Instead of saying RTFM!: `echo "[q]sa[ln0=aln256%Pln256/snlbx]sb729901041524823122snlbxq" | dc`
 
 Why though?
 ===========
