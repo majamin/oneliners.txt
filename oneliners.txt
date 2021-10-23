@@ -337,6 +337,8 @@ Shell things
 X
 =
 
+
+(*) setxkbmap -option compose:ralt
 (*) Display information about key presses: `showkey -a`
 (*) Show information about a window by clicking on it: `xwininfo`
 (*) Send specific key strokes to a window: `xdotool`
