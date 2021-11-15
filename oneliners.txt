@@ -19,7 +19,7 @@ SYSTEM INFORMATION COMMANDS
 (*) Small CPU benchmark with PI, bc and time.: `time cat /proc/cpuinfo | grep proc | wc -l | xargs seq | parallel -N 0 echo "scale=4000\; a\(1\)\*4" '|' bc -l`
 
 (*) Summarize the size of current directory on disk in a human-readable format: `du -sh`
-(*) See free disk space in a human readable format: `df -h`
+(*) See free disk space and mount points in a human readable format: `df -h`
 (*) Currently mounted filesystems in nice layout: `mount | column -t`
 (*) Get the top 10 largest files ordered by size descending, starting from the current folder, recursively: `find . -printf '%s %p\n'| sort -nr | head -10`
 (*) Find 10 largest folders: `du -hsx * | sort -rh | head -10`
@@ -33,6 +33,7 @@ SYSTEM INFORMATION COMMANDS
 
 (*) List contents of directory, sort by access time: `ls -ltr`
 (*) Create a file and manipulate the date: `touch -d '-1 year' /tmp/oldfile`
+(*) Get full path of a file: `readlink -f FILE`
 
 READ THIS: https://github.com/lsof-org/lsof/blob/master/00QUICKSTART
 
@@ -82,6 +83,10 @@ ADMINISTRATION, PROCESSES AND DAEMONS
 
 (*) Using a single sudo to run multiple && arguments: `sudo -s <<< 'apt update -y && apt upgrade -y'`
 (*) Using a single sudo to run multiple && arguments: `sudo sh -c 'apt update -y && apt upgrade -y'`
+
+(*) Change a user's name: `usermod -l newname user`
+(*) Add user to supplementary groups (mind the whitespace): `usermod -a -G group1,group2 user`
+(*) Create a new home directory for a user and move their files to it: `usermod -m -d path/to/home user`
 
 DEVICES AND STORAGE
 ===================
@@ -148,7 +153,7 @@ AWK
 (*) Sum the values in the first column of a file and print the total: `awk '{s+=$1} END {print s}' filename`
 (*) Print every third line starting from the first line: `awk 'NR%3==1' filename`
 (*) Print different values based on conditions: `awk '{if ($1 == "foo") print "Exact match foo"; else if ($1 ~ "bar") print "Partial match bar"; else print "Baz"}' filename`
-(*) Print all lines where the 10th column value equals the specified value : `awk '($10 == value)'`
+(*) Print all lines where the 10th column value equals the specified value : `awk '($10 == value)' filename`
 (*) Print all the lines which the 10th column value is between a min and a max : `awk '($10 >= min_value && $10 <= max_value)'`
 (*) Print lines in a text file with numbers in first column higher or equal than a value: `awk '$NF >= 134000000 {print $0}' single-column-numbers.txt`
 
@@ -166,7 +171,6 @@ HEADS AND TAILS
 (*) Output the first 239 bytes of a file: `head -c239 filename`
 (*) Output everything but the last 24 lines of a file: `head -n -24 filename`
 (*) Output everything but the last 172 bytes of a file: `head -c -172 filename`
-
 
 FIND
 ====
@@ -203,13 +207,14 @@ FIND
 (*) Find non-ASCII and UTF-8 files in the current directory: `find . -type f -regex '.*\.\(cpp\|h\)' -exec file {} + | grep "UTF-8\|extended-ASCII"`
 (*) Replace lines in files with only spaces/tabs with simple empty line (within current directory - recursive): `find . -type f -regex '.*\.\(cpp\|h\)' -exec sed -i 's/^[[:blank:]]\+$//g' {} +`
 (*) Find the top 10 directories containing the highest number of files: `find / -type f ! -regex '^/\(dev\|proc\|run\|sys\).*' | sed 's@^\(.*\)/[^/]*$@\1@' | sort | uniq -c | sort -n | tail -n 10`
-(*) Find all files that have 20 or more MB on every filesystem, change the size and filesystem to your liking: `find / -type f -size +20000k -exec ls -lh {} \; 2> /dev/null | awk '{ print $NF ": " $5 }' | sort -nrk 2,2`
+(*) Find all files that have >= 20MB in your home directory: `find "$HOME" -type f -size +20000k -exec ls -lh {} \; 2> /dev/null | awk '{ print $NF ": " $5 }' | sort -nrk 2,2`
 (*) Find directory with most inodes/files: `find / -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n | tail`
-(*) Find a file and then copy to tmp folder: `for file in `ls | grep -i 'mumbai|pune|delhi'` ; do cp $file /tmp/ ; done `
 
 ZIP
 ===
 
+(*) Find all images by mime type: `find /path/to/crawl -type f -exec file --mime-type {}  \; | awk '{if ($NF == "image/jpeg") print $0 }'`
+(*) Find all files matching glob and create one zip file: `find . -name "*.jpg" -print | zip newZipFile.zip -@`
 (*) Zip all JPG files in the current directory to a zip file: `zip images.zip *.jpg`
 (*) Zip multiple files and directories recursively: `zip -r archive.zip *.jpg ./mydir1 ./mydir2`
 (*) Zip but exclude everything in the private directory: `zip -r compressed.zip ./mydir -x '*private/*'`
@@ -298,6 +303,36 @@ SED
 (*) Remove all matches containing a string until its next space: `sed 's/linux-[^ ]* \{0,1\}//g' /path/to/file`
 (*) Remove ^M characters from file using sed: `sed 's/\r//g' < input.txt >  output.txt`
 (*) Replace all backward slashes with forward slashes: `echo 'C:\Windows\' | sed 's|\\|\/|g'`
+(*) Print one line: `sed -n '10p' myfile.txt`
+(*) Do replacement on all lines except line 5: `sed '5!/s/foo/bar/' file.txt`
+(*) Do replacement on lines matching regex (eg: lines starting with 'hello'): `sed '/^hello/ s/h/H/' file.txt `
+(*) Do replacement from line 5 to end of file: `sed '5,$ s/foo/bar/' file.txt `
+(*) Delete empty files: `sed  '/^$/d' file`
+(*) Print lines between two regex matches: `sed -nE '/^foo/,/^bar/p' file.txt`
+(*) Use custom delimiters to make it easy for some strings that contain slashes: `sed 's_/bin/bash_/bin/sh_' file.txt `
+(*) Custom delimiters for regex address combined with the classical delimiter for substitute command (you could also use there a custom delimiter). Useful for paths.: `sed '\_/bin/bash_s/grep/egrep/' file.txt`
+(*) Insert a space between lowercase/Uppercase characters using & (which represents the regex match): `sed 's/[a-zA-Z]/& /g' file.txt `
+(*) Keep the first word of every line (where word is defined by alphanumeric chars + underscores for simplicity sake): `sed -E 's_[a-zA-Z0-9_]+.*_\1_' file.txt `
+(*) Switch the first two words : `sed -E 's_([a-zA-Z0-9_]*) ([a-zA-Z0-9_]*)_\2 \1_' f1`
+(*) Remove duplicate words separated by a single space (but not triplicate): `sed -E 's_([a-zA-Z0-9_]+) \1_\1_ig' f1`
+(*) Search and replace for pattern, write just the lines with the replacements in a new file: `sed  's_foo_bar_w replaced.txt' file.txt  `
+(*) Multiple replacements: `sed -e 's_foo_bar_' -e 's_hello_HELLO_' file.txt `
+(*) Multiple commands using the ; operator which in theory concatenates commands: `sed '10p;5i\"INSERTED BEFORE LINE 5" file.txt `
+(*) Remove comments between lines starting with these two keywords. Empty lines will be put there instead: `sed -E '/start/,/end/ s/#.*//' file.txt `
+(*) Delete comments starting with # (no empty lines left behind): `sed -E '/^#/d' f1`
+(*) Insert an empty line after pattern  (after each line containing comment in this case): `sed '/^#/G' file.txt `
+(*) View lines minus lines between line starting with pattern and end of file : `sed  '/start/,$ d' file.txt `
+(*) View lines except lines between line starting with pattern and line ending with pattern: `sed -rn '/start/,/end/ !p' file.txt `
+(*) Print until you encounter pattern then quit: `sed  '/start/q' file.txt `
+(*) Insert contents of file after a certain line: `sed  '5 r newfile.txt' file.txt `
+(*) Append text after lines containing regex (AFTER FOO): `sed '/foo/a\AFTER FOO' file.txt `
+(*) Insert text after lines containing regex (BEFORE FOO): `sed '/foo/i\BEFORE FOO' file.txt `
+(*) Change line containing regex match: `sed '/foo/c\FOO IS CHANGED' file.txt `
+(*) Transform text: `sed 'y/abc/ABC/' file.txt `
+(*) Copy all the comments (starting with #) to a new file: `sed -E '/^#/w comments.txt' file.txt `
+(*) Print every second line (substitute ~3 for third line, etc): `sed -n '1~2p' file.txt `
+(*) Edit file in place but also create a backup: `sed -i.bak 's/hello/HELLO/' file.txt `
+(*) Append two extra lines after regex match: `sed -E '/^#/G G' file.txt `
 
 DIFF
 ====
@@ -326,7 +361,8 @@ PERL
 
 SHELL THINGS
 ============
-
+(*) Find all pdfs and add '_small' to the name (renaming and shell substitution): `for FILE in $(find . -name "*.pdf" -print); do mv $FILE ${FILE%%.pdf}_small.pdf; done`
+(*) Nicely format a CSV file: `column -s, -t < somefile.csv | less -#2 -N -S`
 (*) Change all file extensions from txt to xml: `for file in *.txt; do mv "$file" "${file%.txt}.xml"; done`
 (*) Silently deletes lines containing a specific string in a bunch of files: `for file in $(egrep 'abc|def' *.sql | cut -d":" -f1 | uniq); do    sed -i '/abc/d' ./$file ; sed -i '/def/d' ./$file; done`
 (*) Rename all files in lower case: `for f in $(find); do mv -v "$f" "$(echo $f | tr '[A-Z]' '[a-z]')"; done`
@@ -341,7 +377,6 @@ SHELL THINGS
 XORG
 ====
 
-
 (*) setxkbmap -option compose:ralt
 (*) Display information about key presses: `showkey -a`
 (*) Show information about a window by clicking on it: `xwininfo`
@@ -354,6 +389,7 @@ XORG
 (*) Make window transparent (50% opacity) in Gnome shell: `xprop -format _NET_WM_WINDOW_OPACITY 32c -set _NET_WM_WINDOW_OPACITY 0x7FFFFFFF`
 (*) Set RGB gamma of secondary monitor: `secondscreen=$(xrandr -q | grep " connected" | sed -n '2 p' | cut -f 1 -d ' '); [ "$secondscreen" ] && xrandr --output $secondscreen --gamma 0.6:0.75:1`
 (*) Visual alert with keyboard LEDs: `for a in $(seq 16); do xdotool key Num_Lock;sleep .5; xdotool key Caps_Lock;done`
+(*) Change the size of a named window: `xdotool search --name "window name" windowsize 300 400`
 
 MAN
 ===
@@ -369,22 +405,23 @@ PACMAN
   makepkg(8)
   pacman.conf(5)
 
+(*) Clean up cached packages: `pacman -Sc`
 (*) Install a package from the main Arch repo: `pacman -S <package name>`
-(*) Update and upgrade programs: `pacman -Syu`
+(*) Install a package from a file: `pacman -U /path/to/file`
+(*) List all programs installed from the AUR: `pacman -Qm`
+(*) List all programs installed from the main repo: `pacman -Qn`
+(*) List all programs installed: `pacman -Q`
+(*) List all programs that are orphaned dependencies: `pacman -Qdt`
+(*) List packages and their sizes: `LC_ALL=C pacman -Qi | wak '/^Name/{name=$3} /^Installed Size/{print $4$5, name}' | sort -h`
+(*) Programs installed by you: `pacman -Qe`
+(*) Remove a program, its configs and dependencies: `pacman -Rns <package name>`
+(*) Search and remove found packages: `pacman -Rns $(pacman -Qsq SEARCHSTRING)`
+(*) Search for missing libraries using pacman: `pacman -Fs libusb-0.1.so.4`
+(*) Search for packages with file: `pacman -Fy filename`
 (*) Search for programs by string in the main Arch repo: `pacman -Ss <string>`
 (*) Search installed programs by string: `pacman -Qs <string>`
-(*) Remove a program, its configs and dependencies: `pacman -Rns <package name>`
-(*) Search for packages with file: `pacman -Fy filename`
-(*) List all programs installed: `pacman -Q`
-(*) Programs installed by you: `pacman -Qe`
-(*) List all programs installed from the main repo: `pacman -Qn`
-(*) List all programs installed from the AUR: `pacman -Qm`
-(*) List all programs that are orphaned dependencies: `pacman -Qdt`
-(*) Clean up cached packages: `pacman -Sc`
-(*) Search and remove found packages: `pacman -Rns $(pacman -Qsq SEARCHSTRING)`
-(*) List packages and their sizes: `LC_ALL=C pacman -Qi | wak '/^Name/{name=$3} /^Installed Size/{print $4$5, name}' | sort -h`
 (*) Sort installed packages by size: `LC_ALL=C pacman -Qi | egrep '^(Name|Installed)' | cut -f2 -d':' | paste - - | column -t | sort -nk 2 | grep MiB`
-(*) Search for missing libraries using pacman: `pacman -Fs libusb-0.1.so.4`
+(*) Update and upgrade programs: `pacman -Syu`
 
 APT
 ===
@@ -508,6 +545,18 @@ GENERAL NETWORKING
 (*) Quickly ping range of IP adresses and return only those that are online: `{ for i in {1..254}; do ping -c 1 -W 1  192.168.1.$i & done } | grep "64 bytes"`
 (*) Scan all open ports without any required program: `for i in {1..65535}; do (echo < /dev/tcp/127.0.0.1/$i) &>/dev/null && printf "\n[+] Open Port at\n: \t%d\n" "$i" || printf "."; done`
 
+TMUX
+====
+
+(*) Start a new named session: `tmux new -s name`
+(*) List existing sessions: `tmux ls`
+(*) Attach to the most recently used session: `tmux attach`
+(*) Kill a session by name: `tmux kill-session -t name`
+
+Detach from the current session (inside a tmux session): `Ctrl-B d`
+Create a new window (inside a tmux session): `Ctrl-B c`
+Switch between sessions and windows (inside a tmux session): `Ctrl-B w`
+
 NETWORK MANAGER
 ===============
 
@@ -555,6 +604,16 @@ man 7 nm-openvswitch
 (*) Removes the specified IP address from (static) profile ABC: `nmcli con modify ABC -ipv4.addresses "192.168.100.25/24 192.168.1.1"`
 (*) Imports an OpenVPN configuration to NetworkManager: `nmcli con import type openvpn file ~/Downloads/frootvpn.ovpn`
 (*) For more Network Manager examples: `man nmcli-examples`
+
+PANDOC
+======
+
+(*) Convert file to PDF (the output format is determined by file extension): `pandoc input.md -o output.pdf`
+(*) Force conversion to use a specific format: `pandoc input.docx --to gfm -o output.md`
+(*) Convert to a standalone file with the appropriate headers/footers (for LaTeX, HTML, etc.): `pandoc input.md -s -o output.tex`
+(*) Ask pandoc to write out the default template for markdown (useful for expanding and hacking): `pandoc --print-default-template=markdown > template.markdown`
+(*) List all supported input formats: `pandoc --list-input-formats`
+(*) List all supported output formats: `pandoc --list-output-formats`
 
 MYSQL
 =====
@@ -871,6 +930,7 @@ READTHIS: https://git-scm.com/docs/giteveryday
 (*) Initialize a git repo in the current directory: `git init`
 (*) Make some changes to a file and add it to the next commit: `git add FILE`
 (*) Commit your changes with a message: `git commit -m "changes happened"`
+(*) Get status but don't show untracked files: `git status -uno`
 (*) Oops, your last commit message was wrong. Amend it: `git commit --amend -m "changes happened to FILE"`
 (*) Dang it, you also forgot to add a file with the last commit: `git add FILE && git commit --amend --no-edit`
 
@@ -885,7 +945,6 @@ READTHIS: https://git-scm.com/docs/giteveryday
 (*) Apply some stashed changes (use `stash list` to find your index integer): `git stash apply INDEX`
 
 (*) Compare two branches with a simple summary: `git diff --compact-summary <branch1> <branch2>`
-(*) Filter out untracked files: `git status --untracked-files=no`
 (*) Delete all local git branches that have been merged and deleted from remote: `git branch -d $( git branch -vv | grep '\[[^:]\+: gone\]' | awk '{print $1}' | xargs )`
 (*) (Powershell) Delete all local branches that have been merged into master: `git branch --merged origin/master | Where-Object {  !$_.Contains('master') } | ForEach-Object { git branch -d $_.trim() }`
 (*) Cleanup remote git repository of all branches already merged into master: `git branch --remotes --merged | grep -v master | sed 's@ origin/@:@' | xargs git push origin`
@@ -906,7 +965,7 @@ READTHIS: https://git-scm.com/docs/giteveryday
 (*) See where settings are coming from: `git config --show-origin --list`
 (*) Nice git aliases to visualize git log: `git config --global alias.lg2 "log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''%C(white)%s%C(reset) %C(dim white)- %an%C(reset)' --all"`
 
-TODO (*) Create a patch
+(*) Create a multi-patch from the current checked-branch: `git format-patch --singoff master --stdout > multi.diff`
 TODO (*) Apply a patch
 
 IMAGE MAGICK
@@ -926,9 +985,10 @@ IMAGE MAGICK
 (*) "Diff" two images (first shows the result as a PNG, second as a PDF): `compare image1 image2 -compose src diff.png`
 (*) Extract text from an image (requires `tesseract`): `convert -colorspace gray -fill white -resize 480% -sharpen 0x1 in.png out.jpg && tesseract out.jpg out.txt`
 (*) Calculate a hash of image data (ImageMagick): `identify -quiet -format "%#" "./path/to/file"`
-(*) List all fonts available to ImageMagick: `convert -list fonts`
+(*) List all fonts available to ImageMagick: `convert -list font`
 (*) Convert stdout text to image: `convert -background lightblue -fill blue -font DejaVu-Sans-Mono-Book -pointsize 72 label:@- cal.gif <<< $(cal)`
 (*) Combine `cal` calendar output with an image: `convert -font DejaVu-Sans-Mono-Book -fill '#0008' -draw 'rectangle 200,180,960,680' -fill white -pointsize 50 -draw "text 270,260 \" `cal` \"" bg.png bgcal.png`
+(*) Convert a PDF with images to a smaller size: `convert -density 200x200 -quality 60 -compress jpeg input.pdf output.pdf`
 
     - (optional) make canvas bigger to ensure proper filling; in this case assumption is background is white:
       	`convert original.png -gravity Center -extent 110%x110% original_grown.png`
@@ -1259,7 +1319,6 @@ POWERSHELL
 ==========
 
 Because sometimes you gotta use the Windoze.
-
 (*) (Powershell) Change directory (`cd` works as well): `Set-Location .\mydir`
 (*) (Powershell) Find files, recursively (`find . -type f` on linux): `Get-ChildItem -Filter '*myfile*' -Recurse -File`
 (*) (Powershell) List files sorted by date (`ls -ltr` on linux): `Get-ChildItem $env:USERPROFILE\Desktop | Sort-Object -Property LastWriteTime`
@@ -1277,6 +1336,7 @@ TODO (*) (Powershell) Create a new volume (`mkfs` on linux): ``
 (*) (Powershell) Select specific columns from output: `Get-ChildItem $env:USERPROFILE\Desktop -Filter "*.ps1" | Select-Object -Property 'Name', 'Length'`
 (*) (Powershell) Remove the bracketed date from filenames: `Get-ChildItem -Recurse | Where-Object { $_.Name -match " ?\(\d\d\d\d_\d\d_\d\d \d\d_\d\d_\d\d UTC\)" } | Rename-Item -NewName { $_.Name -replace " ?\(\d\d\d\d_\d\d_\d\d \d\d_\d\d_\d\d UTC\)", ""}`
 (*) (Powershell) Application network trace based on application name: `while(1 -eq 1 ) {Get-Process -Name *APPNAME* | Select-Object -ExpandProperty ID | ForEach-Object {Get-NetTCPConnection -OwningProcess $_} -ErrorAction SilentlyContinue }`
+(*) (Powershell) Get last boot time: `Get-CimInstance -ClassName win32_operatingsystem | select csname,lastbootuptime`
 (*) (Powershell) Backup with versioning: `& 'C:\cwRsync_5.5.0_x86_Free\bin\rsync.exe' --force --ignore-errors --no-perms --chmod=ugo=rwX --checksum --delete --backup --backup-dir="_EVAC/$(Get-Date -Format "yyyy-MM-dd-HH-mm-ss")" --whole-file -a -v "//MyServer/MyFolder" "/cygdrive/c/Backup"`
 
 VIM AND NEOVIM
@@ -1358,7 +1418,7 @@ RUN VIRTUALBOX ARCH LINUX HEADLESS ON WINDOWS AND SSH INTO IT
   Virtual machine: enable `sshd` (systemctl, etc.)
 
   VirtualBox > Machine Settings > Network > Advanced
-  Under port forwarding add the entry:
+  Under port forwarding add the entry (Guest IP may vary, but you can try it):
 
   Name    Protocol    Host IP    Host Port    Guest IP    Guest Port
   ----    --------    ---------  ---------    --------    ----------
@@ -1368,7 +1428,20 @@ RUN VIRTUALBOX ARCH LINUX HEADLESS ON WINDOWS AND SSH INTO IT
   `"C:\Program Files\VirtualBox\VBoxManage.exe" startvm Arch --type headless`
 
   SSH into the machine (the above settings will forward your request to 22)
-  `ssh user@127.0.0.1 -p 2222`
+  `ssh mario@127.0.0.1 -p 2222`
+
+  Of course, you can create an SSH config to easily connect:
+
+  ```{~/.ssh/config}
+  Host Arch
+	HostName 127.0.0.1
+	User mario
+	Port 2222
+	RequestTTY yes
+  ```
+  And then connect easily with `ssh Arch`. `RequestTTY yes` asks for TTY (required for tmux)
+
+
 
 RUN A SIMPLE X SERVER AND CONNECT TO IT
 =======================================
