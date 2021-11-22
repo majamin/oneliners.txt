@@ -39,6 +39,6 @@ Bonus
 
     You can alias a simple command like this one to get a nice menu that prints out the command:
 
-        alias oneliner='print -z $(grep "^(\*)" oneliners.txt | fzf -e | grep -oP "(?<=: \`).*(?=\`$)")'
+        alias oneliner='print -R -e -z $(grep "^(\*)" oneliners.txt | fzf -e | grep -oP "(?<=: \`).*(?=\`$)")'
 
     (requirements: zsh is your shell, GNU grep, fzf)
