@@ -175,22 +175,21 @@ HEADS AND TAILS
 FIND
 ====
 
-(*) Find all files in current directory exclude `.wine` and `.git` directories: `find . -type f \! \( -path '*/\.wine/*' -o -path '*/\.git/*' \)`
-(*) Delete all files in all subdirectories by extension: `find . -name "*.jpg" -delete`
-(*) Find from here, inside files recursively and replace a string: `find . -type f -exec sed -i 's/OLDSTRING/NEWSTRING/g' {} +`
+(*) Find and delete all files recursively, by extension: `find . -name "*.jpg" -delete`
+(*) Find today's files only: `find directory_path -maxdepth 1 -daystart -mtime -1`
+(*) Summarize the size of subdirectories in the current directory: `find . -maxdepth 1 -mindepth 1 -type d -exec du -skx {} \; | sort -n`
+(*) Find all files that are >= 20MB in user's home directory: `find "$HOME" -type f -size +20000k -exec ls -lh {} \; 2> /dev/null | awk '{ print $NF ": " $5 }' | sort -nrk 2,2`
 (*) Find from here, recently accessed files: `find . -type f -print0 | xargs -0 stat --format '%Y :%y %n' | sort -nr | cut -d: -f2- | head`
+(*) Find all executable files across the entire tree: `find  -executable -type f`
+(*) Find out which directory uses most inodes - list total sum of directoryname existing on filesystem: `find /etc -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n`
+(*) Find all files in current directory exclude `.wine` and `.git` directories: `find . -type f \! \( -path '*/\.wine/*' -o -path '*/\.git/*' \)`
+(*) Find from here, inside files recursively and replace a string: `find . -type f -exec sed -i 's/OLDSTRING/NEWSTRING/g' {} +`
 (*) Find files, possibly with spaces in filenames and pipe into sxiv: `find . -type f -print0 | xargs -0 sxiv -t &>/dev/null`
-(*) Listing today's files only: `find directory_path -maxdepth 1 -daystart -mtime -1`
 (*) Find image files by common extension: `find . \( -iname '*.tiff' -or -iname '*.tif'  -or -iname '*.bmp'  -or -iname '*.jpeg' -or -iname '*.jpg'  -or -iname '*.gif'  -or -iname '*.png'  -or -iname '*.heic' -or -iname '*.raw' -or -iname '*.cr2' -or -iname '*.nef' -or -iname '*.orf' -or -iname '*.sr2' \)`
 (*) Find ASCII files and extract IP addresses: `find . -type f -exec grep -Iq . {} \; -exec grep -oE "(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)" {} /dev/null \;`
-(*) Find out which directory uses most inodes - list total sum of directoryname existing on filesystem: `find /etc -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n`
-(*) Find all executable files across the entire tree: `find  -executable -type f`
 (*) Find dupe files by checking md5sum: `find . -type f | grep '([0-9]\{1,9\})\.[^.]\+$' | parallel -n1 -j200% md5sum ::: | awk 'x[$1]++ { print $2 " :::"}'| sed 's/^/Dupe: /g'| sed 's,Dupe,\x1B[31m&\x1B[0m,'`
 (*) Find and remove old backup files: `find /home/ -name bk_all_dbProdSlave_\* -mtime +2 -exec rm -f {} \;`
 (*) Find and remove old compressed backup files: `find /home -type f \( -name "*.sql.gz" -o -name "*.tar.gz" -mtime +10 \) -exec rm -rf {} \;`
-(*) Shows space used by each directory of the root filesystem excluding mountpoints/external filesystems (and sort the output): `find / -maxdepth 1 -mindepth 1 -type d \! -empty \! -exec mountpoint -q {} \; -exec du -xsh {} + | sort -h`
-(*) Shows space used by each directory of the root filesystem excluding mountpoints/external filesystems (and sort the output): `find / -maxdepth 1 -mindepth 1 -type d -exec du -skx {} \; | sort -n`
-(*) Shows space used by each directory of the root filesystem excluding mountpoints/external filesystems (and sort the output): `find / -maxdepth 1 -type d | xargs -I {} sh -c "mountpoint -q {} || du -sk {}" | sort -n`
 (*) Code to check if a module is used in python code: `find .  -name "*.ipynb" -exec grep -l "symspellpy" {} \;`
 (*) Check if the same table name exist across different databases: `find . -name "withdrownblocks.frm"  | sort -u | awk -F'/' '{print $3}' | wc  -l`
 (*) Count the total amount of hours of your music collection: `find . -print0 | xargs -0 -P 40 -n 1 sh -c 'ffmpeg -i "$1" 2>&1 | grep "Duration:" | cut -d " " -f 4 | sed "s/.$//" | tr "." ":"' - | awk -F ':' '{ sum1+=$1; sum2+=$2; sum3+=$3; sum4+=$4 } END { printf "%.0f:%.0f:%.0f.%.0f\n", sum1, sum2, sum3, sum4 }'`
@@ -207,7 +206,6 @@ FIND
 (*) Find non-ASCII and UTF-8 files in the current directory: `find . -type f -regex '.*\.\(cpp\|h\)' -exec file {} + | grep "UTF-8\|extended-ASCII"`
 (*) Replace lines in files with only spaces/tabs with simple empty line (within current directory - recursive): `find . -type f -regex '.*\.\(cpp\|h\)' -exec sed -i 's/^[[:blank:]]\+$//g' {} +`
 (*) Find the top 10 directories containing the highest number of files: `find / -type f ! -regex '^/\(dev\|proc\|run\|sys\).*' | sed 's@^\(.*\)/[^/]*$@\1@' | sort | uniq -c | sort -n | tail -n 10`
-(*) Find all files that have >= 20MB in your home directory: `find "$HOME" -type f -size +20000k -exec ls -lh {} \; 2> /dev/null | awk '{ print $NF ": " $5 }' | sort -nrk 2,2`
 (*) Find directory with most inodes/files: `find / -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n | tail`
 
 ZIP
@@ -548,14 +546,16 @@ GENERAL NETWORKING
 TMUX
 ====
 
-(*) Start a new named session: `tmux new -s name`
+(*) Start a new named session: `tmux new -s NAMEOFSESSION`
 (*) List existing sessions: `tmux ls`
 (*) Attach to the most recently used session: `tmux attach`
-(*) Kill a session by name: `tmux kill-session -t name`
+(*) Filter active tmux session by specific name and print only the name: `tmux ls -F "#S" -f "#{==:#S,NAMEOFSESSION}"`
+(*) Run a command under a new tmux session in the background (session killed when process ends): `tmux new-session -d -s "sass" "sass --watch app/scss:dist"`
+(*) Kill a session by name: `tmux kill-session -t NAMEOFSESSION`
 
-Detach from the current session (inside a tmux session): `Ctrl-B d`
-Create a new window (inside a tmux session): `Ctrl-B c`
-Switch between sessions and windows (inside a tmux session): `Ctrl-B w`
+(*) Detach from the current session (inside a tmux session): `Ctrl-B d`
+(*) Create a new window (inside a tmux session): `Ctrl-B c`
+(*) Switch between sessions and windows (inside a tmux session): `Ctrl-B w`
 
 NETWORK MANAGER
 ===============
@@ -976,6 +976,7 @@ IMAGE MAGICK
 (*) Scale an image to 25% of width: `magick image.jpg -resize 25%x image_smaller.jpg`
 (*) Resize an image to 100px wide: `magick image.jpg -resize 100x image_smaller.jpg`
 (*) Resize all images in directory to 25% of original: `mogrify -scale 25% -path ./thumbs *.*`
+(*) Change all JPG to PNG in a directory: `mogrify -format png *.jpg`
 (*) Changing all JPGs to a width of 120px and save as PNG: `magick '*.jpg' -resize 120x thumbnail%03d.png`
 (*) JPG -> JPG good compression (small loss of quality): `convert in.jpg -sampling-factor 4:2:0 -strip -quality 85 -interlace JPEG -colorspace sRGB out.jpg`
 (*) PNG -> PNG good compression (usually): `convert in.png -define png:compression-filter=2 -define png:compression-level=9 -define png:compression-strategy=1 out.png`
@@ -1067,7 +1068,8 @@ FFMPEG (SIMPLE)
 
 A good x264 read: `x264 --fullhelp`
 
-(*) Convert a video using CRF (lower = better): `ffmpeg -i input.mp4 -vcodec libx265 -crf 28 output.mp4`
+(*) Use the vp9 encoder for awesome (slow) compression: `$FILE=myfile.webm && ffmpeg -i $FILE -c:v libvpx-vp9 -c:a libopus -crf 38 ${FILE%.*}.webm`
+(*) Convert a video using CRF (0 is best, 50 is not watchable): `ffmpeg -i input.mp4 -vcodec libx265 -crf 28 output.mp4`
 (*) Convert video for max compatibility and web viewing (2019): `ffmpeg -i final3.mp4 -c:v libx264 -crf 40 -profile:v baseline -level 3.0 -pix_fmt yuv420p -movflags faststart final3_264.mp4`
 (*) Clip a video starting at 35 min 10 sec to 37 min 29 sec: `ffmpeg -ss 00:35:10 -i original.mp4 -to 00:37:29 -c copy out.mp4`
 (*) Clip a video starting at 35 min 10 sec, 1 min 34 sec duration: `ffmpeg -ss 00:35:10.0 -i input.wmv -t 00:01:34 -c copy output.wmv`
@@ -1083,6 +1085,7 @@ A good x264 read: `x264 --fullhelp`
 (*) Download screenshot or frame from YouTube video at certain timestamp: `ffmpeg -ss 8:14 -i $(youtube-dl -f 299 --get-url URL) -vframes 1 -q:v 2 out.jpg`
 (*) ffmpeg fade from video 1 to video 2 (start at 20 seconds for 2 sec): `ffmpeg -i video1.mp4 -i video2.mp4 -filter_complex "xfade=offset=20:duration=2" v1_to_v2.mp4`
 (*) Sliding overlay (does it work?): `ffmpeg -i lights.mp4 -i street.mp4 -filter_complex "overlay=x='if(gte(t,2), -w+(t-2)*20, NAN)" -t 10 output.mp4`
+(*) Create a test video (useful for experimentation): `ffmpeg -f lavfi -i testsrc=duration=30:size=1280x720:rate=30 output.mp4`
 
 FFMPEG transition effects:
   'custom' 'fade' 'wipeleft' 'wiperight' 'wipeup' 'wipedown' 'slideleft' 'slideright' 'slideup'
@@ -1118,7 +1121,8 @@ STREAMING, COMBINING MULTIPLE SOURCES, CAPTURING DEVICES (MORE FFMPEG AND FRIEND
 (*) Grab a video with youtube-dl but limit the size of the video to 1920x?: `youtube-dl -f 'bestvideo[width<=1920]+bestaudio' $URI`
 (*) Grab audio only with youtube-dl: `youtube-dl -f bestaudio --add-metadata --extract-audio --audio-format mp3 --audio-quality 0 <Video-URL>`
 (*) Loop stream a video on the local network: `ffmpeg -stream_loop -1 -i .\campfire.mkv -preset ultrafast -vcodec libx264 -tune zerolatency -b 900k -f mpegts udp://localhost:1234`
-(*) YouTube stream a video (must have audio): `KEY="your-key-goes-here" && FPS=24 && ffmpeg -stream_loop -1 -re -i "VIDEO_SOURCE" -c:v libx264 -pix_fmt yuv420p -preset superfast -r $FPS -g $(($FPS * 2)) -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
+(*) YouTube stream a video (the best?): `KEY="your-key-goes-here" ffmpeg -i "VIDEO_SOURCE" -c:v libx264 -preset slow -crf 18 -vf scale=out_color_matrix=bt709 -color_primaries bt709 -color_trc bt709 -colorspace bt709 -c:a aac -ar 48000 -ac 2 -b:a 320k -profile:v high -level 4.0 -bf 2 -coder 1 -pix_fmt yuv420p -b:v 10M -threads 4 -cpu-used 0 -r 60 -g 15 -movflags +faststart rtmp://a.rtmp.youtube.com/live2/$KEY`
+(*) YouTube stream a video (2nd place): `KEY="your-key-goes-here" && FPS=24 && ffmpeg -stream_loop -1 -re -i "VIDEO_SOURCE" -c:v libx264 -pix_fmt yuv420p -preset superfast -r $FPS -g $(($FPS * 2)) -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
 (*) YouTube stream desktop and default microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re -f x11grab -i :0.0 -f pulse -ac 2 -i default -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
 (*) YouTube stream webcam (here `/dev/video1`, use `v4l2-ctl` to confirm) and default microphone: `KEY="your-key-goes-here" && ffmpeg -stream_loop -1 -re /dev/video1 -f pulse -ac 2 -i default -c:v libx264 -pix_fmt yuv420p -preset superfast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/$KEY"`
 (*) (Windows) YouTube stream desktop with default microphone: `ffmpeg -stream_loop -1 -re -f gdigrab -rtbufsize 100M -i desktop -f dshow -i audio="Microphone Array (Realtek(R) Audio)" -c:v libx264 -pix_fmt yuv420p -preset ultrafast -r 24 -g 48 -b:v 1500k -c:a aac -f flv "rtmp://a.rtmp.youtube.com/live2/YOURKEYGOESHERE"`
@@ -1335,7 +1339,7 @@ TODO (*) (Powershell) Create a new volume (`mkfs` on linux): ``
 (*) (Powershell) Get help on the command Stop-Service (`man` on linux): `Get-Help Stop-Service -Full`
 (*) (Powershell) Select specific columns from output: `Get-ChildItem $env:USERPROFILE\Desktop -Filter "*.ps1" | Select-Object -Property 'Name', 'Length'`
 (*) (Powershell) Remove the bracketed date from filenames: `Get-ChildItem -Recurse | Where-Object { $_.Name -match " ?\(\d\d\d\d_\d\d_\d\d \d\d_\d\d_\d\d UTC\)" } | Rename-Item -NewName { $_.Name -replace " ?\(\d\d\d\d_\d\d_\d\d \d\d_\d\d_\d\d UTC\)", ""}`
-(*) (Powershell) Application network trace based on application name: `while(1 -eq 1 ) {Get-Process -Name *APPNAME* | Select-Object -ExpandProperty ID | ForEach-Object {Get-NetTCPConnection -OwningProcess $_} -ErrorAction SilentlyContinue }`
+(*) (Powershell) Application network trace based on application name: `while(1 -eq 1 ) {Get-Process -Name msedge | Select-Object -ExpandProperty ID | ForEach-Object {Get-NetTCPConnection -OwningProcess $_ -ErrorAction SilentlyContinue } -ErrorAction SilentlyContinue }`
 (*) (Powershell) Get last boot time: `Get-CimInstance -ClassName win32_operatingsystem | select csname,lastbootuptime`
 (*) (Powershell) Backup with versioning: `& 'C:\cwRsync_5.5.0_x86_Free\bin\rsync.exe' --force --ignore-errors --no-perms --chmod=ugo=rwX --checksum --delete --backup --backup-dir="_EVAC/$(Get-Date -Format "yyyy-MM-dd-HH-mm-ss")" --whole-file -a -v "//MyServer/MyFolder" "/cygdrive/c/Backup"`
 
