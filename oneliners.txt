@@ -144,19 +144,6 @@ GREP
 (*) Find Apache Root document: `grep -i 'DocumentRoot' /usr/local/apache/conf/httpd.conf`
 (*) Show OS release incl version.: `grep -m1 -h [0-9] /etc/{*elease,issue} 2>/dev/null | head -1`
 
-AWK
-===
-
-(*) Print the fifth column (a.k.a. field) in a space-separated file: `awk '{print $5}' filename`
-(*) Print the second column of the lines containing "foo" in a space-separated file: `awk '/foo/ {print $2}' filename`
-(*) Print the last column of each line in a file, using a comma (instead of space) as a field separator: `awk -F ',' '{print $NF}' filename`
-(*) Sum the values in the first column of a file and print the total: `awk '{s+=$1} END {print s}' filename`
-(*) Print every third line starting from the first line: `awk 'NR%3==1' filename`
-(*) Print different values based on conditions: `awk '{if ($1 == "foo") print "Exact match foo"; else if ($1 ~ "bar") print "Partial match bar"; else print "Baz"}' filename`
-(*) Print all lines where the 10th column value equals the specified value : `awk '($10 == value)' filename`
-(*) Print all the lines which the 10th column value is between a min and a max : `awk '($10 >= min_value && $10 <= max_value)'`
-(*) Print lines in a text file with numbers in first column higher or equal than a value: `awk '$NF >= 134000000 {print $0}' single-column-numbers.txt`
-
 HEADS AND TAILS
 ===============
 
@@ -171,6 +158,29 @@ HEADS AND TAILS
 (*) Output the first 239 bytes of a file: `head -c239 filename`
 (*) Output everything but the last 24 lines of a file: `head -n -24 filename`
 (*) Output everything but the last 172 bytes of a file: `head -c -172 filename`
+
+CUT, TR, AND COLUMN
+===================
+
+(*) Cut out the first sixteen characters of each line of stdin: `cut -c 1-16`
+(*) Cut out the first sixteen characters of each line of the given files: `cut -c 1-16 file`
+(*) Cut out everything from the 3rd character to the end of each line: `cut -c 3-`
+(*) Cut out the fifth field of each line, using a colon as a field delimiter (default delimiter is tab): `cut -d':' -f5`
+(*) Cut out the 2nd and 10th fields of each line, using a semicolon as a delimiter: `cut -d';' -f2,10`
+(*) Cut out the fields 3 through to the end of each line, using a space as a delimiter: `cut -d' ' -f3-`
+
+(*) Replace all occurrences of a character in a file, and print the result: `tr find_character replace_character < filename`
+(*) Replace all occurrences of a character from another command's output: `echo text | tr find_character replace_character`
+(*) Map each character of the first set to the corresponding character of the second set: `tr 'abcd' 'jkmn' < filename`
+(*) Delete all occurrences of the specified set of characters from the input: `tr -d 'input_characters' < filename`
+(*) Compress a series of identical characters to a single character: `tr -s 'input_characters' < filename`
+(*) Translate the contents of a file to upper-case: `tr "[:lower:]" "[:upper:]" < filename`
+(*) Strip out non-printable characters from a file: `tr -cd "[:print:]" < filename`
+
+(*) Format the output of a command for a 30 characters wide display: `printf "header1 header2\nbar foo\n" | column --output-width 30`
+(*) Split columns automatically and auto-align them in a tabular format: `printf "header1 header2\nbar foo\n" | column --table`
+(*) Specify the column delimiter character for the `--table` option (e.g. "," for CSV) (defaults to whitespace): `printf "header1,header2\nbar,foo\n" | column --table --separator ,`
+(*) Fill rows before filling columns: `printf "header1\nbar\nfoobar\n" | column --output-width 30 --fillrows`
 
 FIND
 ====
@@ -209,6 +219,7 @@ FIND
 (*) Find directory with most inodes/files: `find / -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n | tail`
 (*) Find all images by mime type: `find /path/to/crawl -type f -exec file --mime-type {}  \; | awk '{if ($NF == "image/jpeg") print $0 }'`
 (*) Find all files matching glob and create one zip file: `find . -name "*.jpg" -print | zip newZipFile.zip -@`
+(*) Find all pdfs and add '_small' to the name (renaming and shell substitution): `for FILE in $(find . -name "*.pdf" -print); do mv $FILE ${FILE%%.pdf}_small.pdf; done`
 
 ZIP
 ===
@@ -342,6 +353,20 @@ DIFF
 
 (*) Close virtual terminal or logout, keeping all subprocess running: `disown -a && exit`
 
+AWK
+===
+
+(*) Print the fifth column (a.k.a. field) in a space-separated file: `awk '{print $5}' filename`
+(*) Print the second column of the lines containing "foo" in a space-separated file: `awk '/foo/ {print $2}' filename`
+(*) Print the last column of each line in a file, using a comma (instead of space) as a field separator: `awk -F ',' '{print $NF}' filename`
+(*) Sum the values in the first column of a file and print the total: `awk '{s+=$1} END {print s}' filename`
+(*) Print every third line starting from the first line: `awk 'NR%3==1' filename`
+(*) Print different values based on conditions: `awk '{if ($1 == "foo") print "Exact match foo"; else if ($1 ~ "bar") print "Partial match bar"; else print "Baz"}' filename`
+(*) Print all lines where the 10th column value equals the specified value : `awk '($10 == value)' filename`
+(*) Print all the lines which the 10th column value is between a min and a max : `awk '($10 >= min_value && $10 <= max_value)'`
+(*) Print lines in a text file with numbers in first column higher or equal than a value: `awk '$NF >= 134000000 {print $0}' single-column-numbers.txt`
+(*) AWK calculator: `calc(){ awk "BEGIN{ print $* }" ;}; calc "((3+(2^3)) * 34^2 / 9)-75.89"`
+
 PERL
 ====
 
@@ -359,7 +384,7 @@ PERL
 
 SHELL THINGS
 ============
-(*) Find all pdfs and add '_small' to the name (renaming and shell substitution): `for FILE in $(find . -name "*.pdf" -print); do mv $FILE ${FILE%%.pdf}_small.pdf; done`
+
 (*) Nicely format a CSV file: `column -s, -t < somefile.csv | less -#2 -N -S`
 (*) Change all file extensions from txt to xml: `for file in *.txt; do mv "$file" "${file%.txt}.xml"; done`
 (*) Silently deletes lines containing a specific string in a bunch of files: `for file in $(egrep 'abc|def' *.sql | cut -d":" -f1 | uniq); do    sed -i '/abc/d' ./$file ; sed -i '/def/d' ./$file; done`
@@ -370,7 +395,6 @@ SHELL THINGS
 (*) Iterate over a number range: `for i in {1..10}; do echo $i; done`
 (*) Get a random (uniform) integer between 1 and 100: `echo $(( ( RANDOM % 100 ) + 1))`
 (*) Calculate pi to an arbitrary number of decimal places: `bc -l <<< "scale=1000; 4*a(1)"`
-(*) AWK Calculator: `calc(){ awk "BEGIN{ print $* }" ;}; calc "((3+(2^3)) * 34^2 / 9)-75.89"`
 
 XORG
 ====
