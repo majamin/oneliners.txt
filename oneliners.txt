@@ -207,12 +207,12 @@ FIND
 (*) Replace lines in files with only spaces/tabs with simple empty line (within current directory - recursive): `find . -type f -regex '.*\.\(cpp\|h\)' -exec sed -i 's/^[[:blank:]]\+$//g' {} +`
 (*) Find the top 10 directories containing the highest number of files: `find / -type f ! -regex '^/\(dev\|proc\|run\|sys\).*' | sed 's@^\(.*\)/[^/]*$@\1@' | sort | uniq -c | sort -n | tail -n 10`
 (*) Find directory with most inodes/files: `find / -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n | tail`
+(*) Find all images by mime type: `find /path/to/crawl -type f -exec file --mime-type {}  \; | awk '{if ($NF == "image/jpeg") print $0 }'`
+(*) Find all files matching glob and create one zip file: `find . -name "*.jpg" -print | zip newZipFile.zip -@`
 
 ZIP
 ===
 
-(*) Find all images by mime type: `find /path/to/crawl -type f -exec file --mime-type {}  \; | awk '{if ($NF == "image/jpeg") print $0 }'`
-(*) Find all files matching glob and create one zip file: `find . -name "*.jpg" -print | zip newZipFile.zip -@`
 (*) Zip all JPG files in the current directory to a zip file: `zip images.zip *.jpg`
 (*) Zip multiple files and directories recursively: `zip -r archive.zip *.jpg ./mydir1 ./mydir2`
 (*) Zip but exclude everything in the private directory: `zip -r compressed.zip ./mydir -x '*private/*'`
@@ -1273,10 +1273,25 @@ tips:
 * By default, bluetooth power is not on. Change this: https://wiki.archlinux.org/index.php/bluetooth#Auto_power-on_after_boot
 * To automate bluetoothctl commands, use `echo -e "<command1>\n<command2>\n" | bluetoothctl`
 
-PRINTING
-========
+PRINTING - CUPS
+===============
 
-Again, lots to do. Reader beware.
+(*) Enable and start CUPS daemon: `systemctl enable --now cups`
+(*) Manage printers and options through the CUPS interface: http://localhost:631
+(*) View the status of known printers: `lpstat -s`
+(*) List all known options: `lpoptions -l`
+(*) Set default printer (TAB complete usually works): `lpoptions -d Ricoh-VW-440DN`
+(*) Print a test page (search your CUPS package install for correct file path): `lpr /usr/share/cups/data/testprint`
+(*) Print file to a specific printer: `lpr -P Ricoh-VW-440DN path/to/file`
+(*) Print a file to the default printer: `lpr path/to/file`
+(*) Print 2 copies: `lpr -# 2 path/to/file`
+(*) Print to a named printer: `lpr -P printer path/to/file`
+(*) Print either a single page (e.g. 2) or a range of pages (e.g. 2–16): `lpr -o page-ranges=2|2-16 path/to/file`
+(*) Print double-sided either in portrait (long) or in landscape (short): `lpr -o sides=two_sided_long_edge|two_sided_short_edge path/to/file`
+(*) Set page size (more options may be available depending on setup): `lpr -o media=a4|letter|legal path/to/file`
+(*) Print multiple pages per sheet: `lpr -o number-up=2|4|6|9|16 path/to/file`
+
+General instructions (Arch, for now)
 
 - `pacman -S cups cups-pdf gutenprint system-config-printer`
 - `systemctl enable --now cups` (reboot may be necessary regardless)
@@ -1289,13 +1304,9 @@ Again, lots to do. Reader beware.
 * https://wiki.linuxfoundation.org/openprinting/database/cupsdocumentation
 * https://wiki.archlinux.org/index.php/CUPS#Printer_Drivers
 
-http://localhost:631 is the CUPS web interface.
 
 Helpful commands:
-`lpstat -s` to view the status of known printers
-`lpoptions -l` to list all known options
-`lpoptions -d Ricoh-VW-440DN` to list printing options for Ricoh
-`lpr -P Ricoh-VW-440DN <file>` to print <file> to Ricoh
+
 
 More:
 https://wiki.archlinux.org/index.php/CUPS#CLI_tools
