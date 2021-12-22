@@ -115,6 +115,19 @@ for sysdevpath in $(find /sys/bus/usb/devices/usb*/ -name dev); do
 done
 }}}
 
+DD
+==
+
+(*) Iso to USB with dd and show progress status: `dd if=/backup/archlinux.iso of=/dev/sdb status=progress`
+(*) Iso to USB with dd and show progress status: `dd if=/home/kozanoglu/Downloads/XenServer-7.2.0-install-cd.iso | pv --eta --size 721420288 --progress --bytes --rate --wait > /dev/sdb`
+(*) Make a bootable USB drive from an isohybrid file (such like `archlinux-xxx.iso`) and show the progress: `dd if=file.iso of=/dev/usb_drive status=progress`
+(*) Clone a drive to another drive with 4 MiB block, ignore error and show progress: `dd if=/dev/source_drive of=/dev/dest_drive bs=4M conv=noerror status=progress`
+(*) Generate a file of 100 random bytes by using kernel random driver: `dd if=/dev/urandom of=random_file bs=100 count=1`
+(*) Benchmark the write performance of a disk: `dd if=/dev/zero of=file_1GB bs=1024 count=1000000`
+(*) Generate a system backup into an IMG file and show the progress: `dd if=/dev/drive_device of=path/to/file.img status=progress`
+(*) Restore a drive from an IMG file and show the progress: `dd if=path/to/file.img of=/dev/drive_device status=progress`
+(*) Check progress of an ongoing dd operation (Run this command from another shell): `kill -USR1 $(pgrep ^dd)`
+
 GREP
 ====
 (*) Search for a pattern within a file: `grep "search_pattern" path/to/file`
@@ -1582,8 +1595,6 @@ NEW ONELINERS (THANKS COMMANDLINEFU)
 (*) Extract column from csv file: `cut -d"," -f9`
 (*) Generate random mac-address using md5sum + sed: `date | md5sum | sed -r 's/(..){3}/\1:/g;s/\s+-$//'`
 (*) Poor man's ntpdate: `date -s "$(curl -sD - www.example.com | grep '^Date:' | cut -d' ' -f3-6)Z"`
-(*) Iso to USB with dd and show progress status: `dd if=/backup/archlinux.iso of=/dev/sdb status=progress`
-(*) Iso to USB with dd and show progress status: `dd if=/home/kozanoglu/Downloads/XenServer-7.2.0-install-cd.iso | pv --eta --size 721420288 --progress --bytes --rate --wait > /dev/sdb`
 (*) Hide or show Desktop Icons on MacOS: `defaults write com.apple.finder CreateDesktop -bool false;killall Finder`
 (*) Find German synonyms using OpenThesaurus: `desyno(){ wget -q -O- https://www.openthesaurus.de/synonyme/search\?q\="$*"\&format\=text/xml | sed 's/>/>\n/g' | grep "<term term=" | cut -d \' -f 2 | paste -s -d , | sed 's/,/, /g' | fold -s -w $(tput cols); }`
 (*) Get partitions that are over 50% usage: `df -h | awk '{a=$5;gsub(/%/,"",a);if(a > 50){print $0}}'`
