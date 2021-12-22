@@ -1264,15 +1264,6 @@ BLUETOOTHCTL COMMANDS
 (*) Connect device: `bluetoothctl -- connect`
 (*) Disconnect device: `bluetoothctl -- disconnect`
 
-tips:
-* `org.bluez.Error.Failed` error
-	- *Make sure your device is ON, accepting BLUETOOTH connections, and/or PAIRING*
-	- Is `bluetooth.service` running?
-	- Check out logs `systemctl status bluetooth`
-	- Restart pulseaudio: `pulseaudio -k`, then try connecting again
-* By default, bluetooth power is not on. Change this: https://wiki.archlinux.org/index.php/bluetooth#Auto_power-on_after_boot
-* To automate bluetoothctl commands, use `echo -e "<command1>\n<command2>\n" | bluetoothctl`
-
 PRINTING - CUPS
 ===============
 
@@ -1290,26 +1281,6 @@ PRINTING - CUPS
 (*) Print double-sided either in portrait (long) or in landscape (short): `lpr -o sides=two_sided_long_edge|two_sided_short_edge path/to/file`
 (*) Set page size (more options may be available depending on setup): `lpr -o media=a4|letter|legal path/to/file`
 (*) Print multiple pages per sheet: `lpr -o number-up=2|4|6|9|16 path/to/file`
-
-General instructions (Arch, for now)
-
-- `pacman -S cups cups-pdf gutenprint system-config-printer`
-- `systemctl enable --now cups` (reboot may be necessary regardless)
-- `system-config-printer`
-- Google search for the PPD file and add it manually
-	- e.g. https://www.openprinting.org/printer/Ricoh/Ricoh-SP_C440DN
-
-* https://gist.github.com/edoz90/660a2a67b9bc8a815ba537530137636a
-* https://www.openprinting.org/printer/Ricoh/Ricoh-MP_9003
-* https://wiki.linuxfoundation.org/openprinting/database/cupsdocumentation
-* https://wiki.archlinux.org/index.php/CUPS#Printer_Drivers
-
-
-Helpful commands:
-
-
-More:
-https://wiki.archlinux.org/index.php/CUPS#CLI_tools
 
 COMBOS
 ======
