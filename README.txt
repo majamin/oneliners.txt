@@ -19,7 +19,7 @@ Notes
            \
             \
              \
-            The command is suitable in this shell only
+            The command is suitable in this shell only.
 
 Command not found
 -----------------
@@ -27,6 +27,7 @@ Command not found
     You'll eventually get a 'command not found' complaint from your shell.
     You can try these commands to find the FILE (i.e. binaries) required to run some oneliners:
 
+        Gentoo: `equery b $(which FILE)` (`qfile` is another possibility)
         Arch-based distros: `pacman -Fy FILE`
         Ubuntu-based distros: `apt-file update && apt-file find FILE`
         RHEL / CentOS-based distros: `yum whatprovides '*FILE'`
