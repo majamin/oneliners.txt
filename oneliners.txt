@@ -1104,7 +1104,7 @@ COMBOS (BOX OF CHOCOLATES EDITION)
 ($) Remove ANSI colour escape codes from a file: `sed 's/\x1b\[[0-9;]*m//g'`
 ($) Output the final destination of a URL: `curl -Ls -o /dev/null -w %{url_effective} https://startingurlgoeshere`
 ($) List top 100 djs from https://djmag.com/top100djs: `lynx -listonly -nonumbers -dump https://djmag.com/top100djs|sed '1d'|cut -d- -f5,6,7|sed -n '180,$p'|nl --number-format=rn --number-width=3|sed 's/-/ /g'|sed -e 's/.*/\L&/' -e 's/\<./\u&/g'`
-($) lynx - Get a text-only version of a website: `lynx -dump "URL" >> dump.txt`
+($) lynx - Get a text-only version of a website: `lynx -dump -dont_wrap_pre "URL" >> dump.txt`
 ($) sxiv - Search directory for files and run them as a slideshow: `sxiv -S 2 -i <<< $(find . -type f)`
 ($) Boot a flash disk in QEMU to test it: `qemu-system-x86_64 -rtc base=localtime -m 2G -vga std -drive file=/dev/sdb,readonly=on,cache=none,format=raw,if=virtio`
 ($) Convert JSON to YAML: `yq . -y <example.json`
