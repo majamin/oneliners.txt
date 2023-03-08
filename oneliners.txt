@@ -946,11 +946,12 @@ FFMPEG (SIMPLE)
 ($) Convert video for max compatibility and web viewing (2019): `ffmpeg -i final3.mp4 -c:v libx264 -crf 40 -profile:v baseline -level 3.0 -pix_fmt yuv420p -movflags faststart final3_264.mp4`
 ($) Clip a video starting at 35 min 10 sec to 37 min 29 sec: `ffmpeg -ss 00:35:10 -i original.mp4 -to 00:37:29 -c copy out.mp4`
 ($) Clip a video starting at 35 min 10 sec, 1 min 34 sec duration: `ffmpeg -ss 00:35:10.0 -i input.wmv -t 00:01:34 -c copy output.wmv`
-($) 0 = 90° CounterClockwise and Vertical Flip (default): `ffmpeg -i in.mov -vf "transpose=0" out.mov`
-($) 1 = 90° Clockwise: `ffmpeg -i in.mov -vf "transpose=1" out.mov`
-($) 2 = 90° CounterClockwise: `ffmpeg -i in.mov -vf "transpose=2" out.mov`
-($) 3 = 90° Clockwise and Vertical Flip: `ffmpeg -i in.mov -vf "transpose=3" out.mov`
-($) Flip a video horizontally (this way: <->): `ffmpeg -i original.mp4 -vf hflip original_flipped.mp4`
+($) 0 = 90° rotate counter-clockwise and vertical flip (default): `ffmpeg -i in.mov -vf "transpose=0" out.mov`
+($) 1 = 90° rotate clockwise: `ffmpeg -i in.mov -vf "transpose=1" out.mov`
+($) 2 = 90° rotate counter-clockwise: `ffmpeg -i in.mov -vf "transpose=2" out.mov`
+($) 3 = 90° rotate clockwise and vertical flip: `ffmpeg -i in.mov -vf "transpose=3" out.mov`
+($) Flip a video horizontally (this way: left <-> right): `ffmpeg -i original.mp4 -vf hflip original_flipped.mp4`
+($) Flip a video vertically (this way: up <-> down): `ffmpeg -i original.mp4 -vf vflip original_flipped.mp4`
 ($) Combine multiple images into a video using ffmpeg: `ffmpeg -start_number 0053 -r 1/5 -i IMG_%04d.JPG -c:v libx264 -vf fps=25 -pix_fmt yuv420p out.mp4`
 ($) Inset video. `ffmpeg -i main.mp4 -i inset.mp4 -filter_complex 'overlay=main_w-overlay_w+(1920-192*2.5):main_h-overlay_h+(1080-108*2.5)' -t 5 output.mp4`
 ($) Cover the main video with a transparent color: `ffmpeg -i lights.mp4 -vf 'color=color=red@.3:size=1920x1080 [over]; [in][over] overlay [out]' -t 5 output.mp4`
