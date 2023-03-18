@@ -411,23 +411,66 @@ MAN
 
 PACMAN
 ======
-($) Clean up cached packages: `pacman -Sc`
-($) Install a package from the main Arch repo: `pacman -S <package name>`
-($) Install a package from a file: `pacman -U /path/to/file`
-($) List all programs installed from the AUR: `pacman -Qm`
-($) List all programs installed from the main repo: `pacman -Qn`
-($) List all programs installed: `pacman -Q`
-($) List all programs that are orphaned dependencies: `pacman -Qdt`
-($) List packages and their sizes: `LC_ALL=C pacman -Qi | wak '/^Name/{name=$3} /^Installed Size/{print $4$5, name}' | sort -h`
-($) Programs installed by you: `pacman -Qe`
-($) Remove a program, its configs and dependencies: `pacman -Rns <package name>`
-($) Search and remove found packages: `pacman -Rns $(pacman -Qsq SEARCHSTRING)`
-($) Search for missing libraries using pacman: `pacman -Fs libusb-0.1.so.4`
-($) Search for packages with file: `pacman -Fy filename`
-($) Search for programs by string in the main Arch repo: `pacman -Ss <string>`
-($) Search installed programs by string: `pacman -Qs <string>`
-($) Sort installed packages by size: `LC_ALL=C pacman -Qi | egrep '^(Name|Installed)' | cut -f2 -d':' | paste - - | column -t | sort -nk 2 | grep MiB`
-($) Update and upgrade programs: `pacman -Syu`
+(#) To install a single package or list of packages, including dependencies, issue the following command: `pacman -S package_name1 package_name2 ...`
+(#) To install a list of packages with regex (see this forum thread): ` pacman -S $(pacman -Ssq package_regex)`
+(#) Sometimes there are multiple versions of a package in different repositories (e.g. extra and testing). To install the version from the extra repository in this example, the repository needs to be defined in front of the package name: `pacman -S extra/package_name`
+(#) To install a number of packages sharing similar patterns in their names, one can use curly brace expansion. For example: `pacman -S plasma-{desktop,mediacenter,nm}`
+(#) This can be expanded to however many levels needed: `pacman -S plasma-{workspace{,-wallpapers},pa}`
+
+(#) To remove a single package, leaving all of its dependencies installed: `pacman -R package_name`
+(#) To remove a package and its dependencies which are not required by any other installed package: `pacman -Rs package_name`
+(#) The command `pacman -Rs` may sometimes refuse to run when removing a group which contains otherwise needed packages. In this case try (Warning: When removing a group, such as gnome, this ignores the install reason of the packages in the group, because it acts as though each package in the group is listed separately. Install reason of dependencies is still respected): ` pacman -Rsu package_name`
+(#) To remove a package, its dependencies and all the packages that depend on the target package (Warning: This operation is recursive, and must be used with care since it can remove many potentially needed packages): ` pacman -Rsc package_name`
+(#) To remove a package, which is required by another package, without removing the dependent package: `pacman -Rdd package_name`
+(#) Pacman saves important configuration files when removing certain applications and names them with the extension: .pacsave. To prevent the creation of these backup files use the -n option: `pacman -Rn package_name`
+
+($) Pacman can search for packages in the database, searching both in packages' names and descriptions: `pacman -Ss string1 string2 ...`
+($) Sometimes, -s's builtin ERE (Extended Regular Expressions) can cause a lot of unwanted results, so it has to be limited to match the package name only; not the description nor any other field: `pacman -Ss '^vim-'`
+($) To search for already installed packages: `pacman -Qs string1 string2 ...`
+($) To search for package file names in remote packages: `pacman -F string1 string2 ...`
+($) To display extensive information about a given package: `pacman -Si package_name`
+($) For locally installed packages: `pacman -Qi package_name`
+($) Passing two -i flags will also display the list of backup files and their modification states: `pacman -Qii package_name`
+($) To retrieve a list of the files installed by a package: `pacman -Ql package_name`
+($) To retrieve a list of the files installed by a remote package: `pacman -Fl package_name`
+($) To verify the presence of the files installed by a package: `pacman -Qk package_name`
+($) To query the database to know which package a file in the file system belongs to: `pacman -Qo /path/to/file_name`
+($) To query the database to know which remote package a file belongs to: `pacman -F /path/to/file_name`
+($) To list all packages no longer required as dependencies (orphans): ` pacman -Qdt`
+($) To list all packages explicitly installed and not required as dependencies: `pacman -Qet`
+
+(#) Download a package without installing it: `pacman -Sw package_name`
+(#) Install a 'local' package that is not from a remote repository (e.g. the package is from the AUR): ` pacman -U /path/to/package/package_name-version.pkg.tar.zst`
+(#) To keep a copy of the local package in pacman's cache, use: `pacman -U file:///path/to/package/package_name-version.pkg.tar.zst`
+(#) Install a 'remote' package (not from a repository stated in pacman's configuration files): ` pacman -U http://www.example.com/repo/example.pkg.tar.zst`
+(#) To remove all the cached packages that are not currently installed, and the unused sync database, execute: `pacman -Sc`
+(#) To remove all files from the cache, use the clean switch twice, this is the most aggressive approach and will leave nothing in the cache directory: `pacman -Scc`
+(#) Sync the files database: `pacman -Fy`
+(#) Search for a package containing a file: `pacman -F gcc`
+
+($) The following command will list all installed packages and their individual sizes: `LC_ALL=C pacman -Qi | awk '/^Name/{name=$3} /^Installed Size/{print $4$5, name}' | sort -h`
+($) To list the download size of several packages (leave packages blank to list all packages): `expac -S -H M '%k\t%n' packages`
+($) To list explicitly installed packages not in the meta package base nor package group xorg with size and description: `expac -H M "%011m\t%-20n\t%10d" $(comm -23 <(pacman -Qqen | sort) <({ pacman -Qqg xorg; expac -l '\n' '%E' base; } | sort -u)) | sort -n`
+($) To list the packages marked for upgrade with their download size: `expac -S -H M '%k\t%n' $(pacman -Qqu) | sort -sh`
+($) To list optional dependencies only: `expac -S "%o" package`
+($) To list the 20 last installed packages with expac, run: `expac --timefmt='%Y-%m-%d %T' '%l\t%n' | sort | tail -n 20`
+($) To list the 20 last installed with seconds since the epoch (1970-01-01 UTC): `expac --timefmt=%s '%l\t%n' | sort -n | tail -n 20`
+($) List explicitly installed packages not in the base meta package: `comm -23 <(pacman -Qqe | sort) <(expac -l '\n' '%E' base | sort)`
+($) List explicitly installed packages not in the base meta package or xorg package group: `comm -23 <(pacman -Qqe | sort) <({ pacman -Qqg xorg; expac -l '\n' '%E' base; } | sort -u)`
+($) List all installed packages unrequired by other packages, and which are not in the base meta package or xorg package group: `comm -23 <(pacman -Qqt | sort) <({ pacman -Qqg xorg; echo base; } | sort -u)`
+($) List all installed packages unrequired by other packages, and which are not in the base meta package or xorg package group, but with descriptions: `expac -H M '%-20n\t%10d' $(comm -23 <(pacman -Qqt | sort) <({ pacman -Qqg xorg; echo base; } | sort -u))`
+($) List all installed packages that are not in the specified repository repo_name `comm -23 <(pacman -Qq | sort) <(pacman -Sql repo_name | sort)`
+($) List all installed packages that are in the repo_name repository: `comm -12 <(pacman -Qq | sort) <(pacman -Sql repo_name | sort)`
+($) List all packages on the Arch Linux ISO that are not in the base meta package: `comm -23 <(curl https://gitlab.archlinux.org/archlinux/archiso/-/raw/master/configs/releng/packages.x86_64) <(expac -l '\n' '%E' base | sort)`
+($) To list all development/unstable packages, run: `pacman -Qq | grep -Ee '-(bzr|cvs|darcs|git|hg|svn)$'`
+($) To obtain the list of the dependencies of a package, the simplest solution is reading the output of: `pacman -Qi package`
+($) For automation, instead of the error-prone method of parsing pacman output, use expac: `expac -S '%D' package`
+($) To browse all installed packages with an instant preview of each package: `pacman -Qq | fzf --preview 'pacman -Qil {}' --layout=reverse --bind 'enter:execute(pacman -Qil {} | less)'`
+($) To browse all packages currently known to pacman (both installed and not yet installed) in a similar way, using fzf, use: `pacman -Slq | fzf --preview 'pacman -Si {}' --layout=reverse`
+($) This one might come in handy if you have found that a specific package uses a huge amount of space and you want to find out which files make up the most of that. `pacman -Qlq package | grep -v '/$' | xargs -r du -h | sort -h`
+(#) If your system has stray files not owned by any package, you may want to find such files in order to clean them up. `find /etc /usr /opt | LC_ALL=C pacman -Qqo - 2>&1 >&- >/dev/null | cut -d ' ' -f 5-`
+(#) For recursively removing orphans and their configuration files: `pacman -Qtdq | pacman -Rns -`
+($) For recursively removing orphans and their configuration files with dependency cycles, excessive dependencies, some unexplicit optionals etc.: `pacman -Qqd | pacman -Rsu --print -`
 
 APT
 ===
