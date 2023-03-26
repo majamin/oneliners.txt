@@ -78,6 +78,27 @@ PROCESSES, DAEMONS AND ADMINISTRATION
 (#) Add user to supplementary groups (mind the whitespace): `usermod -a -G group1,group2 user`
 (#) Create a new home directory for a user and move their files to it: `usermod -m -d path/to/home user`
 
+SYSTEMD
+=======
+
+($) List the status of services (systemd): `systemctl status`
+($) List failed services (systemd): `systemctl --failed`
+($) Start a service system-wide (systemd): `systemctl start SERVICE`
+($) Start an user service (systemd): `systemctl --user start SERVICE`
+($) Enable a service system-wide (systemd): `systemctl enable SERVICE`
+($) Enable a service system-wide now (systemd): `systemctl enable --now SERVICE`
+
+OPENRC
+======
+
+(#) Start the ssh daemon in the default runlevel at boot: `rc-update add sshd default`
+(#) Start the sshd service now: `rc-service sshd start`
+(#) Check if the sshd service is running: `rc-service sshd status`
+(#) Restart the sshd service: `rc-service sshd restart`
+(#) Stop the sshd service: `rc-service sshd stop`
+(#) List services, their status, and the runlevels they belong to: `rc-status --all`
+(#) Show enabled services and the runlevels they belong to (not whether they are running or not, just if they are enabled): `rc-update show`
+
 FILESYSTEMS
 ===========
 ($) Create ext4 filesystem with big count of inodes: `mkfs.ext4 -T news /dev/sdcXX`
@@ -416,6 +437,33 @@ MAN
 ===
 ($) Print the contents of a help file to stdout instead of pager: `man -Tutf8 networkmanager`
 ($) List all software that have a man page installed: `ls /usr/share/man/man1 2> /dev/null | sed -e 's/\.1.*//' | xargs whatis 2> /dev/null | sed -e '/unknown subject/d' -e 's/  *- / - /'`
+
+GENTOO
+======
+
+(#) Sync all repositories that are set to auto-sync including the Gentoo ebuild repository: `emaint --auto sync`
+(#) List installed packages with version number and name of overlay used: `qlist -IRv`
+($) List what packages would be installed, without installing them (-pv for short): `emerge --pretend --verbose www-client/firefox`
+(#) List packages, ask for confirmation, and install a package (-av for short): `emerge --ask --verbose www-client/firefox`
+(#) Install a specific version of a package (an update will override this!) (use "\=" for shells that attach special meaning to the "=" character): `emerge --ask =www-client/firefox-96.0.1`
+(#) To prevent Portage from automatically updating a package, add a line into a the /etc/portage/package.mask/package.mask file (create the file if it does not exist). Specify using the greater than operator (>) prefix if it is an older package than latest stable or lesser than operator (<) as a prefix if it is a newer one: `<www-client/firefox-96.0.1`
+(#) Install a package without adding it to the world file: `emerge --ask --oneshot www-client/firefox`
+(#) Use emerge --deselect (or -W option for short) to remove the specified package from the @world set (i.e. it indicate that the package is no longer wanted): `emerge --deselect www-client/firefox`
+(#) If emerge --depclean has not been run in a while, it may try to remove many packages - caution is advised. Once it has been assured that emerge --depclean will only remove unneeded packages, run: `emerge --ask --depclean`
+(#) To directly remove a package that no other packages depend on: `emerge --ask --verbose --depclean www-client/firefox`
+(#) As a safety measure, depclean will not remove any packages unless all required dependencies have been resolved. As a consequence of this, it is sometimes necessary to first run: `emerge --ask --verbose --update --newuse --deep @world`
+(#) Use --changed-use (-U) in place of --newuse (-N) to avoid rebuilds when the only changes are USE flags added to or dropped from the repository. Use the --quiet (-q) flag for more succinct execution: `emerge --ask --quiet --update --changed-use --deep @world`
+(#) Upgrade all packages in the world set, their dependencies (--deep), and packages that have USE flag changes (avoiding unnecessary rebuilds when USE changes have no impact): `emerge --ask --verbose --update --deep --changed-use @world`
+($) Tell which installed package provides a command using equery: `equery b `which vim``
+($) Tell which (not) installed package provides a command using e-file: `e-file vim`
+(#) Sometimes it's necessary to rebuild some packages for them to work properly. After installing a new kernel: `emerge @module-rebuild`
+(#) Sometimes it's necessary to rebuild some packages for them to work properly. After upgrading to a new version of Go: `emerge @golang-rebuild`
+(#) Sometimes it's necessary to rebuild some packages for them to work properly. For using new libraries: `emerge @preserved-rebuild`
+(#) Manage configuration changes after an emerge completes: `dispatch-conf`
+($) Obtain descriptions and usage of the USE flag X using euse: `euse -i X`
+($) Show what packages have the mysql USE flag: `equery hasuse mysql`
+($) Show what packages are currently built with the mysql USE flag: `eix --installed-with-use mysql`
+($) Show what USE flags are available for a specific package: `equery uses <package-name>`
 
 PACMAN
 ======
@@ -1012,6 +1060,7 @@ FFMPEG (SIMPLE)
 ($) Sliding overlay (does it work?): `ffmpeg -i lights.mp4 -i street.mp4 -filter_complex "overlay=x='if(gte(t,2), -w+(t-2)*20, NAN)" -t 10 output.mp4`
 ($) Create a test video (useful for experimentation): `ffmpeg -f lavfi -i testsrc=duration=30:size=1280x720:rate=30 output.mp4`
 
+($) Combine the video (only) from a file and an audio track: `ffmpeg -i video.mp4 -i audio.mp3 -c:v copy -map 0:v:0 -map 1:a:0 -shortest output.mp4`
 ($) Concatenate two or more videos read from a file (see `man ffmpeg` for proper file format): `ffmpeg -f concat -safe 0 -i mylist.txt -c copy output.mp4`
 ($) Stabilize a video: `ffmpeg -i video.mp4 -vf vidstabtransform=smoothing=30 video_stab.mp4`
 ($) Extract frames from a video: `ffmpeg -i file.mpg -r 1/1 $filename%03d.bmp`
