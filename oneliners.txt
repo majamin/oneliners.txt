@@ -705,6 +705,7 @@ PANDOC, PDF, GHOSTSCRIPT
 
 ($) Combined two or more PDFs using poppler: `pdfunite one.pdf two.pdf output.pdf`
 ($) Compress a PDF using ghostscript: `gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -dNOPAUSE -dQUIET -dBATCH -dPrinted=false -sOutputFile=foo-compressed.pdf foo.pdf`)
+($) Make a PDF "read-only" (NOT secure, but often effective): `gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile=main_secure.pdf main.pdf`
 
 MYSQL
 =====
