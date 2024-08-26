@@ -261,6 +261,17 @@ FIND
 ($) Count the total amount of hours of your music collection: `find . -print0 | xargs -0 -P 40 -n 1 sh -c 'ffmpeg -i "$1" 2>&1 | grep "Duration:" | cut -d " " -f 4 | sed "s/.$//" | tr "." ":"' - | awk -F ':' '{ sum1+=$1; sum2+=$2; sum3+=$3; sum4+=$4 } END { printf "%.0f:%.0f:%.0f.%.0f\n", sum1, sum2, sum3, sum4 }'`
 ($) Find all file extension in current dir.: `find . -type f | perl -ne 'print $1 if m/\.([^.\/]+)$/' | sort -u`
 
+FD
+==
+($) (fd) Find files by extension: `fd -e jpg`
+($) (fd) Find all files (including hidden) but exclude a directory: `fd -H -E .git`
+($) (fd) Find all files (including hidden) and list their details: `fd -H -l`
+($) (fd) Find all find matching a regex (entries that start with x and end with rc): `fd '^x.*rc$'`
+($) (fd) Find all files by glob pattern: `fd -g libc*.so /usr`
+($) fd only matches the filename of each file, but, using the --full-path or -p option, you can match against the full path: `fd -p '.*/lesson-\d+/[a-z]+.(jpg|png)'`
+($) Recursively find all zip files and unpack them: `fd -e zip -x unzip`
+($) Convert all *.jpg files to *.png files ({.} is placeholder syntax to get the file without the extension): `fd -e jpg -x convert {} {.}.png`
+
 SED
 ===
 ($) Replace the first occurrence of a regular expression in each line of a file, and print the result: `sed 's/regex/replace/' filename`
