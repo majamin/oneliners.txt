@@ -477,6 +477,8 @@ EMERGE, EQUERY, AND FRIENDS
 ($) Show what packages are currently built with the mysql USE flag: `eix --installed-with-use mysql`
 ($) Show what USE flags are available for a specific package: `equery uses <package-name>`
 
+($) List installed packages and sort by compile times: `qlist -I | xargs qlop -M | cut -d' ' -f3,4 | sort -nk 2`
+
 PACMAN
 ======
 (#) To install a single package or list of packages, including dependencies, issue the following command: `pacman -S package_name1 package_name2 ...`
