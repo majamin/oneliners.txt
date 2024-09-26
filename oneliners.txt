@@ -1097,10 +1097,12 @@ YT-DLP (SORRY YOUTUBE-DL)
 =========================
 ($) Download the best quality version of a video `yt-dlp "URL"`
 ($) View all available formats for a video: `yt-dlp -F "URL"`
-($) Download a specific combination of video+audio - let yt-dlp decide how to combine: `yt-dlp -f248+251 "URL"`
+($) Download a specific combination of video+audio - let yt-dlp decide how to combine: `yt-dlp -f 248+251 "URL"`
 ($) Fetch stream URLs with yt-dlp (defaults to best quality stream): `yt-dlp -g "URL"`
+($) Fetch stream URLs for specified streams: `yt-dlp -g -f 248+251 "URL"`
 ($) Download (best) audio and convert to 'opus': `yt-dlp -x --audio-format opus "URL"`
 ($) Download a video but limit the size of the video to 1920x?: `yt-dlp -f 'bestvideo[width<=1920]+bestaudio' "URL"`
+($) Download a 720p video but with highest audio quality: `yt-dlp -f "bestvideo[height<=720]+bestaudio/best[height<=720]" -ciw -o "%(title)s.%(ext)s" <URL>`
 
 FFMPEG STREAMING, COMBINING MULTIPLE SOURCES, CAPTURING DEVICES
 ===============================================================
