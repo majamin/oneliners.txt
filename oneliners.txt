@@ -449,20 +449,25 @@ MAN
 ($) Print the contents of a help file to stdout instead of pager: `man -Tutf8 networkmanager`
 ($) List all software that have a man page installed: `ls /usr/share/man/man1 2> /dev/null | sed -e 's/\.1.*//' | xargs whatis 2> /dev/null | sed -e '/unknown subject/d' -e 's/  *- / - /'`
 
-EMERGE, EQUERY, AND FRIENDS
-===========================
+PORTAGE AND FRIENDS
+===================
 
+($) Search for packages with 'python' in the name (case insensitive): `emerge -s python`
+($) Search specifically for the python package, using regular expressions: `emerge -s "^python$"`
+($) Search for the string "python", but also in the package description: `emerge -sS python`
+(#) Install a package, with confirmation, verbosely: `emerge --ask --verbose www-client/firefox`
+($) Pretend to install - list what packages would be installed, without installing them (-pv for short): `emerge --pretend --verbose www-client/firefox`
+(#) Install a specific version of a package (an update will override this!) (use "\=" for shells that attach special meaning to the "=" character): `emerge --ask =www-client/firefox-96.0.1`
+(#) Uninstall packages - first remove the specified package from the @world set, then perform a dependency clean: `emerge --deselect www-client/firefox && emerge --ask --depclean`
+(#) To directly uninstall a package that no other packages depend on: `emerge --ask --verbose --depclean www-client/firefox`
+(#) Sync repos, upgrade all packages: `emaint --auto sync && emerge --ask --verbose --update --deep --changed-use @world`
+(#) Sync repos, upgrade all packages, short version: `emaint --auto sync && emerge -avtDUu @world`
 (#) Sync all repositories that are set to auto-sync including the Gentoo ebuild repository: `emaint --auto sync`
 (#) List installed packages with version number and name of overlay used: `qlist -IRv`
-($) List what packages would be installed, without installing them (-pv for short): `emerge --pretend --verbose www-client/firefox`
-(#) List packages, ask for confirmation, and install a package (-av for short): `emerge --ask --verbose www-client/firefox`
 ($) List files installed by a package: `equery files --tree gentoolkit`
-(#) Install a specific version of a package (an update will override this!) (use "\=" for shells that attach special meaning to the "=" character): `emerge --ask =www-client/firefox-96.0.1`
 (#) To prevent Portage from automatically updating a package, add a line into a the /etc/portage/package.mask/package.mask file (create the file if it does not exist). Specify using the greater than operator (>) prefix if it is an older package than latest stable or lesser than operator (<) as a prefix if it is a newer one: `<www-client/firefox-96.0.1`
 (#) Install a package without adding it to the world file: `emerge --ask --oneshot www-client/firefox`
-(#) Use emerge --deselect (or -W option for short) to remove the specified package from the @world set (i.e. it indicate that the package is no longer wanted): `emerge --deselect www-client/firefox`
 (#) If emerge --depclean has not been run in a while, it may try to remove many packages - caution is advised. Once it has been assured that emerge --depclean will only remove unneeded packages, run: `emerge --ask --depclean`
-(#) To directly remove a package that no other packages depend on: `emerge --ask --verbose --depclean www-client/firefox`
 (#) As a safety measure, depclean will not remove any packages unless all required dependencies have been resolved. As a consequence of this, it is sometimes necessary to first run: `emerge --ask --verbose --update --newuse --deep @world`
 (#) Use --changed-use (-U) in place of --newuse (-N) to avoid rebuilds when the only changes are USE flags added to or dropped from the repository. Use the --quiet (-q) flag for more succinct execution: `emerge --ask --quiet --update --changed-use --deep @world`
 (#) Upgrade all packages in the world set, their dependencies (--deep), and packages that have USE flag changes (avoiding unnecessary rebuilds when USE changes have no impact): `emerge --ask --verbose --update --deep --changed-use @world`
@@ -718,6 +723,7 @@ PANDOC, PDF, GHOSTSCRIPT
 
 ($) Combined two or more PDFs using poppler: `pdfunite one.pdf two.pdf output.pdf`
 ($) Compress a PDF using ghostscript: `gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.5 -dNOPAUSE -dQUIET -dBATCH -dPrinted=false -sOutputFile=foo-compressed.pdf foo.pdf`)
+($) Make a PDF "read-only" (NOT secure, but often effective): `gs -q -dNOPAUSE -dBATCH -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress -sOutputFile=main_secure.pdf main.pdf`
 
 MYSQL
 =====
