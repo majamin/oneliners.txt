@@ -1014,7 +1014,7 @@ IMAGE MAGICK
 ($) Change all white pixels in an image to transparent: `convert in.jpg -transparent white out.png`
 ($) Replace transperancy with white background: `convert in.png -flatten out.jpg`
 ($) Print DateTimeOriginal from EXIF data for all files in folder: `for i in *.jpg; do identify -format %[EXIF:DateTimeOriginal] $i; echo; done`
-($) "Diff" two images (first shows the result as a PNG, second as a PDF): `compare image1 image2 -compose src diff.png`
+($) "Diff" two images: `compare image1 image2 -compose src diff.png`
 ($) Calculate a hash of image data (ImageMagick): `identify -quiet -format "%#" "./path/to/file"`
 ($) List all fonts available to ImageMagick: `convert -list font`
 ($) Convert stdout text to image: `convert -background lightblue -fill blue -font DejaVu-Sans-Mono-Book -pointsize 72 label:@- cal.gif <<< $(cal)`
