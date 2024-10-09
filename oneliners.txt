@@ -960,17 +960,21 @@ GIT
 ($) Commit your changes with a message: `git commit -m "changes happened"`
 ($) Get status but don't show untracked files: `git status -uno`
 ($) Oops, your last commit message was wrong. Amend it: `git commit --amend -m "changes happened to FILE"`
-($) Dang it, you also forgot to add a file with the last commit: `git add FILE && git commit --amend --no-edit`
+($) Dang it, you also forgot to add a file with the last commit (caution: may not work with github): `git add FILE && git commit --amend --no-edit`
 
 ($) List the branches available to git: `git branch`
 ($) You're ready for something new. Make a new branch: `git checkout NAMEOFBRANCH`
-($) Make a new branch and carry over staged files: `git checkout -b name-of-new-branch`
+($) You made some changes, and would like to carry over the changes to a new branch: `git checkout -b name-of-new-branch`
 ($) Stage files from another branch: `git checkout NAMEOFTHEBRANCH FILE1 FILE2`
 ($) Revert a file to a version seen in COMMITREF: `git checkout COMMITREF -- file1/to/restore`
 
 ($) You want to save your changes, but not commit them (yet). Stash: `git stash save MyStashedChanges`
 ($) What stashed changes do I have?: `git stash list`
 ($) Apply some stashed changes (use `stash list` to find your index integer): `git stash apply INDEX`
+
+($) Create an auto-named .patch file for all the unpushed commits: `git format-patch origin`
+($) Write a .patch file for all the commits between 2 revisions to stdout: `git format-patch revision_1..revision_2`
+($) Write a .patch file for the 3 latest commits: `git format-patch -3`
 
 ($) Compare two branches with a simple summary: `git diff --compact-summary <branch1> <branch2>`
 ($) Delete all local git branches that have been merged and deleted from remote: `git branch -d $( git branch -vv | grep '\[[^:]\+: gone\]' | awk '{print $1}' | xargs )`
