@@ -950,6 +950,7 @@ NMAP MISCELLANEOUS OPTIONS
 FONTS
 =====
 ($) Search for installed fonts: `fc-list`
+($) Refresh (re-register) the font cache (useful after introducing new font files to the system): `fc-cache -r`
 ($) How to find out what fonts `st` is using: `lsof -p $(ps -o pid --no-headers -C st) | grep fonts`
 
 GIT
