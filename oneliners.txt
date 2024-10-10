@@ -956,13 +956,17 @@ FONTS
 GIT
 ===
 ($) Initialize a git repo in the current directory: `git init`
+($) Add all files in the current project to the index: `git add .`
 ($) Make some changes to a file and add it to the next commit: `git add FILE`
+($) See what will be committed: `git diff --cached`
 ($) Commit your changes with a message: `git commit -m "changes happened"`
+($) Commit all of the current changes: `git commit -a`
 ($) Get status but don't show untracked files: `git status -uno`
 ($) Oops, your last commit message was wrong. Amend it: `git commit --amend -m "changes happened to FILE"`
 ($) Dang it, you also forgot to add a file with the last commit (caution: may not work with github): `git add FILE && git commit --amend --no-edit`
 
 ($) List the branches available to git: `git branch`
+($) Switch to the 'betterbranch' branch: `git switch betterbranch`
 ($) You're ready for something new. Make a new branch: `git checkout NAMEOFBRANCH`
 ($) You made some changes, and would like to carry over the changes to a new branch: `git checkout -b name-of-new-branch`
 ($) Stage files from another branch: `git checkout NAMEOFTHEBRANCH FILE1 FILE2`
