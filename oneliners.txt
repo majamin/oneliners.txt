@@ -628,7 +628,7 @@ GENERAL NETWORKING
 ($) Download mp3 files linked in a RSS podcast feed: `curl http://radiofrance-podcast.net/podcast09/rss_14726.xml | grep -Eo "(http|https)://[a-zA-Z0-9./?=_%:-]*mp3" | sort -u | xargs wget`
 ($) Offcloud - add a link as remote download: `curl  'https://offcloud.com/api/remote?key=XXXXXX' \   -H 'accept: application/json' \   -H 'Content-Type: application/x-www-form-urlencoded'  --data-raw "url=$MYLINK&remoteOptionId=XXXXX"`
 ($) Check web server port 80 response header: `curl -I <IPaddress>`
-($) Get a list of top 1000 sites from alexa: `curl -qsSl http://s3.amazonaws.com/alexa-static/top-1m.csv.zip 2>/dev/null | zcat | grep ".de$" | head -1000 | awk -F, '{print $2}'`
+($) Get a list of the top 1000 .de sites from the NetAPI Top 1M: `curl -sS https://netapi.com/netapi_top1mln.csv | grep ".de$" | head -1000 | awk -F, '{print $2}'`
 ($) Get Your IP Geographic Location with curl and jq: `curl -s https://ipvigilante.com/$(curl -s https://ipinfo.io/ip) | jq '.data.latitude, .data.longitude, .data.city_name, .data.country_name'`
 ($) Get current stable kernel version string from kernel.org: `curl -s https://www.kernel.org/releases.json | jq '.latest_stable.version' -r`
 ($) Check every URL redirect (HTTP status codes 301/302) with curl: `curl -sLkIv --stderr - http://example.org | grep -i location: | awk {'print $3'} | sed '/^$/d'`
